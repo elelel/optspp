@@ -11,7 +11,45 @@
 #include "predeclare.hpp"
 
 namespace optspp {
+  template <typename... Args>
+  std::shared_ptr<option> make_options(Args&&... properties) {
+    auto o = std::make_shared<options>(std::forward<Args>(properties)...);
+    return o;
+  }
+  
   struct options : std::enable_shared_from_this<options> {
+    options() {
+    }
+
+    void swap(options& other) {
+      std::swap(options_, other.options_);
+      std::swap(long_prefixes_, other.long_prefixes_);
+      std::swap(short_prefixes_, other.short_prefixes_);
+
+      std::swap(args_, other.args_);
+
+      std::swap(values_, other.values_);
+    }
+    
+    template <typename... Args>
+    options(Args&&... args) {
+      apply_options(std::forward<Args>(args)...);
+    }
+    
+    void apply_options(const std::shared_ptr<option>& o) {
+      auto found = std::find(options_.begin(), options_.end(), o);
+      if (found == options_.end()) {
+        options_.push_back(o);
+      }
+      check();
+    }
+
+    template <typename... Args>
+    void apply_options(const std::shared_ptr<option>& o, Args&&... args) {
+      apply_options(o);
+      apply_options(std::forward<Args>(args)...);
+    }
+
     void add(const std::shared_ptr<option>& o) {
       options_.push_back(o);
     }
@@ -74,20 +112,17 @@ namespace optspp {
     }
     
     options& operator<<(const std::shared_ptr<option>& o) {
-      auto found = std::find(options_.begin(), options_.end(), o);
-      if (found == options_.end()) {
-        options_.push_back(o);
-      }
-      check();
+      apply_options(o);
       return *this;
     }
 
     options& operator<<(const option& o) {
-      std::cout << "Adding option " << o.long_name() << " from value\n";
-      auto op = std::make_shared<option>(o);
-      return operator<<(op);
+      option o_(o);
+      auto op = o_.shared_from_this();
+      apply_options(op);
+      return *this;
     }
-    
+
   private:
     std::vector<std::shared_ptr<option> > options_;
     std::vector<std::string> long_prefixes_{ {"--"} };

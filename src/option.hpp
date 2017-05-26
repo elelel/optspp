@@ -15,16 +15,13 @@ namespace optspp {
     }
     
     template <typename Arg>
-    void apply_option_property(option& o, Arg&& property) {
-      std::cout << "Calling property\n";
+    void apply_option_property(option& o, Arg property) {
       property(o);
     }
     
     template <typename Arg, typename... Args>
-    void apply_option_property(option& o, Arg&& property, Args&&... args) {
-      std::cout << "Calling property(...)\n";
+    void apply_option_property(option& o, Arg property, Args&&... args) {
       property(o);
-      std::cout << "Called property(...)\n";
       apply_option_property(o, std::forward<Args>(args)...);
     }
   }
