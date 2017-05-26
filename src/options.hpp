@@ -74,13 +74,10 @@ namespace optspp {
     }
     
     options& operator<<(const std::shared_ptr<option>& o) {
-      std::cout << "Searching for option " << o << " " << o->long_name() << std::endl;
       auto found = std::find(options_.begin(), options_.end(), o);
       if (found == options_.end()) {
-        std::cout << "Adding new option " << o->long_name() << std::endl;
         options_.push_back(o);
       }
-      std::cout << "Checking\n" << std::endl;
       check();
       return *this;
     }
@@ -127,12 +124,14 @@ namespace optspp {
             if (it == args_.end()) {
               if (o.implicit_values().size() > 0) {
                 values_[*o_it] = o.implicit_values();
+                check_values_mutually_exclusive(name, o, values_[*o_it]);
               } else {
                 throw exception::long_parameter_requires_value(name);
               }
             } else {
               if (o.is_valid_value(*it)) {
                 values_[*o_it].push_back(*it);
+                check_values_mutually_exclusive(name, o, values_[*o_it]);
                 ++it;
               } else {
                 throw exception::invalid_long_parameter_value(name, *it);
@@ -166,12 +165,14 @@ namespace optspp {
                 if (it == args_.cend()) {
                   if (o.implicit_values().size() > 0) {
                     values_[*o_it] = o.implicit_values();
+                    check_values_mutually_exclusive(name, o, values_[*o_it]);
                   } else {
                     throw exception::short_parameter_requires_value(name);
                   }
                 } else {
                   if (o.is_valid_value(*it)) {
                     values_[*o_it].push_back(*it);
+                    check_values_mutually_exclusive(name, o, values_[*o_it]);
                     ++it;
                   } else {
                     throw exception::invalid_short_parameter_value(name, *it);
@@ -181,6 +182,7 @@ namespace optspp {
               } else {  // Not the last short option in single pack
                 if (o.implicit_values().size() > 0) {
                   values_[*o_it] = o.implicit_values();
+                  check_values_mutually_exclusive(name, o, values_[*o_it]);
                 } else {
                   throw exception::short_parameter_requires_value(name);
                 }
@@ -194,7 +196,32 @@ namespace optspp {
     }
 
     void try_positional_(std::vector<std::string>::const_iterator& it) {
+      // TODO: positional
     }
     
+    void check_values_mutually_exclusive(const std::string& name,
+                                         const option& o,
+                                         const std::vector<std::string>& values) const {
+      if (o.mutually_exclusive_values().size() == 0) return;
+      std::vector<std::vector<std::string>> rslt;
+      for (const auto& me : o.mutually_exclusive_values()) {
+        std::vector<std::string> cur_set;
+        for (const auto& v : values) {
+          if (std::find(me.begin(), me.end(), v) != me.end()) cur_set.push_back(v);
+        }
+        if (cur_set.size() > 1) rslt.push_back(cur_set);
+      }
+      if (rslt.size() > 0) {
+        throw exception::values_mutual_exclusiveness_violated(name, rslt);
+      }
+    }
+    
+    void check_values_mutually_exclusive(const char& name,
+                                         const option& o,
+                                         const std::vector<std::string>& values) const {
+      std::string s;
+      s += name;
+      check_values_mutually_exclusive(s, o, values);
+    }
   };
 }

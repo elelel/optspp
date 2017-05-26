@@ -167,6 +167,9 @@ namespace optspp {
     void check_parents() const;
 
     void check() const {
+      // Checks below are valid only if valid_values_ are defined
+      if (valid_values_.size() == 0) return;
+      
       bool default_value_found{false};
       bool implicit_value_found{false};
       std::vector<std::set<std::string>> mes_to_find;
@@ -177,7 +180,7 @@ namespace optspp {
                                       default_values_.end());
       std::set<std::string> i_to_find(implicit_values_.begin(),
                                       implicit_values_.end());
-      std::cout << "Starting check iteration\n";
+
       for (auto it1 = valid_values_.begin(); it1 != valid_values_.end(); ++it1) {
         std::vector<std::string> lhs{it1->second};
         lhs.push_back(it1->first);
@@ -209,12 +212,14 @@ namespace optspp {
       if (i_to_find.size() > 0)
         throw exception::invalid_implicit_value(i_to_find);
 
-      bool mes_ok{true};
-      for (const auto& me_to_find : mes_to_find) {
-        if (me_to_find.size() > 0) mes_ok = false;
-      }
-      if (!mes_ok)
-        throw exception::invalid_mutually_exclusive_value(mes_to_find);
+      // // Do not require mutually exclusive values to be listed in valid values yet
+      // bool mes_ok{true};
+      // for (const auto& me_to_find : mes_to_find) {
+      //   if (me_to_find.size() > 0) mes_ok = false;
+      // }
+      // if (!mes_ok)
+      //   throw exception::invalid_mutually_exclusive_value(mes_to_find);
+
     }
 
     template <typename Property>

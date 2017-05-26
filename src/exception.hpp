@@ -84,7 +84,7 @@ namespace optspp {
       }
 
       virtual const char* what() const noexcept override {
-        std::string s{"Mutually exclusive values not listed among valid values: "};
+        std::string s{"Values specified in mutual exclusiveness constraints are not listed among valid values: "};
         for (const auto& vs : values) {
           bool need_outer_comma{false};
           if (s.size() > 0) {
@@ -189,6 +189,47 @@ namespace optspp {
 
       char name;
       std::string value;
+    };
+
+    struct values_mutual_exclusiveness_violated : value_exception {
+      values_mutual_exclusiveness_violated(const char& _name, const std::vector<std::vector<std::string>>& _values) :
+        name_char(_name),
+        values(_values) {
+      }
+
+      values_mutual_exclusiveness_violated(const std::string& _name, const std::vector<std::vector<std::string>>& _values) :
+        name_str(_name),
+        values(_values) {
+      }
+      
+      virtual const char* what() const noexcept override {
+        std::string name = name_str;
+        if (name_str.size() == 0) name += name_char;
+
+        std::string s{"Mutual exclusiveness constraints violated for parameter '"};
+        s += name + "': ";
+        for (const auto& vs : values) {
+          bool need_outer_comma{false};
+          if (s.size() > 0) {
+            if (need_outer_comma) s += ", ";
+            s += "[";
+            bool need_comma{false};
+            for (const auto& v : vs) {
+              if (need_comma) s += ", ";
+              s += v;
+              need_comma = true;
+            }
+            s += "]";
+            need_outer_comma = true;
+          }
+        }
+        return s.c_str();
+
+      }
+
+      char name_char;
+      std::string name_str;
+      std::vector<std::vector<std::string>> values;
     };
   }
 }
