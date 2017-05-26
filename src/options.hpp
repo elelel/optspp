@@ -95,19 +95,26 @@ namespace optspp {
             auto& o = **o_it;
             ++it;
             if (it == args_.end()) {
-              if (o.implicit_values().size() == 0) throw std::runtime_error("Long parameter '" + name + "' requires a value");
-              values_[*o_it] = o.implicit_values();
+              if (o.implicit_values().size() > 0) {
+                values_[*o_it] = o.implicit_values();
+              } else {
+                throw exception::long_parameter_requires_value(name);
+              }
             } else {
-              values_[*o_it].push_back(*it);
-              ++it;
+              if (o.is_valid_value(*it)) {
+                values_[*o_it].push_back(*it);
+                ++it;
+              } else {
+                throw exception::invalid_long_parameter_value(name, *it);
+              }
             }
-              break;
-            } else {
-              throw std::runtime_error("Unknown long parameter '" + name + "'");
-            }
+            break;
+          } else {
+            throw exception::unknown_long_parameter(name);
           }
         }
       }
+    }
 
     void try_short_name_(std::vector<std::string>::const_iterator& it) {
       // Check if it is a short param
@@ -124,24 +131,32 @@ namespace optspp {
                                      });
             if (o_it != options_.end()) {
               auto& o = **o_it;
-              if (i == names.size() - 1) {
+              if (i == names.size() - 1) {  // Last short option in single pack
                 ++it;
                 if (it == args_.cend()) {
-                  if (o.implicit_values().size() == 0)
+                  if (o.implicit_values().size() > 0) {
+                    values_[*o_it] = o.implicit_values();
+                  } else {
                     throw exception::short_parameter_requires_value(name);
-                  values_[*o_it] = o.implicit_values();
+                  }
                 } else {
-                  values_[*o_it].push_back(*it);
-                  ++it;
+                  if (o.is_valid_value(*it)) {
+                    values_[*o_it].push_back(*it);
+                    ++it;
+                  } else {
+                    throw exception::invalid_short_parameter_value(name, *it);
+                  }
                 }
                 break;
-              } else {
-                if (o.implicit_values().size() == 0)
-                    throw exception::short_parameter_requires_value(name);
-                values_[*o_it] = o.implicit_values();
+              } else {  // Not the last short option in single pack
+                if (o.implicit_values().size() > 0) {
+                  values_[*o_it] = o.implicit_values();
+                } else {
+                  throw exception::short_parameter_requires_value(name);
+                }
               }
             } else {
-              throw std::runtime_error(std::string("Unknown short option '") + name + "'");
+              throw exception::unknown_short_parameter(name);
             }
           }
         }

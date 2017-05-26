@@ -106,6 +106,30 @@ namespace optspp {
       std::string value;
     };
 
+    struct long_parameter_requires_value : value_exception {
+      long_parameter_requires_value(const std::string& _name) :
+        name(_name) {
+      }
+
+      virtual const char* what() const noexcept override {
+        return (std::string("Long parameter '") + name + "' requires a value.").c_str();
+      }
+      
+      std::string name;
+    };
+
+    struct unknown_long_parameter : value_exception {
+      unknown_long_parameter(const std::string& _name) :
+        name(_name) {
+      }
+
+      virtual const char* what() const noexcept override {
+        return (std::string("Unknown long parameter '") + name + "'").c_str();
+      }
+
+      std::string name;
+    };
+    
     struct short_parameter_requires_value : value_exception {
       short_parameter_requires_value(const char& _name) :
         name(_name) {
@@ -117,6 +141,43 @@ namespace optspp {
       
       char name;
     };
-    
+
+    struct unknown_short_parameter : value_exception {
+      unknown_short_parameter(const char& _name) :
+        name(_name) {
+      }
+
+      virtual const char* what() const noexcept override {
+        return (std::string("Unknown short parameter '") + name + "'.").c_str();
+      }
+
+      char name;
+    };
+
+    struct invalid_long_parameter_value : value_exception {
+      invalid_long_parameter_value(const std::string& _name, const std::string& _value) :
+        name(_name), value(_value) {
+      }
+
+      virtual const char* what() const noexcept override {
+        return ("Value '" + value + "' is not valid for long parameter '" + name + "'.").c_str();
+      }
+
+      std::string name;
+      std::string value;
+    };
+
+    struct invalid_short_parameter_value : value_exception {
+      invalid_short_parameter_value(const char& _name, const std::string& _value) :
+        name(_name), value(_value) {
+      }
+
+      virtual const char* what() const noexcept override {
+        return (std::string("Value '") + value + "' is not valid for short parameter '" + name + "'.").c_str();
+      }
+
+      char name;
+      std::string value;
+    };
   }
 }

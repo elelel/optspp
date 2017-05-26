@@ -119,6 +119,14 @@ namespace optspp {
                                parent_containers_.end());
     }
 
+    bool is_valid_value(const std::string& v) const {
+      for (const auto& p : valid_values_) {
+        if (p.first == v) return true;
+        if (std::find(p.second.begin(), p.second.end(), v) != p.second.end()) return true;
+      }
+      return false;
+    }
+
     void check_parents() const;
 
     void check() const {
