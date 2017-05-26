@@ -2,6 +2,8 @@
 
 #include <exception>
 
+#include "predeclare.hpp"
+
 namespace optspp {
   namespace exception {
     struct optspp_exception : std::exception {
@@ -102,15 +104,6 @@ namespace optspp {
       std::string value;
     };
 
-    struct long_parameter_requires_value : value_exception {
-      long_parameter_requires_value(const std::string& _name) :
-        name(_name) {
-        message = std::string("Long parameter '") + name + "' requires a value.";
-      }
-
-      std::string name;
-    };
-
     struct unknown_long_parameter : value_exception {
       unknown_long_parameter(const std::string& _name) :
         name(_name) {
@@ -119,14 +112,14 @@ namespace optspp {
 
       std::string name;
     };
-    
-    struct short_parameter_requires_value : value_exception {
-      short_parameter_requires_value(const char& _name) :
-        name(_name) {
-        message = std::string("Short parameter '") + name + "' requires a value.";
-      }
 
-      char name;
+    struct parameter_requires_value : value_exception {
+      parameter_requires_value(const std::shared_ptr<option>& _o) :
+        o(_o) {
+        message = "Parameter " + option_names_to_str(*o) + " requires a value.";
+      }
+        
+      std::shared_ptr<option> o;
     };
 
     struct unknown_short_parameter : value_exception {
@@ -138,39 +131,25 @@ namespace optspp {
       char name;
     };
 
-    struct invalid_long_parameter_value : value_exception {
-      invalid_long_parameter_value(const std::string& _name, const std::string& _value) :
-        name(_name), value(_value) {
-        message = "Value '" + value + "' is not valid for long parameter '" + name + "'.";
+    struct invalid_parameter_value : value_exception {
+      invalid_parameter_value(const std::shared_ptr<option>& _o, const std::string& _value) :
+        o(_o),
+        value(_value) {
+        message = "Value '" + value + "' is not valid parameter " + option_names_to_str(*o) + ".";
       }
 
-      std::string name;
+    private:
+      std::shared_ptr<option> o;
       std::string value;
     };
 
-    struct invalid_short_parameter_value : value_exception {
-      invalid_short_parameter_value(const char& _name, const std::string& _value) :
-        name(_name), value(_value) {
-        message = std::string("Value '") + value + "' is not valid for short parameter '" + name + "'.";
-      }
-
-      char name;
-      std::string value;
-    };
-
-    struct values_mutual_exclusiveness_violated : value_exception {
-      values_mutual_exclusiveness_violated(const char& _name, const std::vector<std::vector<std::string>>& _values) :
-        name_char(_name),
+    struct value_mutual_exclusiveness_violated : value_exception {
+      value_mutual_exclusiveness_violated(const std::shared_ptr<option>& _o,
+                                          const std::vector<std::vector<std::string>>& _values) :
+        o(_o),
         values(_values) {
-      }
-
-      values_mutual_exclusiveness_violated(const std::string& _name, const std::vector<std::vector<std::string>>& _values) :
-        name_str(_name),
-        values(_values) {
-        std::string name = name_str;
-        if (name_str.size() == 0) name += name_char;
-
-        message = "Mutual exclusiveness constraints violated for parameter '" + name + "': ";
+        message = "Mutual exclusiveness constraints violated for parameter '" + option_names_to_str(*o) +
+          "' values: ";
         for (const auto& vs : values) {
           bool need_outer_comma{false};
           if (values.size() > 0) {
@@ -187,10 +166,9 @@ namespace optspp {
           }
         }
       }
-      
-      char name_char;
-      std::string name_str;
+
       std::vector<std::vector<std::string>> values;
+      std::shared_ptr<option> o;
     };
 
     struct superflous_positional_parameter : value_exception {
@@ -219,11 +197,17 @@ namespace optspp {
 
     struct unknown_parameter : value_exception {
       unknown_parameter(const std::string& _name) :
-        name(_name) {
-        message = "Unknown parameter '" + name + "'.";
+        name_str(_name) {
+        message = "Unknown parameter '" + name_str + "'.";
+      }
+      
+      unknown_parameter(const char& _name) :
+        name_char(_name) {
+        message = std::string("Unknown parameter '") + name_char + "'.";
       }
 
-      std::string name;
+      std::string name_str;
+      char name_char;
     };
 
     struct too_few_values : value_exception {

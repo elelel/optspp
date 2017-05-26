@@ -3,7 +3,6 @@
 namespace optspp {
   struct option;
   struct options;
-  
-  struct long_name;
-
+  struct parser;
+  std::string option_names_to_str(const option& o);
 }

@@ -259,7 +259,7 @@ namespace optspp {
     std::vector<std::shared_ptr<options>> parent_containers_;
     std::string long_name_;
     std::vector<std::string> long_name_synonyms_;
-    char short_name_;
+    char short_name_{0};
     std::vector<char> short_name_synonyms_;
     std::map<std::string, std::vector<std::string>> valid_values_;
     std::vector<std::vector<std::string>> mutually_exclusive_values_;

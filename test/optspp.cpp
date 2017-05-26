@@ -56,6 +56,19 @@ SCENARIO("TDD") {
       REQUIRE(opts["username"].size() == 1);
       REQUIRE(opts["username"][0] == "john");
     }
+
+    THEN("Parse normal with equal") {
+      std::vector<std::string> args{"--admin", "--username", "john", "--password", "secret", "add"};
+      opts.parse(args);
+      
+      REQUIRE(opts["admin"].size() == 1);
+      REQUIRE(opts["admin"][0] == "true");
+      REQUIRE(opts["administrator"][0] == "true");
+      REQUIRE(opts['a'][0] == "true");
+
+      REQUIRE(opts["username"].size() == 1);
+      REQUIRE(opts["username"][0] == "john");
+    }
   }
 
   WHEN("Creating options descriptor with streamline style") {
