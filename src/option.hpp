@@ -9,29 +9,9 @@
 #include "predeclare.hpp"
 
 namespace optspp {
-
-  namespace detail {
-    void apply_option_property(option& o) {
-    }
-    
-    template <typename Arg>
-    void apply_option_property(option& o, Arg property) {
-      property(o);
-    }
-    
-    template <typename Arg, typename... Args>
-    void apply_option_property(option& o, Arg property, Args&&... args) {
-      property(o);
-      apply_option_property(o, std::forward<Args>(args)...);
-    }
-  }
-
   template <typename... Args>
   std::shared_ptr<option> make_option(Args&&... properties) {
-    auto o = std::make_shared<option>();
-    std::cout << "Applying properties\n";
-    detail::apply_option_property(*o, std::forward<Args>(properties)...);
-    std::cout << "Applied properties\n";
+    auto o = std::make_shared<option>(std::forward<Args>(properties)...);
     return o;
   }
 
@@ -56,12 +36,23 @@ namespace optspp {
 
     template <typename... Args>
     option(Args&&... args) {
-      std::cout << "option(...)\n";
-      auto o = make_option(std::forward<Args>(args)...);
-      swap(*o);
-      std::cout << "Created " << long_name_ << "\n";
+      apply_properties(std::forward<Args>(args)...);
     }
 
+    void apply_properties() {
+    }
+
+    template <typename Arg>
+    void apply_properties(Arg property) {
+      property(*this);
+    }
+    
+    template <typename Arg, typename... Args>
+    void apply_properties(Arg property, Args&&... args) {
+      property(*this);
+      apply_properties(std::forward<Args>(args)...);
+    }
+    
     const std::string& long_name() const {
       return long_name_;
     }
@@ -221,7 +212,7 @@ namespace optspp {
 
     template <typename Property>
     option& operator<<(const Property& property) {
-      property(*this);
+      apply_properties(property);
       return *this;
     }
 

@@ -4,23 +4,21 @@
 SCENARIO("TDD") {
   using namespace optspp;
   
-  // Constructor-style options descripton
-  optspp::options opts;
-
   WHEN("Creating options descriptor with constructor style") {
-    auto opts = options(make_option(long_name("admin", {"administrator"}),
-                                    short_name('a'),
-                                    valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}}),
-                                    mutually_exclusive_value({"true", "false"}),
-                                    default_value("false"),
-                                    implicit_value("true"),
-                                    description("Specifies whether the user is administrator")),
-                        make_option(long_name("login", {"username", "user"}),
-                                    short_name('l', {'u'}),
-                                    description("User's login")),
-                        make_option(long_name("password", {"pw", "pass"}),
-                                    short_name('p'))
-                        );
+    auto opts =
+      options(option(long_name("admin", {"administrator"}),
+                     short_name('a'),
+                     valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}}),
+                     mutually_exclusive_value({"true", "false"}),
+                     default_value("false"),
+                     implicit_value("true"),
+                     description("Specifies whether the user is administrator")),
+              option(long_name("login", {"username", "user"}),
+                     short_name('l', {'u'}),
+                     description("User's login")),
+              make_option(long_name("password", {"pw", "pass"}),
+                          short_name('p'))
+              );
     THEN("Non-existent options must stay non-existent") {
       auto option_non_existent = opts.find("non-existent");
       REQUIRE(option_non_existent.get() == nullptr);
@@ -45,21 +43,23 @@ SCENARIO("TDD") {
   }
 
   WHEN("Creating options descriptor with streamline style") {
-    opts << (option()
-             << long_name("admin", {"administrator"})
-             << short_name('a')
-             << valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}})
-             << mutually_exclusive_value({"true", "false"})
-             << default_value("false")
-             << implicit_value("true")
-             << description("Specifies whether the user is administrator"))
-         << (option()
-             << long_name("login", {"username", "user"})
-             << short_name('l', {'u'})
-             << description("User's login"))
-         << (option()
-             << long_name("password", {"pw", "pass"})
-             << short_name('p'));
+    options opts;
+    opts 
+      << (option()
+          << long_name("admin", {"administrator"})
+          << short_name('a')
+          << valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}})
+          << mutually_exclusive_value({"true", "false"})
+          << default_value("false")
+          << implicit_value("true")
+          << description("Specifies whether the user is administrator"))
+      << (option()
+          << long_name("login", {"username", "user"})
+          << short_name('l', {'u'})
+          << description("User's login"))
+      << (option()
+          << long_name("password", {"pw", "pass"})
+          << short_name('p'));
     THEN("Non-existent options must stay non-existent") {
       auto option_non_existent = opts.find("non-existent");
       REQUIRE(option_non_existent.get() == nullptr);
@@ -83,13 +83,6 @@ SCENARIO("TDD") {
     }
   }
 
-
   /*
-  options.add_option(opt);
-  options.by_long_name("login");
-  options.by_short_name("l");
-  options.add_constraint(mutually_exclusive(opt1, opt2, opt3));
-  options.remove_constraint(mutually_exclusive(opt1, opt2));
-  
-  std::vector<std::string> args{"--login", "User Name"};*/
+    std::vector<std::string> args{"--login", "User Name"};*/
 }
