@@ -22,7 +22,28 @@ SCENARIO("TDD") {
                      short_name('l', {'u'}),
                      description("User's login"))
       << make_option(long_name("password", {"pw", "pass"}),
-                     short_name('p'));
+      short_name('p'));
+    THEN("Non-existent options must stay non-existent") {
+      auto option_non_existent = opts.find("non-existent");
+      REQUIRE(option_non_existent.get() == nullptr);
+      auto option_n = opts.find('n');
+      REQUIRE(option_n.get() == nullptr);
+    }
+    THEN("Options have to be findable") {
+      auto option_admin = opts.find("admin");
+      REQUIRE(option_admin.get() != nullptr);
+      auto option_administrator = opts.find("administrator");
+      auto option_a = opts.find('a');
+      REQUIRE(option_admin == option_administrator);
+      REQUIRE(option_admin == option_a);
+
+      auto option_login = opts.find("login");
+      REQUIRE(option_login.get() != nullptr);
+      auto option_l = opts.find('l');
+      auto option_u = opts.find('u');
+      REQUIRE(option_login == option_l);
+      REQUIRE(option_login == option_u);
+    }
   }
 
   WHEN("Creating options descriptor with streamline style") {
@@ -41,6 +62,27 @@ SCENARIO("TDD") {
          << (option()
              << long_name("password", {"pw", "pass"})
              << short_name('p'));
+    THEN("Non-existent options must stay non-existent") {
+      auto option_non_existent = opts.find("non-existent");
+      REQUIRE(option_non_existent.get() == nullptr);
+      auto option_n = opts.find('n');
+      REQUIRE(option_n.get() == nullptr);
+    }
+    THEN("Options have to be findable") {
+      auto option_admin = opts.find("admin");
+      REQUIRE(option_admin.get() != nullptr);
+      auto option_administrator = opts.find("administrator");
+      auto option_a = opts.find('a');
+      REQUIRE(option_admin == option_administrator);
+      REQUIRE(option_admin == option_a);
+
+      auto option_login = opts.find("login");
+      REQUIRE(option_login.get() != nullptr);
+      auto option_l = opts.find('l');
+      auto option_u = opts.find('u');
+      REQUIRE(option_login == option_l);
+      REQUIRE(option_login == option_u);
+    }
   }
 
 

@@ -16,12 +16,15 @@ namespace optspp {
     
     template <typename Arg>
     void apply_option_property(option& o, Arg&& property) {
+      std::cout << "Calling property\n";
       property(o);
     }
     
     template <typename Arg, typename... Args>
     void apply_option_property(option& o, Arg&& property, Args&&... args) {
+      std::cout << "Calling property(...)\n";
       property(o);
+      std::cout << "Called property(...)\n";
       apply_option_property(o, std::forward<Args>(args)...);
     }
   }
@@ -29,15 +32,19 @@ namespace optspp {
   template <typename... Args>
   std::shared_ptr<option> make_option(Args&&... properties) {
     auto o = std::make_shared<option>();
+    std::cout << "Applying properties\n";
     detail::apply_option_property(*o, std::forward<Args>(properties)...);
+    std::cout << "Applied properties\n";
     return o;
   }
 
   struct option : public std::enable_shared_from_this<option> {
     option() {
+      std::cout << "option()\n";
     }
 
     void swap(option& other) {
+      std::cout << "Swapping\n";
       std::swap(parent_containers_, other.parent_containers_);
       std::swap(long_name_, other.long_name_);
       std::swap(long_name_synonyms_, other.long_name_synonyms_);
@@ -52,8 +59,10 @@ namespace optspp {
 
     template <typename... Args>
     option(Args&&... args) {
+      std::cout << "option(...)\n";
       auto o = make_option(std::forward<Args>(args)...);
       swap(*o);
+      std::cout << "Created " << long_name_ << "\n";
     }
 
     const std::string& long_name() const {
@@ -97,9 +106,11 @@ namespace optspp {
     }
 
     void add_valid_value(const std::string& val, const std::vector<std::string>& synonyms) {
-      check();
+      std::cout << "Setting valid values\n";
       valid_values_[val] = synonyms;
+      std::cout << "Set valid values\n";
       check();
+      std::cout << "Checked\n";
     }
 
     const std::vector<std::string>& mutually_exclusive_values() const {
@@ -166,6 +177,7 @@ namespace optspp {
                                       default_values_.end());
       std::set<std::string> i_to_find(implicit_values_.begin(),
                                       implicit_values_.end());
+      std::cout << "Starting check iteration\n";
       for (auto it1 = valid_values_.begin(); it1 != valid_values_.end(); ++it1) {
         std::vector<std::string> lhs{it1->second};
         lhs.push_back(it1->first);
@@ -178,11 +190,13 @@ namespace optspp {
           i_to_find.erase(it1->first);
         
         for (auto it2 = valid_values_.begin(); it2 != valid_values_.end(); ++it2) {
-          std::vector<std::string> rhs{it2->second};
-          rhs.push_back(it2->first);
-          for (const auto& a : lhs) {
-            for (const auto& b : rhs) {
-              if (a == b) throw exception::non_distinct_valid_values(a);
+          if (it1 != it2) {
+            std::vector<std::string> rhs{it2->second};
+            rhs.push_back(it2->first);
+            for (const auto& a : lhs) {
+              for (const auto& b : rhs) {
+                if (a == b) throw exception::non_distinct_valid_values(a);
+              }
             }
           }
         }

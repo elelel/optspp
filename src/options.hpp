@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include <iostream>
+
 #include "exception.hpp"
 #include "predeclare.hpp"
 
@@ -49,14 +51,42 @@ namespace optspp {
       }
     }
 
-    options& operator<<(const std::shared_ptr<option>& o) {
-      if (std::find(options_.begin(), options_.end(), o) == options_.end()) {
-        options_.push_back(o);
-        check();
+    std::shared_ptr<option> find(const std::string& long_name) const {
+      std::cout << "Searching for long name " << long_name << " in " << options_.size() << "\n";
+      for (const auto& o : options_) {
+        if (o->long_name() == long_name) return o;
+        const auto& syns = o->long_name_synonyms();
+        if (std::find(syns.begin(), syns.end(), long_name) != syns.end())
+          return o;
       }
+      return nullptr;
+    }
+
+    std::shared_ptr<option> find(const char& short_name) const {
+      std::cout << "Searching for short name " << short_name << " in " << options_.size() << "\n";
+      for (const auto& o : options_) {
+        if (o->short_name() == short_name) return o;
+        const auto& syns = o->short_name_synonyms();
+        if (std::find(syns.begin(), syns.end(), short_name) != syns.end())
+          return o;
+      }
+      return nullptr;
+    }
+    
+    options& operator<<(const std::shared_ptr<option>& o) {
+      std::cout << "Searching for option " << o << " " << o->long_name() << std::endl;
+      auto found = std::find(options_.begin(), options_.end(), o);
+      if (found == options_.end()) {
+        std::cout << "Adding new option " << o->long_name() << std::endl;
+        options_.push_back(o);
+      }
+      std::cout << "Checking\n" << std::endl;
+      check();
+      return *this;
     }
 
     options& operator<<(const option& o) {
+      std::cout << "Adding option " << o.long_name() << " from value\n";
       auto op = std::make_shared<option>(o);
       return operator<<(op);
     }
