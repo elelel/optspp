@@ -128,7 +128,7 @@ namespace optspp {
       apply_options(o);
       return *this;
     }
-    
+   
   private:
     std::vector<std::shared_ptr<option> > options_;
     std::vector<std::string> long_prefixes_{ {"--"} };
@@ -212,7 +212,7 @@ namespace optspp {
                   }
                 } else {
                   if (o.is_valid_value(*it)) {
-                    values_[*o_it].push_back(*it);
+                    values_[*o_it].push_back(o.main_value(*it));
                     check_values_mutually_exclusive(name, o, values_[*o_it]);
                     ++it;
                   } else {

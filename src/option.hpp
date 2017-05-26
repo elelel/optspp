@@ -107,8 +107,13 @@ namespace optspp {
       check();
     }
 
-    const std::vector<std::string>& default_values() const {
-      return default_values_;
+    std::vector<std::string> default_values() const {
+      std::vector<std::string> rslt;
+      std::transform(default_values_.begin(), default_values_.end(), std::back_inserter(rslt),
+                     [this] (const std::string& s) {
+                       return main_value(s);
+                     });
+      return rslt;
     }
 
     void add_default_value(const std::string& val) {
@@ -116,8 +121,13 @@ namespace optspp {
       check();      
     }
     
-    const std::vector<std::string>& implicit_values() const {
-      return implicit_values_;
+    std::vector<std::string> implicit_values() const {
+      std::vector<std::string> rslt;
+      std::transform(implicit_values_.begin(), implicit_values_.end(), std::back_inserter(rslt),
+                     [this] (const std::string& s) {
+                       return main_value(s);
+                     });
+      return rslt;
     }
 
     void add_implicit_value(const std::string& val) {
@@ -150,6 +160,16 @@ namespace optspp {
         if (std::find(p.second.begin(), p.second.end(), v) != p.second.end()) return true;
       }
       return false;
+    }
+
+    std::string main_value(const std::string& v) const {
+      if (valid_values_.size() == 0) return v;
+      for (const auto& p : valid_values_) {
+        if (p.first == v) return p.first;
+        auto found = std::find(p.second.begin(), p.second.end(), v);
+        if (found != p.second.end()) return *found;
+      }
+      throw std::runtime_error("Unknown value requested. This should never have happened.");
     }
 
     void check_parents() const;
