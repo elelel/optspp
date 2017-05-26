@@ -1,0 +1,7 @@
+#pragma once
+
+#include "../../src/predeclare.hpp"
+#include "../../src/option.hpp"
+#include "../../src/options.hpp"
+#include "../../src/properties.hpp"
+#include "../../src/definitions.hpp"
