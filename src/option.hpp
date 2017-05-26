@@ -106,20 +106,17 @@ namespace optspp {
     }
 
     void add_valid_value(const std::string& val, const std::vector<std::string>& synonyms) {
-      std::cout << "Setting valid values\n";
       valid_values_[val] = synonyms;
-      std::cout << "Set valid values\n";
       check();
-      std::cout << "Checked\n";
     }
 
-    const std::vector<std::string>& mutually_exclusive_values() const {
+    const std::vector<std::vector<std::string>>& mutually_exclusive_values() const {
       return mutually_exclusive_values_;
     }
 
-    void set_mutually_exclusive_values(const std::vector<std::string>& vals) {
+    void add_mutually_exclusive_value(const std::vector<std::string>& vals) {
+      mutually_exclusive_values_.push_back(vals);
       check();
-      mutually_exclusive_values_ = vals;
     }
 
     const std::vector<std::string>& default_values() const {
@@ -127,8 +124,8 @@ namespace optspp {
     }
 
     void add_default_value(const std::string& val) {
-      check();
       default_values_.push_back(val);
+      check();      
     }
     
     const std::vector<std::string>& implicit_values() const {
@@ -136,8 +133,8 @@ namespace optspp {
     }
 
     void add_implicit_value(const std::string& val) {
-      check();
       implicit_values_.push_back(val);
+      check();      
     }
     
     const std::string& description() const {
@@ -159,6 +156,7 @@ namespace optspp {
     }
 
     bool is_valid_value(const std::string& v) const {
+      if (valid_values_.size() == 0) return true;
       for (const auto& p : valid_values_) {
         if (p.first == v) return true;
         if (std::find(p.second.begin(), p.second.end(), v) != p.second.end()) return true;
@@ -171,8 +169,10 @@ namespace optspp {
     void check() const {
       bool default_value_found{false};
       bool implicit_value_found{false};
-      std::set<std::string> me_to_find(mutually_exclusive_values_.begin(),
-                                       mutually_exclusive_values_.end());
+      std::vector<std::set<std::string>> mes_to_find;
+      for (const auto& me : mutually_exclusive_values_) {
+        mes_to_find.push_back(std::set<std::string>(me.begin(), me.end()));
+      }
       std::set<std::string> d_to_find(default_values_.begin(),
                                       default_values_.end());
       std::set<std::string> i_to_find(implicit_values_.begin(),
@@ -182,8 +182,10 @@ namespace optspp {
         std::vector<std::string> lhs{it1->second};
         lhs.push_back(it1->first);
 
-        if (me_to_find.find(it1->first) != me_to_find.end())
-          me_to_find.erase(it1->first);
+        for (auto& me_to_find : mes_to_find) {
+          if (me_to_find.find(it1->first) != me_to_find.end())
+            me_to_find.erase(it1->first);
+        }
         if (d_to_find.find(it1->first) != d_to_find.end())
           d_to_find.erase(it1->first);
         if (i_to_find.find(it1->first) != i_to_find.end())
@@ -206,8 +208,13 @@ namespace optspp {
         throw exception::invalid_default_value(d_to_find);
       if (i_to_find.size() > 0)
         throw exception::invalid_implicit_value(i_to_find);
-      if (me_to_find.size() > 0)
-        throw exception::invalid_mutually_exclusive_value(me_to_find);
+
+      bool mes_ok{true};
+      for (const auto& me_to_find : mes_to_find) {
+        if (me_to_find.size() > 0) mes_ok = false;
+      }
+      if (!mes_ok)
+        throw exception::invalid_mutually_exclusive_value(mes_to_find);
     }
 
     template <typename Property>
@@ -223,7 +230,7 @@ namespace optspp {
     char short_name_;
     std::vector<char> short_name_synonyms_;
     std::map<std::string, std::vector<std::string>> valid_values_;
-    std::vector<std::string> mutually_exclusive_values_;
+    std::vector<std::vector<std::string>> mutually_exclusive_values_;
     std::vector<std::string> default_values_;
     std::vector<std::string> implicit_values_;
     std::string description_;

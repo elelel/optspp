@@ -77,22 +77,33 @@ namespace optspp {
     };
 
     struct invalid_mutually_exclusive_value : option_exception {
-      invalid_mutually_exclusive_value(const std::set<std::string>& _values) :
-        values(_values.begin(), _values.end()) {
+      invalid_mutually_exclusive_value(const std::vector<std::set<std::string>>& _values) {
+        for (const auto& v : _values) {
+          values.push_back(std::vector<std::string>(v.begin(), v.end()));
+        }
       }
 
       virtual const char* what() const noexcept override {
         std::string s{"Mutually exclusive values not listed among valid values: "};
-        bool need_comma{false};
-        for (const auto& v : values) {
-          if (need_comma) s += ", ";
-          s += v;
-          need_comma = true;
+        for (const auto& vs : values) {
+          bool need_outer_comma{false};
+          if (s.size() > 0) {
+            if (need_outer_comma) s += ", ";
+            s += "[";
+            bool need_comma{false};
+            for (const auto& v : vs) {
+              if (need_comma) s += ", ";
+              s += v;
+              need_comma = true;
+            }
+            s += "]";
+            need_outer_comma = true;
+          }
         }
         return s.c_str();
       }
       
-      std::vector<std::string> values;
+      std::vector<std::vector<std::string>> values;
     };
 
     struct non_distinct_valid_values : option_exception {

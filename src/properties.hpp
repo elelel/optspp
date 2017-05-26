@@ -95,24 +95,31 @@ namespace optspp {
     std::vector<valid_value> values_;
   };
 
-  // TODO: Make like valied_values, convert to add
-  struct mutually_exclusive_values {
-    template <typename... Args>
-    mutually_exclusive_values(const std::string& val, Args&&... args) :
-      mutually_exclusive_values(std::forward<Args>(args)...) {
-      vals_.push_back(val);
+  struct mutually_exclusive_value {
+    mutually_exclusive_value(std::initializer_list<std::string> val) :
+      val_(val) {
     }
 
     void operator()(option& o) const {
-      std::cout << "Property mutually_exclusive_values\n";
-      o.set_mutually_exclusive_values(vals_);
+      std::cout << "Property mutually_exclusive_value\n";
+      o.add_mutually_exclusive_value(val_);
     }
   private:
-    std::vector<std::string> vals_;
+    std::vector<std::string> val_;
+  };
 
-    mutually_exclusive_values(const std::string& val) {
-      vals_.push_back(val);
+  struct mutually_exclusive_values {
+    mutually_exclusive_values(std::initializer_list<mutually_exclusive_value> vals) :
+      vals_(vals) {
     }
+
+    void operator()(option& o) const {
+      for (const auto& v : vals_) {
+        v.operator()(o);
+      }
+    }
+  private:
+    std::vector<mutually_exclusive_value> vals_;
   };
 
   // TODO: Add default_values

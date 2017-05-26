@@ -13,7 +13,7 @@ SCENARIO("TDD") {
       << option(long_name("admin", {"administrator"}),
                 short_name('a'),
                 valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}}),
-                mutually_exclusive_values("true", "false"),
+                mutually_exclusive_value({"true", "false"}),
                 default_value("false"),
                 implicit_value("true"),
                 description("Specifies whether the user is administrator"))
@@ -51,7 +51,7 @@ SCENARIO("TDD") {
              << long_name("admin", {"administrator"})
              << short_name('a')
              << valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}})
-             << mutually_exclusive_values("true", "false")
+             << mutually_exclusive_value({"true", "false"})
              << default_value("false")
              << implicit_value("true")
              << description("Specifies whether the user is administrator"))
