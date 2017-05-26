@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -133,10 +134,12 @@ namespace optspp {
     std::vector<std::shared_ptr<option> > options_;
     std::vector<std::string> long_prefixes_{ {"--"} };
     std::vector<std::string> short_prefixes_{ {"-"} };
+    size_t max_positional_args_{std::numeric_limits<size_t>::max()};
 
     std::vector<std::string> args_;
 
     std::map<std::shared_ptr<option>, std::vector<std::string>> values_;
+    std::vector<std::string> positional_;
 
     void parse_() {
       auto it = args_.cbegin();
@@ -237,6 +240,9 @@ namespace optspp {
     }
 
     void try_positional_(std::vector<std::string>::const_iterator& it) {
+      if ((max_positional_args_ != std::numeric_limits<size_t>::max()) &&
+          (positional_.size() == max_positional_args_))
+        throw exception::superflous_positional_parameter(*it);
       // TODO: positional
     }
     
