@@ -178,7 +178,9 @@ namespace optspp {
       max_positional_args_ = n;
     }
 
-    friend struct parser;
+    const std::vector<std::string>& positional() const {
+      return positional_;
+    }
   private:
     std::vector<std::shared_ptr<option> > options_;
     std::vector<std::string> long_prefixes_{ {"--"} };
@@ -287,6 +289,7 @@ namespace optspp {
         parse_positional(it);
       }
       check_value_counts();
+      add_default_values();
     }
 
     void set_value_implicit(const std::shared_ptr<option>& o) {
@@ -328,6 +331,13 @@ namespace optspp {
       }
       if (rslt.size() > 0) {
         throw exception::value_mutual_exclusiveness_violated(o, rslt);
+      }
+    }
+
+    void add_default_values() {
+      for (const auto& o : options_) {
+        if ((o->default_values().size() != 0) && (values_[o].size() == 0))
+          values_[o] = o->default_values();
       }
     }
     

@@ -6,7 +6,14 @@ SCENARIO("TDD") {
   
   WHEN("Creating options descriptor with constructor style") {
     auto opts =
-      options(option(long_name("admin", {"administrator"}),
+      options(option(long_name("login", {"username", "user"}),
+                     short_name('l', {'u'}),
+                     max_count(1),
+                     description("User's login")),
+              make_option(long_name("password", {"pw", "pass"}),
+                          max_count(1),
+                          short_name('p')),
+              option(long_name("admin", {"administrator"}),
                      short_name('a'),
                      valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}}),
                      mutually_exclusive_value({"true", "false"}),
@@ -14,14 +21,11 @@ SCENARIO("TDD") {
                      implicit_value("true"),
                      max_count(1),
                      description("Specifies whether the user is administrator")),
-              option(long_name("login", {"username", "user"}),
-                     short_name('l', {'u'}),
-                     max_count(1),
-                     description("User's login")),
-              make_option(long_name("password", {"pw", "pass"}),
-                          max_count(1),
-                          short_name('p'))
+              option(long_name("active"),
+                     valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}}),
+                     default_value("true"))
               );
+
     THEN("Non-existent options must stay non-existent") {
       auto option_non_existent = opts.find("non-existent");
       REQUIRE(option_non_existent.get() == nullptr);
@@ -55,9 +59,21 @@ SCENARIO("TDD") {
 
       REQUIRE(opts["username"].size() == 1);
       REQUIRE(opts["username"][0] == "john");
+      REQUIRE(opts['u'][0] == "john");
+
+      REQUIRE(opts["password"].size() == 1);
+      REQUIRE(opts["password"][0] == "secret");
+      REQUIRE(opts["pw"][0] == "secret");
+      REQUIRE(opts["pass"][0] == "secret");
+
+      REQUIRE(opts["active"].size() == 1);
+      REQUIRE(opts["active"][0] == "true");
+
+      REQUIRE(opts.positional().size() == 1);
+      REQUIRE(opts.positional()[0] == "add");
     }
 
-    THEN("Parse normal with equal") {
+    THEN("Parse normal with implicit") {
       std::vector<std::string> args{"--admin", "--username", "john", "--password", "secret", "add"};
       opts.parse(args);
       
