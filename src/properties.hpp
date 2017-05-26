@@ -162,4 +162,28 @@ namespace optspp {
   private:
     std::string val_;
   };
+
+  struct max_count {
+    max_count(const size_t& n) :
+      count_(n) {
+    }
+
+    void operator()(option& o) const {
+      o.set_max_count(count_);
+    }
+  private:
+    size_t count_;
+  };
+
+  struct min_count {
+    min_count(const size_t& n) :
+      count_(n) {
+    }
+
+    void operator()(option& o) const {
+      o.set_min_count(count_);
+    }
+  private:
+    size_t count_;
+  };
 }

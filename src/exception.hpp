@@ -201,5 +201,59 @@ namespace optspp {
 
       std::string value;
     };
+
+    struct non_existent_option_value_requested : value_exception {
+      non_existent_option_value_requested(const std::string& _name) :
+        name_str(_name) {
+        message = "Non-existent option's '" + name_str + "' value requested.";
+      }
+      
+      non_existent_option_value_requested(const char& _name) :
+        name_char(_name) {
+        message = std::string("Non-existent option's '") + name_char + "' value requested.";
+      }
+
+      std::string name_str;
+      char name_char;
+    };
+
+    struct unknown_parameter : value_exception {
+      unknown_parameter(const std::string& _name) :
+        name(_name) {
+        message = "Unknown parameter '" + name + "'.";
+      }
+
+      std::string name;
+    };
+
+    struct too_few_values : value_exception {
+      too_few_values(const std::string& _name, const size_t& _min, const size_t& _actual):
+        name(_name),
+        min(_min),
+        actual(_actual) {
+        message = "Too few values for parameter '" + name +
+          "', should be at least " + std::to_string(min) +
+          ", but actually " + std::to_string(actual) + ".";
+      }
+
+      std::string name;
+      size_t min;
+      size_t actual;
+    };
+    
+    struct too_many_values : value_exception {
+      too_many_values(const std::string& _name, const size_t& _max, const size_t& _actual):
+        name(_name),
+        max(_max),
+        actual(_actual) {
+        message = "Too many values for parameter '" + name +
+          "', should be at most " + std::to_string(max) +
+          ", but actually " + std::to_string(actual) + ".";
+      }
+
+      std::string name;
+      size_t max;
+      size_t actual;
+    };
   }
 }

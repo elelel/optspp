@@ -12,11 +12,14 @@ SCENARIO("TDD") {
                      mutually_exclusive_value({"true", "false"}),
                      default_value("false"),
                      implicit_value("true"),
+                     max_count(1),
                      description("Specifies whether the user is administrator")),
               option(long_name("login", {"username", "user"}),
                      short_name('l', {'u'}),
+                     max_count(1),
                      description("User's login")),
               make_option(long_name("password", {"pw", "pass"}),
+                          max_count(1),
                           short_name('p'))
               );
     THEN("Non-existent options must stay non-existent") {
@@ -39,6 +42,19 @@ SCENARIO("TDD") {
       auto option_u = opts.find('u');
       REQUIRE(option_login == option_l);
       REQUIRE(option_login == option_u);
+    }
+
+    THEN("Parse normal") {
+      std::vector<std::string> args{"--admin", "true", "--username", "john", "--password", "secret", "add"};
+      opts.parse(args);
+      
+      REQUIRE(opts["admin"].size() == 1);
+      REQUIRE(opts["admin"][0] == "true");
+      REQUIRE(opts["administrator"][0] == "true");
+      REQUIRE(opts['a'][0] == "true");
+
+      REQUIRE(opts["username"].size() == 1);
+      REQUIRE(opts["username"][0] == "john");
     }
   }
 

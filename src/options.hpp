@@ -129,6 +129,30 @@ namespace optspp {
       apply_options(o);
       return *this;
     }
+
+    void parse(const std::vector<std::string>& args) {
+      args_.clear();
+      std::copy(args.begin(), args.end(), std::back_inserter(args_));
+      parse_();
+    }
+
+    const std::vector<std::string>& operator[](const std::string& name) const {
+      auto o = find(name);
+      if (o != nullptr) {
+        return values_.at(o);
+      } else {
+        throw exception::non_existent_option_value_requested(name);
+      }
+    };
+   
+    const std::vector<std::string>& operator[](const char& name) const {
+      auto o = find(name);
+      if (o != nullptr) {
+        return values_.at(o);
+      } else {
+        throw exception::non_existent_option_value_requested(name);
+      }
+    };
    
   private:
     std::vector<std::shared_ptr<option> > options_;
@@ -142,20 +166,26 @@ namespace optspp {
     std::vector<std::string> positional_;
 
     void parse_() {
+      values_.clear();
+      positional_.clear();
       auto it = args_.cbegin();
       while (it != args_.cend()) {
-        try_long_name_(it);
+        std::cout << "Trying long " << (*it) << "\n";
+        if (try_long_name_(it)) continue;
         if (it == args_.cend()) break;
-        try_short_name_(it);
+        std::cout << "Trying short " << (*it) << "\n";
+        if (try_short_name_(it)) continue;
         if (it == args_.cend()) break;
-        try_positional_(it);
+        if (try_positional_(it)) continue;
       }
+      check_value_counts();
     }
 
-    void try_long_name_(std::vector<std::string>::const_iterator& it) {
+    bool try_long_name_(std::vector<std::string>::const_iterator& it) {
       for (const auto& long_prefix : long_prefixes_) {
         if (it->find(long_prefix) == 0) {
           auto name = it->substr(long_prefix.size(), it->size());
+          std::cout << "Name: " << name << "\n";
           auto o_it = std::find_if(options_.begin(), options_.end(),
                                    [&name] (const std::shared_ptr<option>& o) {
                                      const auto& syns = o->long_name_synonyms();
@@ -164,19 +194,22 @@ namespace optspp {
                                    });
           if (o_it != options_.end()) {
             auto& o = **o_it;
+            // Move to following item
             ++it;
             if (it == args_.end()) {
               if (o.implicit_values().size() > 0) {
                 values_[*o_it] = o.implicit_values();
                 check_values_mutually_exclusive(name, o, values_[*o_it]);
+                return true;
               } else {
                 throw exception::long_parameter_requires_value(name);
               }
             } else {
               if (o.is_valid_value(*it)) {
-                values_[*o_it].push_back(*it);
+                values_[*o_it].push_back(o.main_value(*it));
                 check_values_mutually_exclusive(name, o, values_[*o_it]);
                 ++it;
+                return true;
               } else {
                 throw exception::invalid_long_parameter_value(name, *it);
               }
@@ -187,9 +220,16 @@ namespace optspp {
           }
         }
       }
+      return false;
     }
 
-    void try_short_name_(std::vector<std::string>::const_iterator& it) {
+    bool try_short_name_(std::vector<std::string>::const_iterator& it) {
+      // Skip it if it has long prefix
+      for (const auto& long_prefix : long_prefixes_) {
+        if (it->find(long_prefix) == 0) {
+          throw exception::unknown_parameter(*it);
+        }
+      }
       // Check if it is a short param
       for (const auto& short_prefix : short_prefixes_) {
         if (it->find(short_prefix) == 0) {
@@ -210,14 +250,17 @@ namespace optspp {
                   if (o.implicit_values().size() > 0) {
                     values_[*o_it] = o.implicit_values();
                     check_values_mutually_exclusive(name, o, values_[*o_it]);
+                    return true;
                   } else {
                     throw exception::short_parameter_requires_value(name);
                   }
+                  
                 } else {
                   if (o.is_valid_value(*it)) {
                     values_[*o_it].push_back(o.main_value(*it));
                     check_values_mutually_exclusive(name, o, values_[*o_it]);
                     ++it;
+                    return true;
                   } else {
                     throw exception::invalid_short_parameter_value(name, *it);
                   }
@@ -236,14 +279,37 @@ namespace optspp {
             }
           }
         }
-      } 
+      }
+      return false;
     }
 
-    void try_positional_(std::vector<std::string>::const_iterator& it) {
+    bool try_positional_(std::vector<std::string>::const_iterator& it) {
       if ((max_positional_args_ != std::numeric_limits<size_t>::max()) &&
           (positional_.size() == max_positional_args_))
         throw exception::superflous_positional_parameter(*it);
-      // TODO: positional
+      // Skip it if it has long prefix
+      for (const auto& long_prefix : long_prefixes_) {
+        if (it->find(long_prefix) == 0) {
+          throw exception::unknown_parameter(*it);
+        }
+      }
+      for (const auto& short_prefix : short_prefixes_) {
+        if (it->find(short_prefix) == 0) {
+          throw exception::unknown_parameter(*it);
+        }
+      }
+      positional_.push_back(*it);
+      ++it;
+      return true;
+    }
+
+    void check_value_counts() {
+      for (const auto& p : values_) {
+        if (p.first->max_count() <  p.second.size())
+          throw exception::too_many_values(p.first->long_name(), p.first->max_count(), p.second.size());
+        if (p.first->min_count() > p.second.size())
+          throw exception::too_few_values(p.first->long_name(), p.first->max_count(), p.second.size());
+      }
     }
     
     void check_values_mutually_exclusive(const std::string& name,

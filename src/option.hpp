@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -32,6 +33,8 @@ namespace optspp {
       std::swap(default_values_, other.default_values_);
       std::swap(implicit_values_, other.implicit_values_);
       std::swap(description_, other.description_);
+      std::swap(max_count_, other.max_count_);
+      std::swap(min_count_, other.min_count_);
     }
 
     template <typename... Args>
@@ -136,11 +139,27 @@ namespace optspp {
     }
     
     const std::string& description() const {
-      return description();
+      return description_;
     }
 
     void set_description(const std::string& desc) {
       description_ = desc;
+    }
+
+    const size_t& max_count() const {
+      return max_count_;
+    }
+    
+    void set_max_count(const size_t& n) {
+      max_count_ = n;
+    }
+
+    const size_t& min_count() const {
+      return min_count_;
+    }
+    
+    void set_min_count(const size_t& n) {
+      min_count_ = n;
     }
 
     void add_parent_container(const std::shared_ptr<options>& os) {
@@ -247,6 +266,8 @@ namespace optspp {
     std::vector<std::string> default_values_;
     std::vector<std::string> implicit_values_;
     std::string description_;
+    size_t max_count_{std::numeric_limits<size_t>::max()};
+    size_t min_count_{std::numeric_limits<size_t>::min()};
   };
 
 
