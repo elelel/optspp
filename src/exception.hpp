@@ -107,15 +107,15 @@ namespace optspp {
     };
 
     struct short_parameter_requires_value : value_exception {
-      short_parameter_requires_value(const std::string& _name) :
+      short_parameter_requires_value(const char& _name) :
         name(_name) {
       }
 
       virtual const char* what() const noexcept override {
-        return ("Short parameter '" + name + "' requires a value.").c_str();
+        return (std::string("Short parameter '") + name + "' requires a value.").c_str();
       }
       
-      std::string name;
+      char name;
     };
     
   }
