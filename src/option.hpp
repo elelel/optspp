@@ -25,8 +25,36 @@ namespace optspp {
       apply_option_property(o, std::forward<Args>(args)...);
     }
   }
-  
+
+  template <typename... Args>
+  std::shared_ptr<option> make_option(Args&&... properties) {
+    auto o = std::make_shared<option>();
+    detail::apply_option_property(*o, std::forward<Args>(properties)...);
+    return o;
+  }
+
   struct option : public std::enable_shared_from_this<option> {
+    option() {
+    }
+
+    void swap(option& other) {
+      std::swap(parent_containers_, other.parent_containers_);
+      std::swap(long_name_, other.long_name_);
+      std::swap(long_name_synonyms_, other.long_name_synonyms_);
+      std::swap(short_name_, other.short_name_);
+      std::swap(short_name_synonyms_, other.short_name_synonyms_);
+      std::swap(valid_values_, other.valid_values_);
+      std::swap(mutually_exclusive_values_, other.mutually_exclusive_values_);
+      std::swap(default_values_, other.default_values_);
+      std::swap(implicit_values_, other.implicit_values_);
+      std::swap(description_, other.description_);
+    }
+
+    template <typename... Args>
+    option(Args&&... args) {
+      auto o = make_option(std::forward<Args>(args)...);
+      swap(*o);
+    }
 
     const std::string& long_name() const {
       return long_name_;
@@ -187,12 +215,6 @@ namespace optspp {
     std::string description_;
   };
 
-  template <typename... Args>
-  std::shared_ptr<option> make_option(Args&&... properties) {
-    auto o = std::make_shared<option>();
-    detail::apply_option_property(*o, std::forward<Args>(properties)...);
-    return o;
-  }
 
   
 }

@@ -1,27 +1,48 @@
 #include <catch.hpp>
 #include <optspp/optspp>
 
-SCENARIO("General test") {
+SCENARIO("TDD") {
   using namespace optspp;
+  
+  // Constructor-style options descripton
   optspp::options opts;
 
-  make_option(long_name("admin", {"administrator"}),
-              short_name('a'),
-              valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}}),
-              mutually_exclusive_values("true", "false"),
-              default_value("false"),
-              implicit_value("true"),
-              description("Specifies whether the user is administrator"));
+  WHEN("Creating options descriptor with constructor style") {
+    opts
+      // Using value-based option
+      << option(long_name("admin", {"administrator"}),
+                short_name('a'),
+                valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}}),
+                mutually_exclusive_values("true", "false"),
+                default_value("false"),
+                implicit_value("true"),
+                description("Specifies whether the user is administrator"))
+      // Using shared_ptr<option>
+      << make_option(long_name("login", {"username", "user"}),
+                     short_name('l', {'u'}),
+                     description("User's login"))
+      << make_option(long_name("password", {"pw", "pass"}),
+                     short_name('p'));
+  }
 
-  opts <<
-    (option()
-     << long_name("admin", {"administrator"})
-     << short_name('a')
-     << valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}})
-     << mutually_exclusive_values("true", "false")
-     << default_value("false")
-     << implicit_value("true")
-     << description("Specifies whether the user is administrator"));
+  WHEN("Creating options descriptor with streamline style") {
+    opts << (option()
+             << long_name("admin", {"administrator"})
+             << short_name('a')
+             << valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}})
+             << mutually_exclusive_values("true", "false")
+             << default_value("false")
+             << implicit_value("true")
+             << description("Specifies whether the user is administrator"))
+         << (option()
+             << long_name("login", {"username", "user"})
+             << short_name('l', {'u'})
+             << description("User's login"))
+         << (option()
+             << long_name("password", {"pw", "pass"})
+             << short_name('p'));
+  }
+
 
   /*
   options.add_option(opt);
