@@ -2,7 +2,7 @@
 
 #include <exception>
 
-#include "predeclare.hpp"
+#include "declaration.hpp"
 
 namespace optspp {
   namespace exception {
@@ -14,14 +14,17 @@ namespace optspp {
       std::string message;
     };
 
-    struct option_exception : optspp_exception {
-    };
 
     struct options_exception : optspp_exception {
+    };
+
+    struct option_exception : optspp_exception {
     };
     
     struct value_exception : optspp_exception {
     };
+
+    // --------- Options exceptions ---------
     
     struct long_name_conflict : options_exception {
       long_name_conflict(const std::string& _name) :
@@ -39,6 +42,7 @@ namespace optspp {
       char name;
     };
 
+    // --------- Option exceptions ---------
     struct invalid_default_value : option_exception {
       invalid_default_value(const std::set<std::string>& _values) :
         values(_values.begin(), _values.end()) {
@@ -104,80 +108,129 @@ namespace optspp {
       std::string value;
     };
 
-    struct unknown_long_parameter : value_exception {
-      unknown_long_parameter(const std::string& _name) :
-        name(_name) {
-        message = std::string("Unknown long parameter '") + name + "'";
+    // --------- Value exceptions ---------
+    struct unknown_parameter : value_exception {
+      unknown_parameter(const token& _t, const std::string& _parameter) :
+        t(_t),
+        parameter(_parameter) {
+        message = "Unknown parameter '" + parameter + "'.";
       }
 
-      std::string name;
+      token t;
+      std::string parameter;
     };
 
-    struct parameter_requires_value : value_exception {
-      parameter_requires_value(const std::shared_ptr<option>& _o) :
-        o(_o) {
-        message = "Parameter " + option_names_to_str(*o) + " requires a value.";
+    struct too_many_parameters : value_exception {
+      too_many_parameters(const token& _t, const std::string& _argument) :
+        t(_t),
+        argument(_argument) {
+        message = "Too many parameters, superflous argument '" + argument + "'.";
       }
-        
+
+      token t;
+      std::string argument;
+    };
+
+    struct too_many_values : value_exception {
+      too_many_values(const std::shared_ptr<option>& _o) :
+        o(_o) {
+        message = "Too many values for parameter '" + o->all_names_to_string() + ".";
+      }
+      
+      too_many_values(const token& _t, const std::shared_ptr<option>& _o) :
+        t(_t),
+        o(_o) {
+        message = "Too many values for parameter '" + o->all_names_to_string() + ".";
+      }
+    private:
+      token t;
       std::shared_ptr<option> o;
     };
 
-    struct unknown_short_parameter : value_exception {
-      unknown_short_parameter(const char& _name) :
-        name(_name) {
-        message = std::string("Unknown short parameter '") + name + "'.";
+    struct too_few_values : value_exception {
+      too_few_values(const std::shared_ptr<option>& _o) :
+        o(_o) {
+        message = "Too few values for parameter '" + o->all_names_to_string() + ".";
       }
-
-      char name;
+      
+      too_few_values(const token& _t, const std::shared_ptr<option>& _o) :
+        t(_t),
+        o(_o) {
+        message = "Too few values for parameter '" + o->all_names_to_string() + ".";
+      }
+    private:
+      token t;
+      std::shared_ptr<option> o;
+    };
+    
+    struct parameter_requires_value : value_exception {
+      parameter_requires_value(const token& _t, const std::shared_ptr<option>& _o) :
+        t(_t),
+        o(_o) {
+        message = "Parameter " + o->all_names_to_string() + " requires a value.";
+      }
+      
+    private:
+      token t;
+      std::shared_ptr<option> o;
     };
 
     struct invalid_parameter_value : value_exception {
-      invalid_parameter_value(const std::shared_ptr<option>& _o, const std::string& _value) :
-        o(_o),
-        value(_value) {
-        message = "Value '" + value + "' is not valid parameter " + option_names_to_str(*o) + ".";
+      invalid_parameter_value(const token& _t, const std::shared_ptr<option>& _o, const std::string& s) :
+        t(_t),
+        o(_o) {
+        message = "Invalied value '" + s + "' for parameter " + o->all_names_to_string() + ".";
       }
-
+      
     private:
+      token t;
       std::shared_ptr<option> o;
-      std::string value;
     };
 
+
+    
     struct value_mutual_exclusiveness_violated : value_exception {
       value_mutual_exclusiveness_violated(const std::shared_ptr<option>& _o,
                                           const std::vector<std::vector<std::string>>& _values) :
         o(_o),
         values(_values) {
-        message = "Mutual exclusiveness constraints violated for parameter '" + option_names_to_str(*o) +
-          "' values: ";
+        message = "Mutual exclusiveness constraints violated for parameter '" + o->all_names_to_string() +
+          "' values: " + values_to_string();
+      }
+
+      value_mutual_exclusiveness_violated(const token& _t,
+                                          const std::shared_ptr<option>& _o,
+                                          const std::vector<std::vector<std::string>>& _values) :
+        t(_t),
+        o(_o),
+        values(_values) {
+        message = "Mutual exclusiveness constraints violated for parameter '" + o->all_names_to_string() +
+          "' values: " + values_to_string();
+      }
+      
+      std::string values_to_string() const {
+        std::string s;
         for (const auto& vs : values) {
           bool need_outer_comma{false};
           if (values.size() > 0) {
-            if (need_outer_comma) message += ", ";
-            message += "[";
+            if (need_outer_comma) s += ", ";
+            s += "[";
             bool need_comma{false};
             for (const auto& v : vs) {
-              if (need_comma) message += ", ";
-              message += v;
+              if (need_comma) s += ", ";
+              s += v;
               need_comma = true;
             }
-            message += "]";
+            s += "]";
             need_outer_comma = true;
           }
         }
       }
 
+      token t;
       std::vector<std::vector<std::string>> values;
       std::shared_ptr<option> o;
-    };
-
-    struct superflous_positional_parameter : value_exception {
-      superflous_positional_parameter(const std::string& _value) :
-        value(_value) {
-        message = "Superflous positional parameter '" + value + "'";
-      }
-
-      std::string value;
+      
     };
 
     struct non_existent_option_value_requested : value_exception {
@@ -195,49 +248,5 @@ namespace optspp {
       char name_char;
     };
 
-    struct unknown_parameter : value_exception {
-      unknown_parameter(const std::string& _name) :
-        name_str(_name) {
-        message = "Unknown parameter '" + name_str + "'.";
-      }
-      
-      unknown_parameter(const char& _name) :
-        name_char(_name) {
-        message = std::string("Unknown parameter '") + name_char + "'.";
-      }
-
-      std::string name_str;
-      char name_char;
-    };
-
-    struct too_few_values : value_exception {
-      too_few_values(const std::string& _name, const size_t& _min, const size_t& _actual):
-        name(_name),
-        min(_min),
-        actual(_actual) {
-        message = "Too few values for parameter '" + name +
-          "', should be at least " + std::to_string(min) +
-          ", but actually " + std::to_string(actual) + ".";
-      }
-
-      std::string name;
-      size_t min;
-      size_t actual;
-    };
-    
-    struct too_many_values : value_exception {
-      too_many_values(const std::string& _name, const size_t& _max, const size_t& _actual):
-        name(_name),
-        max(_max),
-        actual(_actual) {
-        message = "Too many values for parameter '" + name +
-          "', should be at most " + std::to_string(max) +
-          ", but actually " + std::to_string(actual) + ".";
-      }
-
-      std::string name;
-      size_t max;
-      size_t actual;
-    };
   }
 }

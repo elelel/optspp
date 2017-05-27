@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "predeclare.hpp"
+#include "declaration.hpp"
 
 namespace optspp {
 
