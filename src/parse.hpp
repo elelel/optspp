@@ -116,14 +116,16 @@ namespace optspp {
         auto separated = separation(unprefixed, os_.separators_);
         // See if we have to unpack many short parameters with single prefix
         if (separated.key.size() > 1) {
-          if (separated) {
-            tokens_.pop_front();
+          tokens_.pop_front();
+          if (separated) { // Needed to push empty string in case we have -abcd=
             tokens_.push_front({
                 t.pos_arg_num, t.pos_in_arg + separated.value_pos, separated.value});
-            const auto& names = separated.key;
-            for (size_t i = names.size() - 1; i >= 0; --i) {
-              tokens_.push_front({t.pos_arg_num, t.pos_in_arg + i, std::string() + names[i]});
-            }
+          }
+          const auto& names = separated.key;
+          size_t i = names.size();
+          for (auto ri = names.rbegin(); ri != names.rend(); ++ri) {
+            --i;
+            tokens_.push_front({t.pos_arg_num, t.pos_in_arg + i, std::string("-") + names[i]});
           }
           return true;
         }

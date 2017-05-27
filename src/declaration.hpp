@@ -19,8 +19,6 @@ namespace optspp {
     template <typename... Args>
     options(Args&&... args);
     
-    void swap(options& other);
-    
     void apply();
     void apply(const std::shared_ptr<option>& o);
     template <typename... Args>
@@ -59,8 +57,6 @@ namespace optspp {
     size_t max_positional_count_{std::numeric_limits<size_t>::max()};
     size_t min_positional_count_{std::numeric_limits<size_t>::min()};
 
-    std::vector<std::string> args_;
-    
     std::map<std::shared_ptr<option>, std::vector<std::string>> values_;
     std::vector<std::string> positional_;
 
@@ -97,8 +93,6 @@ namespace optspp {
     template <typename... Args>
     option(Args&&... args);
     
-    void swap(option& other);
-
     void apply();
     template <typename Arg>
     void apply(Arg property);

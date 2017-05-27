@@ -26,16 +26,6 @@ namespace optspp {
   options::options(Args&&... args) {
     apply(std::forward<Args>(args)...);
   }
-    
-  void options::swap(options& other) {
-    std::swap(options_, other.options_);
-    std::swap(long_prefixes_, other.long_prefixes_);
-    std::swap(short_prefixes_, other.short_prefixes_);
-
-    std::swap(args_, other.args_);
-
-    std::swap(values_, other.values_);
-  }
 
   void options::apply() {
   }
@@ -141,9 +131,7 @@ namespace optspp {
   }
 
   void options::parse(const std::vector<std::string>& args) {
-    args_.clear();
-    std::copy(args.begin(), args.end(), std::back_inserter(args_));
-    parser p(*this, args_);
+    parser p(*this, args);
     p.parse();
     add_default_values();
     check_results();
