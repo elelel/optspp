@@ -137,13 +137,13 @@ namespace optspp {
     check_results();
   }
 
-  void options::check_results() const {
-    for (const auto& p : values_) {
-      const auto& o = p.first;
+  void options::check_results() {
+    for (const auto& o : options_) {
+      auto& v = values_[o];
       // Check value counts
-      if (o->max_count() <  p.second.size())
+      if (o->max_count() < v.size())
         throw exception::too_many_values(o);
-      if (o->min_count() > p.second.size())
+      if (o->min_count() > v.size())
         throw exception::too_few_values(o);
       // Value mutual exclusiveness
       check_value_mutually_exclusive(o);

@@ -62,7 +62,7 @@ namespace optspp {
 
     void check_value_mutually_exclusive(const std::shared_ptr<option>& o) const;
 
-    void check_results() const;
+    void check_results();
 
     void add_default_values();
   };

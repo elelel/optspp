@@ -8,6 +8,7 @@ SCENARIO("TDD") {
     auto opts =
       options(option(long_name("login", {"username", "user"}),
                      short_name('l', {'u'}),
+                     min_count(1),
                      max_count(1),
                      description("User's login")),
               option(long_name("password", {"pw", "pass"}),
@@ -82,19 +83,45 @@ SCENARIO("TDD") {
       REQUIRE(opts["admin"][0] == "true");
       REQUIRE(opts["administrator"][0] == "true");
       REQUIRE(opts['a'][0] == "true");
-    }
-    
-    THEN("Parse normal with short name") {
-      std::vector<std::string> args{"--admin", "--username", "john", "-p", "secret", "add"};
-      opts.parse(args);
+
       REQUIRE(opts["username"].size() == 1);
       REQUIRE(opts["username"][0] == "john");
+      REQUIRE(opts['u'][0] == "john");
 
       REQUIRE(opts["password"].size() == 1);
       REQUIRE(opts["password"][0] == "secret");
       REQUIRE(opts["pw"][0] == "secret");
       REQUIRE(opts["pass"][0] == "secret");
       REQUIRE(opts['p'][0] == "secret");
+
+      REQUIRE(opts["active"].size() == 1);
+      REQUIRE(opts["active"][0] == "true");
+
+      REQUIRE(opts.positional().size() == 1);
+      REQUIRE(opts.positional()[0] == "add");
+    }
+    
+    THEN("Parse normal with short name") {
+      std::vector<std::string> args{"--admin", "--username", "john", "-p", "secret", "add"};
+      opts.parse(args);
+      
+      REQUIRE(opts["admin"].size() == 1);
+      REQUIRE(opts["admin"][0] == "true");
+      REQUIRE(opts["administrator"][0] == "true");
+      REQUIRE(opts['a'][0] == "true");
+
+      REQUIRE(opts["username"].size() == 1);
+      REQUIRE(opts["username"][0] == "john");
+      REQUIRE(opts['u'][0] == "john");
+
+      REQUIRE(opts["password"].size() == 1);
+      REQUIRE(opts["password"][0] == "secret");
+      REQUIRE(opts["pw"][0] == "secret");
+      REQUIRE(opts["pass"][0] == "secret");
+      REQUIRE(opts['p'][0] == "secret");
+
+      REQUIRE(opts["active"].size() == 1);
+      REQUIRE(opts["active"][0] == "true");
 
       REQUIRE(opts.positional().size() == 1);
       REQUIRE(opts.positional()[0] == "add");
@@ -107,6 +134,27 @@ SCENARIO("TDD") {
       REQUIRE(opts["admin"][0] == "true");
       REQUIRE(opts["administrator"][0] == "true");
       REQUIRE(opts['a'][0] == "true");
+
+      REQUIRE(opts["username"].size() == 1);
+      REQUIRE(opts["username"][0] == "john");
+      REQUIRE(opts['u'][0] == "john");
+
+      REQUIRE(opts["password"].size() == 1);
+      REQUIRE(opts["password"][0] == "secret");
+      REQUIRE(opts["pw"][0] == "secret");
+      REQUIRE(opts["pass"][0] == "secret");
+      REQUIRE(opts['p'][0] == "secret");
+
+      REQUIRE(opts["active"].size() == 1);
+      REQUIRE(opts["active"][0] == "true");
+
+      REQUIRE(opts.positional().size() == 1);
+      REQUIRE(opts.positional()[0] == "add");
+    }
+
+    THEN("Invalid invocation: required parameter missed") {
+      std::vector<std::string> args{"-ap", "secret", "add"};
+      REQUIRE_THROWS_AS(opts.parse(args), exception::too_few_values);
     }
     
   }
