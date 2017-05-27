@@ -10,9 +10,9 @@ SCENARIO("TDD") {
                      short_name('l', {'u'}),
                      max_count(1),
                      description("User's login")),
-              make_option(long_name("password", {"pw", "pass"}),
-                          max_count(1),
-                          short_name('p')),
+              option(long_name("password", {"pw", "pass"}),
+                     max_count(1),
+                     short_name('p')),
               option(long_name("admin", {"administrator"}),
                      short_name('a'),
                      valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}}),
@@ -21,7 +21,7 @@ SCENARIO("TDD") {
                      implicit_value("true"),
                      max_count(1),
                      description("Specifies whether the user is administrator")),
-              option(long_name("active"),
+              make_option(long_name("active"),
                      valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}}),
                      default_value("true"))
               );

@@ -10,6 +10,7 @@
 
 #include "exception.hpp"
 #include "predeclare.hpp"
+#include "parse.hpp"
 
 namespace optspp {
   template <typename... Args>
@@ -185,6 +186,7 @@ namespace optspp {
     std::vector<std::shared_ptr<option> > options_;
     std::vector<std::string> long_prefixes_{ {"--"} };
     std::vector<std::string> short_prefixes_{ {"-"} };
+    std::vector<std::string> separators_{ {"="} };
     size_t max_positional_args_{std::numeric_limits<size_t>::max()};
     size_t min_positional_args_{std::numeric_limits<size_t>::min()};
 
@@ -193,31 +195,9 @@ namespace optspp {
     std::map<std::shared_ptr<option>, std::vector<std::string>> values_;
     std::vector<std::string> positional_;
 
-    const std::string as_long_name(const std::string& token) {
-      std::string name;
-      for (const auto& long_prefix : long_prefixes_) {
-        if (token.find(long_prefix) == 0) {
-          name = token.substr(long_prefix.size(), token.size());
-          break;
-        }
-      }
-      return name;
-    }
-
-    const std::vector<char> as_short_names(const std::string& token) {
-      std::vector<char> names;
-      for (const auto& long_prefix : long_prefixes_) {
-        if (token.find(long_prefix) == 0) {
-          auto names_str = token.substr(long_prefix.size(), token.size());
-          for (const auto& c : names_str) names.push_back(c);
-          break;
-        }
-      }
-      return names;
-    }
 
     bool parse_long_option(std::vector<std::string>::iterator& it) {
-      std::string name = as_long_name(*it);
+      std::string name = parsing::as_long_name(*it, long_prefixes_);
       if (name != "") {
         auto o = find(name);
         if (o == nullptr) throw exception::unknown_parameter(name);
@@ -228,7 +208,8 @@ namespace optspp {
           return true;
         }
         // Next arg is an option
-        if ((as_long_name(*it) != "") || (as_short_names(*it).size() != 0)) {
+        if (parsing::is_prefixed(*it, long_prefixes_) ||
+            parsing::is_prefixed(*it, short_prefixes_)) {
           set_value_implicit(o);
           return true;
         }
@@ -241,7 +222,7 @@ namespace optspp {
     }
 
     bool parse_short_options(std::vector<std::string>::iterator& it) {
-      std::vector<char> names = as_short_names(*it);
+      std::vector<char> names = parsing::as_short_names(*it, short_prefixes_);
       for (auto name_it = names.begin(); name_it != names.end(); ++name_it) {
         auto o = find(*name_it);
         if (o == nullptr) throw exception::unknown_parameter(*name_it);
@@ -254,7 +235,8 @@ namespace optspp {
             return true;
           } 
           // Next arg is an option
-          if ((as_long_name(*it) != "") || (as_short_names(*it).size() != 0)) {
+          if (parsing::is_prefixed(*it, long_prefixes_) ||
+              parsing::is_prefixed(*it, short_prefixes_)) {
             set_value_implicit(o);
             return true;
           }
@@ -268,7 +250,8 @@ namespace optspp {
     }
 
     bool parse_positional(std::vector<std::string>::iterator& it) {
-      if ((as_long_name(*it) == "") && (as_short_names(*it).size() == 0)) {
+      if (!parsing::is_prefixed(*it, long_prefixes_) &&
+          !parsing::is_prefixed(*it, short_prefixes_)) {
         if ((max_positional_args_ != std::numeric_limits<size_t>::max()) &&
             (positional_.size() == max_positional_args_))
           throw exception::superflous_positional_parameter(*it);
