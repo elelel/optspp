@@ -21,7 +21,6 @@ namespace optspp {
     }
 
     void operator()(option& o) const {
-      std::cout << "Property long_name\n";
       o.set_long_name(name_);
       if (synonyms_.size() > 0) {
         o.set_long_name_synonyms(synonyms_);
@@ -45,7 +44,6 @@ namespace optspp {
     }
 
     void operator()(option& o) const {
-      std::cout << "Property short_name\n";
       o.set_short_name(name_);
       if (synonyms_.size() > 0) {
         o.set_short_name_synonyms(synonyms_);
@@ -68,7 +66,6 @@ namespace optspp {
     }
 
     void operator()(option& o) const {
-      std::cout << "Property valid_value\n";
       o.add_valid_value(value_, synonyms_);
     }
     
@@ -86,7 +83,6 @@ namespace optspp {
     }
 
     void operator()(option& o) const {
-      std::cout << "Property valid_values\n";
       for (const auto& v : values_) {
         v.operator()(o);
       }
@@ -101,7 +97,6 @@ namespace optspp {
     }
 
     void operator()(option& o) const {
-      std::cout << "Property mutually_exclusive_value\n";
       o.add_mutually_exclusive_value(val_);
     }
   private:
@@ -129,7 +124,6 @@ namespace optspp {
     }
 
     void operator()(option& o) const {
-      std::cout << "Property default_value\n";
       o.add_default_value(val_);
     }
   private:
@@ -143,7 +137,6 @@ namespace optspp {
     }
 
     void operator()(option& o) const {
-      std::cout << "Property implicit_value\n";
       o.add_implicit_value(val_);
     }
   private:
@@ -156,7 +149,6 @@ namespace optspp {
     }
 
     void operator()(option& o) const {
-      std::cout << "Property description\n";
       o.set_description(val_);
     }
   private:

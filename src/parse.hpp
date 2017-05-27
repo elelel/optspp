@@ -46,7 +46,6 @@ namespace optspp {
       os_.values_.clear();
       os_.positional_.clear();
       while (tokens_.size() > 0) {
-        std::cout << "Token " << tokens_.front().s << "\n";
         if (parse_long_option()) continue;
         if (parse_short_options()) continue;
         if (parse_positional()) continue;
@@ -141,9 +140,7 @@ namespace optspp {
 
     bool parse_positional() {
       const auto& t = tokens_.front();
-      std::cout << "Checking positional " << t.s << "\n";
       if (!is_short_prefixed(t.s) && !(is_short_prefixed(t.s))) {
-        std::cout << "Pushing positional " << t.s << "\n";
         os_.positional_.push_back(t.s);
         tokens_.pop_front();
         if (os_.max_positional_count_ < os_.positional_.size())
