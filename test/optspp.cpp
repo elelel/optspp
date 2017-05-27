@@ -75,6 +75,16 @@ SCENARIO("TDD") {
       REQUIRE(opts.positional()[0] == "add");
     }
 
+    THEN("Parse normal with value synonym") {
+      std::vector<std::string> args{"--admin", "yes", "--username", "john", "--password", "secret", "add"};
+      opts.parse(args);
+      
+      REQUIRE(opts["admin"].size() == 1);
+      REQUIRE(opts["admin"][0] == "true");
+      REQUIRE(opts["administrator"][0] == "true");
+      REQUIRE(opts['a'][0] == "true");
+    }
+
     THEN("Parse normal with implicit") {
       std::vector<std::string> args{"--admin", "--username", "john", "--password", "secret", "add"};
       opts.parse(args);
@@ -156,6 +166,12 @@ SCENARIO("TDD") {
       std::vector<std::string> args{"-ap", "secret", "add"};
       REQUIRE_THROWS_AS(opts.parse(args), exception::too_few_values);
     }
+
+    THEN("Invalid invocation: invalid value specified") {
+      std::vector<std::string> args{"--admin", "yeah", "--username", "john", "--password", "secret", "add"};
+      REQUIRE_THROWS_AS(opts.parse(args), exception::invalid_parameter_value);
+     }
+    
     
   }
 

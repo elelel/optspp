@@ -174,7 +174,7 @@ namespace optspp {
     for (const auto& p : valid_values_) {
       if (p.first == v) return p.first;
       auto found = std::find(p.second.begin(), p.second.end(), v);
-      if (found != p.second.end()) return *found;
+      if (found != p.second.end()) return p.first;
     }
     throw std::runtime_error("Unknown value requested. This should never have happened.");
   }
