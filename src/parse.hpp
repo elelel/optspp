@@ -109,16 +109,16 @@ namespace optspp {
     }
 
     bool parse_short_options() {
-      // Copy-construct and remove the token from deque early
+      // Copy-construct
       const auto t = tokens_.front();
       if (is_short_prefixed(t.s)) {
-        tokens_.pop_front();
         auto unprefixed = extract_unprefixed(t.s, os_.short_prefixes_);
         // Check if we have a specially separated value
         auto separated = separation(unprefixed, os_.separators_);
         // See if we have to unpack many short parameters with single prefix
         if (separated.key.size() > 1) {
           if (separated) {
+            tokens_.pop_front();
             tokens_.push_front({
                 t.pos_arg_num, t.pos_in_arg + separated.value_pos, separated.value});
             const auto& names = separated.key;

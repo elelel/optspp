@@ -65,6 +65,7 @@ SCENARIO("TDD") {
       REQUIRE(opts["password"][0] == "secret");
       REQUIRE(opts["pw"][0] == "secret");
       REQUIRE(opts["pass"][0] == "secret");
+      REQUIRE(opts['p'][0] == "secret");
 
       REQUIRE(opts["active"].size() == 1);
       REQUIRE(opts["active"][0] == "true");
@@ -84,6 +85,31 @@ SCENARIO("TDD") {
 
       REQUIRE(opts["username"].size() == 1);
       REQUIRE(opts["username"][0] == "john");
+
+      REQUIRE(opts.positional().size() == 1);
+      REQUIRE(opts.positional()[0] == "add");
+    }
+    
+    THEN("Parse normal with short names") {
+      std::vector<std::string> args{"--admin", "--username", "john", "-p", "secret", "add"};
+      opts.parse(args);
+      
+      REQUIRE(opts["admin"].size() == 1);
+      REQUIRE(opts["admin"][0] == "true");
+      REQUIRE(opts["administrator"][0] == "true");
+      REQUIRE(opts['a'][0] == "true");
+
+      REQUIRE(opts["username"].size() == 1);
+      REQUIRE(opts["username"][0] == "john");
+
+      REQUIRE(opts["password"].size() == 1);
+      REQUIRE(opts["password"][0] == "secret");
+      REQUIRE(opts["pw"][0] == "secret");
+      REQUIRE(opts["pass"][0] == "secret");
+      REQUIRE(opts['p'][0] == "secret");
+
+      REQUIRE(opts.positional().size() == 1);
+      REQUIRE(opts.positional()[0] == "add");
     }
   }
 
