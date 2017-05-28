@@ -171,7 +171,12 @@ SCENARIO("TDD") {
       std::vector<std::string> args{"--admin", "yeah", "--username", "john", "--password", "secret", "add"};
       REQUIRE_THROWS_AS(opts.parse(args), exception::invalid_parameter_value);
      }
-    
+
+    THEN("Invalid invocation: no value specified") {
+      std::vector<std::string> args{"--admin", "true", "--username", "--password", "secret", "add"};
+      REQUIRE_THROWS_AS(opts.parse(args), exception::parameter_requires_value);
+    }
+
     
   }
 

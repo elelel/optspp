@@ -19,12 +19,12 @@ namespace optspp {
     template <typename... Args>
     options(Args&&... args);
     
-    void apply();
-    void apply(const std::shared_ptr<option>& o);
+    void update();
+    void update(const std::shared_ptr<option>& o);
     template <typename... Args>
-    void apply(const std::shared_ptr<option>& o, Args&&... args);
+    void update(const std::shared_ptr<option>& o, Args&&... args);
     template <typename... Args>
-    void apply(const option& o, Args&&... args);
+    void update(const option& o, Args&&... args);
     
     void add(const std::shared_ptr<option>& o);
     void remove(const std::shared_ptr<option>& o);
@@ -93,11 +93,11 @@ namespace optspp {
     template <typename... Args>
     option(Args&&... args);
     
-    void apply();
+    void update();
     template <typename Arg>
-    void apply(Arg property);
+    void update(Arg property);
     template <typename Arg, typename... Args>
-    void apply(Arg property, Args&&... args);
+    void update(Arg property, Args&&... args);
     template <typename Property>
     option& operator<<(const Property& property);
 

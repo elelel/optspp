@@ -21,26 +21,26 @@ namespace optspp {
 
   template <typename... Args>
   option::option(Args&&... args) {
-    apply(std::forward<Args>(args)...);
+    update(std::forward<Args>(args)...);
   }
 
-  void option::apply() {
+  void option::update() {
   }
 
   template <typename Arg>
-  void option::apply(Arg property) {
+  void option::update(Arg property) {
     property(*this);
   }
     
   template <typename Arg, typename... Args>
-  void option::apply(Arg property, Args&&... args) {
+  void option::update(Arg property, Args&&... args) {
     property(*this);
-    apply(std::forward<Args>(args)...);
+    update(std::forward<Args>(args)...);
   }
 
   template <typename Property>
   option& option::operator<<(const Property& property) {
-    apply(property);
+    update(property);
     return *this;
   }
     
