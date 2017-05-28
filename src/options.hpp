@@ -3,10 +3,9 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
-
-#include <iostream>
 
 #include "exception.hpp"
 #include "declaration.hpp"
@@ -172,6 +171,14 @@ namespace optspp {
     }
   }
 
+  template <typename T>
+  T options::as(const std::string& name) const {
+    std::istringstream i(this->operator[](name));
+    T value;
+    i >> value;
+    return value;
+  }
+  
   const std::vector<std::string>&
   options::operator[](const std::string& name) const {
     auto o = find(name);

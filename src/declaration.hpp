@@ -40,7 +40,9 @@ namespace optspp {
     options& operator<<(const Option& o);
     
     void parse(const std::vector<std::string>& args);
-    
+
+    template <typename T>
+    T as(const std::string& name) const;
     const std::vector<std::string>& operator[](const std::string& name) const;
     const std::vector<std::string>& operator[](const char& name) const;
 
