@@ -3,6 +3,13 @@
 
 SCENARIO("TDD") {
   using namespace optspp;
+
+  WHEN("Creating min property") {
+    option source = min_count(1);
+    REQUIRE(source.min_count() == 1);
+    auto applied = long_name("test") | min_count(1);
+    REQUIRE(applied.min_count() == 1);
+  }
   
   WHEN("Creating options descriptor with constructor style") {
     auto opts =
@@ -33,6 +40,7 @@ SCENARIO("TDD") {
       auto option_n = opts.find('n');
       REQUIRE(option_n.get() == nullptr);
     }
+    
     THEN("Options have to be findable") {
       auto option_admin = opts.find("admin");
       REQUIRE(option_admin.get() != nullptr);
@@ -180,24 +188,21 @@ SCENARIO("TDD") {
     
   }
 
-  WHEN("Creating options descriptor with streamline style") {
+  WHEN("Creating options descriptor with streamline/pipeline style") {
     options opts;
-    opts 
-      << (option()
-          << long_name("admin", {"administrator"})
-          << short_name('a')
-          << valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}})
-          << mutually_exclusive_value({"true", "false"})
-          << default_value("false")
-          << implicit_value("true")
-          << description("Specifies whether the user is administrator"))
-      << (option()
-          << long_name("login", {"username", "user"})
-          << short_name('l', {'u'})
-          << description("User's login"))
-      << (option()
-          << long_name("password", {"pw", "pass"})
-          << short_name('p'));
+    opts << (long_name("admin", {"administrator"})
+             | short_name('a')
+             | valid_values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}})
+             | mutually_exclusive_value({"true", "false"})
+             | default_value("false")
+             | implicit_value("true")
+             | description("Specifies whether the user is administrator"))
+         << (long_name("login", {"username", "user"})
+             << short_name('l', {'u'})
+             << description("User's login"))
+         << (option()
+             << long_name("password", {"pw", "pass"})
+             << short_name('p'));
     THEN("Non-existent options must stay non-existent") {
       auto option_non_existent = opts.find("non-existent");
       REQUIRE(option_non_existent.get() == nullptr);
@@ -221,6 +226,4 @@ SCENARIO("TDD") {
     }
   }
 
-  /*
-    std::vector<std::string> args{"--login", "User Name"};*/
 }

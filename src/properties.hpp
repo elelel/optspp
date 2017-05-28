@@ -8,174 +8,79 @@
 #include "declaration.hpp"
 
 namespace optspp {
+  long_name::long_name(const std::string& name) {
+    set_long_name(name);
+  }
 
-  // Sets option's long name and synonyms
-  struct long_name {
-    long_name(const std::string& name) :
-      name_(name) {
-    }
+  long_name::long_name(const std::string& name, std::initializer_list<std::string> synonyms) {
+    set_long_name(name);
+    for (const auto& s : synonyms) add_long_name_synonym(s);
+  }
+
+  short_name::short_name(const char& name) {
+    set_short_name(name);
+  }
+
+  short_name::short_name(const char& name, std::initializer_list<char> synonyms) {
+    set_short_name(name);
+    for (const auto& s : synonyms) add_short_name_synonym(s);
+  }
+  
+  valid_value::valid_value(const std::string& value) {
+    add_valid_value(value, {});
+  }
     
-    long_name(const std::string& name, std::initializer_list<std::string> synonyms) :
-      name_(name),
-      synonyms_(synonyms) {
-    }
+  valid_value::valid_value(const std::string& value, std::initializer_list<std::string> synonyms) {
+    add_valid_value(value, synonyms);
+  }
 
-    void operator()(option& o) const {
-      o.set_long_name(name_);
-      if (synonyms_.size() > 0) {
-        o.set_long_name_synonyms(synonyms_);
-      }
-    }
-    
-  private:
-    std::string name_;
-    std::vector<std::string> synonyms_;
-  };
+  valid_values::valid_values(const valid_value& vv) {
+    *this += vv;
+  }
+  
+  valid_values::valid_values(std::initializer_list<valid_value> vvs) {
+    for (const auto& vv : vvs) 
+      *this += vv;
+  }
+  
+  mutually_exclusive_value::mutually_exclusive_value(std::initializer_list<std::string> values) {
+    add_mutually_exclusive_values(values);
+  }
+  
+  template <typename... Args>
+  mutually_exclusive_value::mutually_exclusive_value(std::initializer_list<std::string> values, Args&&... args)
+    : mutually_exclusive_value(std::forward<Args>(args)...) {
+    add_mutually_exclusive_values(values);
+  }
 
-  // Sets option's short name and synonyms
-  struct short_name {
-    short_name(const char& name) :
-      name_(name) {
-    }
+  default_value::default_value(const std::string& value) {
+    add_default_value(value);
+  }
+  
+  template <typename... Args>
+  default_value::default_value(const std::string& value, Args&&... args) : default_value(std::forward<Args>(args)...) {
+    add_default_value(value);
+  }
 
-    short_name(const char& name, std::initializer_list<char> synonyms) :
-      name_(name),
-      synonyms_(synonyms) {
-    }
+  implicit_value::implicit_value(const std::string& value) {
+    add_implicit_value(value);
+  }
+  
+  template <typename... Args>
+  implicit_value::implicit_value(const std::string& value, Args&&... args) : implicit_value(std::forward<Args>(args)...) {
+    add_implicit_value(value);
+  }
 
-    void operator()(option& o) const {
-      o.set_short_name(name_);
-      if (synonyms_.size() > 0) {
-        o.set_short_name_synonyms(synonyms_);
-      }
-    }
-    
-  private:
-    char name_;
-    std::vector<char> synonyms_;
-  };
+  description::description(const std::string& desc) {
+    set_description(desc);
+  }
+  
+  max_count::max_count(const size_t& count) {
+    set_max_count(count);
+  }
+  
+  min_count::min_count(const size_t& count) {
+    set_min_count(count);
+  }
 
-  struct valid_value {
-    valid_value(const std::string& value) :
-      value_(value) {
-    }
-    
-    valid_value(const std::string& value, std::initializer_list<std::string> synonyms) :
-      value_(value),
-      synonyms_(synonyms) {
-    }
-
-    void operator()(option& o) const {
-      o.add_valid_value(value_, synonyms_);
-    }
-    
-
-  private:
-    std::string value_;
-    std::vector<std::string> synonyms_;
-  };
-
-  struct valid_values {
-    valid_values(std::initializer_list<valid_value> vals) {
-      for (const auto& v : vals) {
-        values_.push_back(v);
-      }
-    }
-
-    void operator()(option& o) const {
-      for (const auto& v : values_) {
-        v.operator()(o);
-      }
-    }
-  private:
-    std::vector<valid_value> values_;
-  };
-
-  struct mutually_exclusive_value {
-    mutually_exclusive_value(std::initializer_list<std::string> val) :
-      val_(val) {
-    }
-
-    void operator()(option& o) const {
-      o.add_mutually_exclusive_value(val_);
-    }
-  private:
-    std::vector<std::string> val_;
-  };
-
-  struct mutually_exclusive_values {
-    mutually_exclusive_values(std::initializer_list<mutually_exclusive_value> vals) :
-      vals_(vals) {
-    }
-
-    void operator()(option& o) const {
-      for (const auto& v : vals_) {
-        v.operator()(o);
-      }
-    }
-  private:
-    std::vector<mutually_exclusive_value> vals_;
-  };
-
-  // TODO: Add default_values
-  struct default_value {
-    default_value(const std::string& val) :
-      val_(val) {
-    }
-
-    void operator()(option& o) const {
-      o.add_default_value(val_);
-    }
-  private:
-    std::string val_;
-  };
-
-  // TODO: Add implicit_values
-  struct implicit_value {
-    implicit_value(const std::string& val) :
-      val_(val) {
-    }
-
-    void operator()(option& o) const {
-      o.add_implicit_value(val_);
-    }
-  private:
-    std::string val_;
-  };
-
-  struct description {
-    description(const std::string& val) :
-      val_(val) {
-    }
-
-    void operator()(option& o) const {
-      o.set_description(val_);
-    }
-  private:
-    std::string val_;
-  };
-
-  struct max_count {
-    max_count(const size_t& n) :
-      count_(n) {
-    }
-
-    void operator()(option& o) const {
-      o.set_max_count(count_);
-    }
-  private:
-    size_t count_;
-  };
-
-  struct min_count {
-    min_count(const size_t& n) :
-      count_(n) {
-    }
-
-    void operator()(option& o) const {
-      o.set_min_count(count_);
-    }
-  private:
-    size_t count_;
-  };
 }

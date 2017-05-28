@@ -25,6 +25,22 @@ namespace optspp {
     };
 
     // --------- Options exceptions ---------
+
+    struct long_name_not_found : options_exception {
+      long_name_not_found(const std::string& _name) :
+        name(_name) {
+        message = "Long name '" + _name + "' not found";
+      }
+      std::string name;
+    };
+
+    struct short_name_not_found : options_exception {
+      short_name_not_found(const char& _name) :
+        name(_name) {
+        message = "Short name '" + std::string() + _name + "' not found";
+      }
+      char name;
+    };
     
     struct long_name_conflict : options_exception {
       long_name_conflict(const std::string& _name) :

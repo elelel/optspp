@@ -3,6 +3,7 @@
 #include <deque>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -19,12 +20,12 @@ namespace optspp {
     template <typename... Args>
     options(Args&&... args);
     
-    void update();
-    void update(const std::shared_ptr<option>& o);
+    void apply();
+    void apply(const std::shared_ptr<option>& o);
     template <typename... Args>
-    void update(const std::shared_ptr<option>& o, Args&&... args);
+    void apply(const std::shared_ptr<option>& o, Args&&... args);
     template <typename... Args>
-    void update(const option& o, Args&&... args);
+    void apply(const option& o, Args&&... args);
     
     void add(const std::shared_ptr<option>& o);
     void remove(const std::shared_ptr<option>& o);
@@ -88,49 +89,58 @@ namespace optspp {
     bool some_{false};
   };
 
-  struct option : public std::enable_shared_from_this<option> {
+  struct option {
     option();
+    virtual ~option();
+
+    // For argument-style creation
     template <typename... Args>
     option(Args&&... args);
-    
-    void update();
-    template <typename Arg>
-    void update(Arg property);
-    template <typename Arg, typename... Args>
-    void update(Arg property, Args&&... args);
-    template <typename Property>
-    option& operator<<(const Property& property);
+    void reduce(const option& o);
+    template <typename... Args>
+    void reduce(const option& o, Args&&... args);
+
+    option& operator+=(const option& other);
+    option& operator|(const option& other);
+    option& operator<<(const option& other);
+
+    // Option state mutators
+    option& set_long_name(const std::string& long_name);
+    option& add_long_name_synonym(const std::string& long_name_synonym);
+    option& set_short_name(const char& short_name);
+    option& add_short_name_synonym(const char& short_name_synonym);
+    option& add_valid_value(const std::string& main_value, const std::vector<std::string>& synonyms);
+    option& add_mutually_exclusive_values(const std::vector<std::string>& mutually_exclusive_values);
+    option& add_default_value(const std::string& default_values);
+    option& add_implicit_value(const std::string& implicit_values);
+    option& set_description(const std::string& description);
+    option& set_max_count(const size_t& max_count);
+    option& set_min_count(const size_t& min_count);
+    void check() const;
+
+    option& add_parent_container(const std::shared_ptr<options>& os);
+    option& remove_parent_container(const std::shared_ptr<options>& os);
+    option& add_parent_containers(const std::vector<std::shared_ptr<options>>& oss);
+    option& remove_parent_containers(const std::vector<std::shared_ptr<options>>& oss);
+    void invoke_parent_container_checks() const;
+
+    // Read member accessors
+    std::string all_names_to_string() const;
+    const std::string& long_name() const;
+    const std::vector<std::string>& long_name_synonyms() const;
+    const char& short_name() const;
+    const std::vector<char>& short_name_synonyms() const;
+    const std::map<std::string, std::vector<std::string>>& valid_values() const;
+    const std::vector<std::vector<std::string>>& mutually_exclusive_values() const;
+    const std::string& description() const;
+    std::string main_value(const std::string& v) const;
+    std::vector<std::string> default_values() const;
+    std::vector<std::string> implicit_values() const;
+    const size_t& max_count() const;
+    const size_t& min_count() const;
 
     bool is_valid_value(const std::string& v) const;
-    std::string main_value(const std::string& v) const;
 
-    const std::string& long_name() const;
-    void set_long_name(const std::string& long_name);
-    const std::vector<std::string> long_name_synonyms() const;
-    void set_long_name_synonyms(const std::vector<std::string>& long_name_synonyms);
-    const char& short_name() const;
-    void set_short_name(const char& short_name);
-    const std::vector<char> short_name_synonyms() const;
-    void set_short_name_synonyms(const std::vector<char>& short_name_synonyms);
-    const std::map<std::string, std::vector<std::string>> valid_values() const;
-    void add_valid_value(const std::string& val, const std::vector<std::string>& synonyms);
-    const std::vector<std::vector<std::string>>& mutually_exclusive_values() const;
-    void add_mutually_exclusive_value(const std::vector<std::string>& vals);
-    std::vector<std::string> default_values() const;
-    void add_default_value(const std::string& val);
-    std::vector<std::string> implicit_values() const;
-    void add_implicit_value(const std::string& val);
-    const std::string& description() const;
-    void set_description(const std::string& desc);
-    const size_t& max_count() const;
-    void set_max_count(const size_t& n);
-    const size_t& min_count() const;
-    void set_min_count(const size_t& n);
-    
-    void add_parent_container(const std::shared_ptr<options>& os);
-    void remove_parent_container(const std::shared_ptr<options>& os);
-
-    std::string all_names_to_string();
   private:
     std::vector<std::shared_ptr<options>> parent_containers_;
     std::string long_name_;
@@ -144,11 +154,57 @@ namespace optspp {
     std::string description_;
     size_t max_count_{std::numeric_limits<size_t>::max()};
     size_t min_count_{std::numeric_limits<size_t>::min()};
+    
+  };
+
+  // --------- Option properties ---------
+  struct long_name : option {
+    long_name(const std::string& name);
+    long_name(const std::string& name, std::initializer_list<std::string> synonyms);
+  }; 
   
-    void check_parents() const;
-    void check() const;
+  struct short_name : option {
+    short_name(const char& name);
+    short_name(const char& name, std::initializer_list<char> synonyms);
+  };
+
+  struct valid_value : option {
+    valid_value(const std::string& value);
+    valid_value(const std::string& value, std::initializer_list<std::string> synonyms);
+  };
+
+  struct valid_values : option {
+    valid_values(const valid_value& vv);
+    valid_values(std::initializer_list<valid_value>);
+  };
+
+  struct mutually_exclusive_value : option {
+    mutually_exclusive_value(std::initializer_list<std::string> mutually_exclusive_value);
+    template <typename... Args>
+    mutually_exclusive_value(std::initializer_list<std::string> mutually_exclusive_value, Args&&...);
+  };
+
+  struct default_value : option {
+    default_value(const std::string& value);
+    template <typename... Args>
+    default_value(const std::string& value, Args&&...);
+  };
+
+  struct implicit_value : option {
+    implicit_value(const std::string& value);
+    template <typename... Args>
+    implicit_value(const std::string& value, Args&&...);
+  };
+
+  struct description : option {
+    description(const std::string& desc);
+  };
+    
+  struct min_count : option {
+    min_count(const size_t& count);
+  };
+
+  struct max_count : option {
+    max_count(const size_t& count);
   };
 }
-  
-
-
