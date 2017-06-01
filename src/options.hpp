@@ -70,7 +70,7 @@ namespace optspp {
             rhs.push_back((*it2)->long_name());
             for (const auto& a : lhs) {
               for (const auto& b : rhs) {
-                if (a == b) throw exception::long_name_conflict(a);
+                if ((a.size() > 0) && (a == b)) throw exception::long_name_conflict(a);
               }
             }
           }
@@ -81,7 +81,7 @@ namespace optspp {
             rhs.push_back((*it2)->short_name());
             for (const auto& a : lhs) {
               for (const auto& b : rhs) {
-                if (a == b) throw exception::short_name_conflict(a);
+                if ((a != 0) && (a == b)) throw exception::short_name_conflict(a);
               }
             }
           }
