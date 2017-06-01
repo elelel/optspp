@@ -99,6 +99,7 @@ namespace optspp {
       long_name_synonyms_.push_back(synonym);
       invoke_parent_container_checks();
     }
+    return *this;
   }
 
   option& option::set_short_name(const char& short_name) {

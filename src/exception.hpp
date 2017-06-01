@@ -256,6 +256,7 @@ namespace optspp {
             need_outer_comma = true;
           }
         }
+        return s;
       }
 
       token t;
