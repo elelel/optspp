@@ -182,8 +182,17 @@ namespace optspp {
   }
 
   template <typename T>
+  T options::as(const std::string& name, const size_t idx) const {
+    std::istringstream i(this->operator[](name)[idx]);
+    T value;
+    i >> value;
+    return value;
+  }
+
+  template <typename T>
   T options::as(const std::string& name) const {
-    std::istringstream i(this->operator[](name));
+    const auto& vs = this->operator[](name);
+    std::istringstream i(vs[vs.size() - 1]);
     T value;
     i >> value;
     return value;

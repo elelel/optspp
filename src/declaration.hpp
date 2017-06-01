@@ -43,6 +43,9 @@ namespace optspp {
     void parse(const std::vector<std::string>& args);
     void parse(const int argc, const char* argv[]);
 
+    
+    template <typename T>
+    T as(const std::string& name, const size_t idx) const;
     template <typename T>
     T as(const std::string& name) const;
     const std::vector<std::string>& operator[](const std::string& name) const;
