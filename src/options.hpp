@@ -140,7 +140,9 @@ namespace optspp {
 
   void options::parse(const int argc, char* argv[]) {
     std::vector<std::string> args;
-    for (int i = 1; i < argc; ++i) args.push_back(std::string(argv[i]));
+    if (argc > 1) {
+      for (int i = 1; i < argc; ++i) args.push_back(std::string(argv[i]));
+    }
     parse(args);
   }
 
