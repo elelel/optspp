@@ -138,6 +138,12 @@ namespace optspp {
     check_results();
   }
 
+  void options::parse(const int argc, const char* argv[]) {
+    std::vector<std::string> args;
+    for (int i = 1; i < argc; ++i) args.push_back(std::string(argv[i]));
+    parse(args);
+  }
+
   void options::check_results() {
     for (const auto& o : options_) {
       auto& v = values_[o];
