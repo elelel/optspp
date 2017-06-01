@@ -124,6 +124,21 @@ namespace optspp {
       std::string value;
     };
 
+    struct option_dependency_conflict : option_exception {
+      option_dependency_conflict(const std::string& _name) :
+        name_str(_name) {
+        message = "Option dependency conflict for option '" + name_str + "'.";
+      }
+
+      option_dependency_conflict(const char& _name) :
+        name_char(_name) {
+        message = "Option dependency conflict for option '" + std::string() + _name + "'.";
+      }
+      
+      std::string name_str;
+      char name_char;
+    };
+
     // --------- Value exceptions ---------
     struct unknown_parameter : value_exception {
       unknown_parameter(const token& _t, const std::string& _parameter) :

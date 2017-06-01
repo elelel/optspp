@@ -167,6 +167,56 @@ namespace optspp {
     }
     return *this;
   }
+
+  option& option::add_other_option_name_dependency_existent(const std::string& other) {
+    if (std::find(name_deps_nonexistent_str_.begin(),
+                  name_deps_nonexistent_str_.end(), other) != name_deps_nonexistent_str_.end())
+      throw exception::option_dependency_conflict(other);
+    if (std::find(name_deps_existent_str_.begin(),
+                  name_deps_existent_str_.end(), other) == name_deps_existent_str_.end())
+      name_deps_existent_str_.push_back(other);
+    return *this;
+  }
+  
+  option& option::add_other_option_name_dependency_existent(const char& other) {
+    if (std::find(name_deps_nonexistent_char_.begin(),
+                  name_deps_nonexistent_char_.end(), other) != name_deps_nonexistent_char_.end())
+      throw exception::option_dependency_conflict(other);
+    if (std::find(name_deps_existent_char_.begin(),
+                  name_deps_existent_char_.end(), other) == name_deps_existent_char_.end())
+      name_deps_existent_char_.push_back(other);
+    return *this;
+  }
+  
+  option& option::set_other_option_name_dependency_existent_mode(const match_mode& m) {
+    name_deps_existent_match_mode_ = m;
+    return *this;
+  }
+  
+  option& option::add_other_option_name_dependency_nonexistent(const std::string& other) {
+    if (std::find(name_deps_existent_str_.begin(),
+                  name_deps_existent_str_.end(), other) != name_deps_existent_str_.end())
+      throw exception::option_dependency_conflict(other);
+    if (std::find(name_deps_nonexistent_str_.begin(),
+                  name_deps_nonexistent_str_.end(), other) == name_deps_nonexistent_str_.end())
+      name_deps_nonexistent_str_.push_back(other);
+    return *this;
+  }
+  
+  option& option::add_other_option_name_dependency_nonexistent(const char& other) {
+    if (std::find(name_deps_existent_char_.begin(),
+                  name_deps_existent_char_.end(), other) != name_deps_existent_char_.end())
+      throw exception::option_dependency_conflict(other);
+    if (std::find(name_deps_nonexistent_char_.begin(),
+                  name_deps_nonexistent_char_.end(), other) == name_deps_nonexistent_char_.end())
+      name_deps_nonexistent_char_.push_back(other);
+    return *this;
+  }
+  
+  option& option::set_other_option_name_dependency_nonexistent_mode(const match_mode& m) {
+    name_deps_nonexistent_match_mode_ = m;
+    return *this;
+  }
   
   void option::check() const {
     // Checks below are valid only if valid_values_ are defined
@@ -331,6 +381,30 @@ namespace optspp {
     return min_count_;
   }
 
+  const std::vector<std::string>& option::name_deps_existent_str() const {
+    return name_deps_existent_str_;
+  }
+  
+  const std::vector<char>& option::name_deps_existent_char() const {
+    return name_deps_existent_char_;
+  }
+  
+  const option::match_mode& option::name_deps_existent_match_mode() const {
+    return name_deps_existent_match_mode_;
+  }
+  
+  const std::vector<std::string>& option::name_deps_nonexistent_str() const {
+    return name_deps_nonexistent_str_;
+  }
+  
+  const std::vector<char>& option::name_deps_nonexistent_char() const {
+    return name_deps_nonexistent_char_;
+  }
+
+  const option::match_mode& option::name_deps_nonexistent_match_mode() const {
+    return name_deps_nonexistent_match_mode_;
+  }
+  
   bool option::is_valid_value(const std::string& v) const {
     if (valid_values_.size() == 0) return true;
     for (const auto& p : valid_values_) {
@@ -351,4 +425,5 @@ namespace optspp {
   const std::string& option::description() const {
     return description_;
   }
+  
 }

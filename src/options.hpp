@@ -59,6 +59,7 @@ namespace optspp {
   }
 
   void options::check_schema() const {
+    // Name conflicts
     for (auto it1 = options_.begin(); it1 != options_.end(); ++it1) {
       for (auto it2 = options_.begin(); it2 != options_.end(); ++it2) {
         if (it1 < it2) {
@@ -87,6 +88,7 @@ namespace optspp {
         }
       }
     }
+    // TODO: Check name depenencies
   }
 
   std::vector<std::shared_ptr<option>>::const_iterator
@@ -147,8 +149,10 @@ namespace optspp {
       // Value mutual exclusiveness
       check_value_mutually_exclusive(o);
     }
+    // TODO: Check name dependencies
+    // TODO: Check value dependencies
   }
-
+  
   void options::check_value_mutually_exclusive(const std::shared_ptr<option>& o) const {
     if (o->mutually_exclusive_values().size() == 0) return;
     std::vector<std::vector<std::string>> rslt;
