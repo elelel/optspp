@@ -85,9 +85,9 @@ namespace optspp {
     
     name& name::add_child_value(const std::shared_ptr<value>& n) {
       for (const auto& c : child_values_) {
-        if (*c == n->main_value()) throw exception::argument_value_conflict(n->main_value());
+        if ((n->main_value() != "") && (*c == n->main_value())) throw exception::argument_value_conflict(n->main_value());
         for (const auto& s : n->value_synonyms())
-          if (*c == s) throw exception::argument_value_conflict(s);
+          if ((s != "") && (*c == s)) throw exception::argument_value_conflict(s);
       }
       child_values_.push_back(n);
       n->add_parent(this);

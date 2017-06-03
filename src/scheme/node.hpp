@@ -95,12 +95,12 @@ namespace optspp {
 
     node& node::add_child_name(const std::shared_ptr<name>& n) {
       for (const auto& c : child_names_) {
-        if (*c == n->long_name()) throw exception::argument_name_conflict(n->long_name());
+        if ((n->long_name() != "" ) && (*c == n->long_name())) throw exception::argument_name_conflict(n->long_name());
         for (const auto& s : n->long_name_synonyms())
-          if (*c == s) throw exception::argument_name_conflict(s);
-        if (*c == n->short_name()) throw exception::argument_name_conflict(n->short_name());
+          if ((s != "") && (*c == s)) throw exception::argument_name_conflict(s);
+        if ((n->short_name() != 0) && (*c == n->short_name())) throw exception::argument_name_conflict(n->short_name());
         for (const auto& s : n->short_name_synonyms())
-          if (*c == s) throw exception::argument_name_conflict(s);
+          if ((n->short_name() != 0) && (*c == s)) throw exception::argument_name_conflict(s);
       }
       child_names_.push_back(n);
       n->add_parent(this);

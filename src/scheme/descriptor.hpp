@@ -19,9 +19,7 @@ namespace optspp {
     }
 
     descriptor& descriptor::operator<<(const name& other) {
-      std::cout << "descriptor:: adding child\n";
       add_child_name(other);
-      std::cout << "descriptor:: added child\n";
       return *this;
     }
     
