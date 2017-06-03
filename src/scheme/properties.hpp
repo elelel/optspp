@@ -54,5 +54,26 @@ namespace optspp {
     set_description(desc);
   }
 
+  default_value::default_value(const std::string& value) {
+    add_default_value(value);
+  }
+  
+  template <typename... Args>
+  default_value::default_value(const std::string& value, Args&&... args) : default_value(std::forward<Args>(args)...) {
+    add_default_value(value);
+  }
+
+  implicit_value::implicit_value(const std::string& value) {
+    add_implicit_value(value);
+  }
+  
+  template <typename... Args>
+  implicit_value::implicit_value(const std::string& value, Args&&... args) : implicit_value(std::forward<Args>(args)...) {
+    add_implicit_value(value);
+  }
+
+  any_value::any_value() {
+    set_allow_arbitrary_values(true);
+  }
   
 }

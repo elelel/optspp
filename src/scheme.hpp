@@ -181,10 +181,12 @@ namespace optspp {
 
   struct default_value : scheme::name {
     default_value(const std::string& default_value);
+    template <typename... Args> default_value(const std::string& value, Args&&... args);
   };
 
   struct implicit_value : scheme::name {
     implicit_value(const std::string& implicit_value);
+    template <typename... Args> implicit_value(const std::string& value, Args&&... args);
   };
 
   struct any_value : scheme::name {
