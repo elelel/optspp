@@ -90,13 +90,13 @@ namespace optspp {
           if (*c == s) throw exception::argument_value_conflict(s);
       }
       child_values_.push_back(n);
-      n->add_parent(std::enable_shared_from_this<name>::shared_from_this());
+      n->add_parent(this);
       return *this;
     }
 
     name& name::add_child_value(const value& n) {
       auto p = std::make_shared<value>(n);
-      return add_child_value(n);
+      return add_child_value(p);
     }
     
     name& name::set_long_name(const std::string& long_name) {

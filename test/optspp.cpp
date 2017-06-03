@@ -4,6 +4,11 @@
 SCENARIO("TDD") {
   using namespace optspp;
 
+  WHEN("1") {
+    scheme::descriptor arguments;
+    arguments << positional("command");
+  }
+  /*
   WHEN("Variant 2") {
     scheme::descriptor arguments;
     arguments
@@ -48,7 +53,7 @@ SCENARIO("TDD") {
           | min_count(1)
           );
       
-  }
+          }*/
 
   /*
   WHEN("Creating min property") {

@@ -37,17 +37,17 @@ namespace optspp {
 
       const std::string& description() const;
 
-      node& add_parent(const std::shared_ptr<node>& parent);
-      node& remove_parent(const std::shared_ptr<node>& parent);
-      node& add_parents(const std::vector<std::shared_ptr<node>>& parents);
-      node& remove_parents(const std::vector<std::shared_ptr<node>>& parents);
+      node& add_parent(const node* parent);
+      node& remove_parent(const node* parent);
+      node& add_parents(const std::vector<const node*>& parents);
+      node& remove_parents(const std::vector<const node*>& parents);
 
       node& add_child_name(const std::shared_ptr<name>& n);
       node& add_child_name(const name& n);
     protected:      
       KIND node_kind_{KIND::NONE};
       std::string description_;
-      std::vector<std::shared_ptr<node>> parents_;
+      std::vector<const node*> parents_;
       std::vector<std::shared_ptr<name>> child_names_;    
     };
 

@@ -13,16 +13,16 @@ namespace optspp {
     
     void node::validate() const {
       for (const auto& p : parents_) {
-        node* n = p.get();
+        std::cout << "node:;validate()\n";
         switch (p->node_kind_) {
         case KIND::DESCRIPTOR:
-          dynamic_cast<descriptor*>(n)->validate();
+          dynamic_cast<const descriptor*>(p)->validate();
           break;
         case KIND::NAME:
-          dynamic_cast<name*>(n)->validate();
+          dynamic_cast<const name*>(p)->validate();
           break;
         case KIND::VALUE:
-          dynamic_cast<value*>(n)->validate();
+          dynamic_cast<const value*>(p)->validate();
           break;
         }
       }
@@ -71,24 +71,24 @@ namespace optspp {
       return nullptr;
     }
     
-    node& node::add_parent(const std::shared_ptr<node>& parent) {
+    node& node::add_parent(const node* parent) {
       auto found = std::find(parents_.begin(), parents_.end(), parent);
       if (found == parents_.end()) parents_.push_back(parent);
       return *this;
     }
     
-    node& node::remove_parent(const std::shared_ptr<node>& parent) {
-      parents_.erase(std::remove(parents_.begin(), parents_.end(), parent),
-                     parents_.end());
-      return *this;
-    }
-
-    node& node::add_parents(const std::vector<std::shared_ptr<node>>& parents) {
+    node& node::add_parents(const std::vector<const node*>& parents) {
       for (const auto& parent : parents) add_parent(parent);
       return *this;
     }
     
-    node& node::remove_parents(const std::vector<std::shared_ptr<node>>& parents) {
+    node& node::remove_parent(const node* parent) {
+      parents_.erase(std::remove(parents_.begin(), parents_.end(), parent),
+                     parents_.end());
+      return *this;
+    }
+    
+    node& node::remove_parents(const std::vector<const node*>& parents) {
       for (const auto& parent : parents) remove_parent(parent);
       return *this;
     }
@@ -103,14 +103,13 @@ namespace optspp {
           if (*c == s) throw exception::argument_name_conflict(s);
       }
       child_names_.push_back(n);
-      // TODO: Check if really we have a shared_ptr
-      n->add_parent(shared_from_this());
+      n->add_parent(this);
       return *this;
     }
 
     node& node::add_child_name(const name& n) {
       auto p = std::make_shared<name>(n);
-      return add_child_name(n);
+      return add_child_name(p);
     }
   }
 
