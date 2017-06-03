@@ -82,8 +82,16 @@ namespace optspp {
     return *this;
   }
 
+  option& option::operator<<(const std::shared_ptr<option>& other) {
+    if (std::find(children_.begin(), children_.end(), other) == children_.end()) {
+      chlidren_.push_back(other);
+    }
+    return *this;
+  }
+  
   option& option::operator<<(const option& other) {
-    *this += other;
+    auto o = std::make_shared<option>(other);
+    *this << o;
     return *this;
   }
   
@@ -167,56 +175,6 @@ namespace optspp {
       min_count_ = min_count;
       invoke_parent_container_checks();
     }
-    return *this;
-  }
-
-  option& option::add_other_option_name_dependency_existent(const std::string& other) {
-    if (std::find(name_deps_nonexistent_str_.begin(),
-                  name_deps_nonexistent_str_.end(), other) != name_deps_nonexistent_str_.end())
-      throw exception::option_dependency_conflict(other);
-    if (std::find(name_deps_existent_str_.begin(),
-                  name_deps_existent_str_.end(), other) == name_deps_existent_str_.end())
-      name_deps_existent_str_.push_back(other);
-    return *this;
-  }
-  
-  option& option::add_other_option_name_dependency_existent(const char& other) {
-    if (std::find(name_deps_nonexistent_char_.begin(),
-                  name_deps_nonexistent_char_.end(), other) != name_deps_nonexistent_char_.end())
-      throw exception::option_dependency_conflict(other);
-    if (std::find(name_deps_existent_char_.begin(),
-                  name_deps_existent_char_.end(), other) == name_deps_existent_char_.end())
-      name_deps_existent_char_.push_back(other);
-    return *this;
-  }
-  
-  option& option::set_other_option_name_dependency_existent_mode(const match_mode& m) {
-    name_deps_existent_match_mode_ = m;
-    return *this;
-  }
-  
-  option& option::add_other_option_name_dependency_nonexistent(const std::string& other) {
-    if (std::find(name_deps_existent_str_.begin(),
-                  name_deps_existent_str_.end(), other) != name_deps_existent_str_.end())
-      throw exception::option_dependency_conflict(other);
-    if (std::find(name_deps_nonexistent_str_.begin(),
-                  name_deps_nonexistent_str_.end(), other) == name_deps_nonexistent_str_.end())
-      name_deps_nonexistent_str_.push_back(other);
-    return *this;
-  }
-  
-  option& option::add_other_option_name_dependency_nonexistent(const char& other) {
-    if (std::find(name_deps_existent_char_.begin(),
-                  name_deps_existent_char_.end(), other) != name_deps_existent_char_.end())
-      throw exception::option_dependency_conflict(other);
-    if (std::find(name_deps_nonexistent_char_.begin(),
-                  name_deps_nonexistent_char_.end(), other) == name_deps_nonexistent_char_.end())
-      name_deps_nonexistent_char_.push_back(other);
-    return *this;
-  }
-  
-  option& option::set_other_option_name_dependency_nonexistent_mode(const match_mode& m) {
-    name_deps_nonexistent_match_mode_ = m;
     return *this;
   }
   
@@ -381,30 +339,6 @@ namespace optspp {
 
   const size_t& option::min_count() const {
     return min_count_;
-  }
-
-  const std::vector<std::string>& option::name_deps_existent_str() const {
-    return name_deps_existent_str_;
-  }
-  
-  const std::vector<char>& option::name_deps_existent_char() const {
-    return name_deps_existent_char_;
-  }
-  
-  const option::match_mode& option::name_deps_existent_match_mode() const {
-    return name_deps_existent_match_mode_;
-  }
-  
-  const std::vector<std::string>& option::name_deps_nonexistent_str() const {
-    return name_deps_nonexistent_str_;
-  }
-  
-  const std::vector<char>& option::name_deps_nonexistent_char() const {
-    return name_deps_nonexistent_char_;
-  }
-
-  const option::match_mode& option::name_deps_nonexistent_match_mode() const {
-    return name_deps_nonexistent_match_mode_;
   }
   
   bool option::is_valid_value(const std::string& v) const {

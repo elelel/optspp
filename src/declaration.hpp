@@ -130,13 +130,7 @@ namespace optspp {
     option& set_description(const std::string& description);
     option& set_max_count(const size_t& max_count);
     option& set_min_count(const size_t& min_count);
-    option& add_other_option_name_dependency_existent(const std::string& other);
-    option& add_other_option_name_dependency_existent(const char& other);
-    option& set_other_option_name_dependency_existent_mode(const match_mode& m);
-    option& add_other_option_name_dependency_nonexistent(const std::string& other);
-    option& add_other_option_name_dependency_nonexistent(const char& other);
-    option& set_other_option_name_dependency_nonexistent_mode(const match_mode& m);
-    
+
     void check() const;
 
     option& add_parent_container(const std::shared_ptr<options>& os);
@@ -159,12 +153,6 @@ namespace optspp {
     std::vector<std::string> implicit_values() const;
     const size_t& max_count() const;
     const size_t& min_count() const;
-    const std::vector<std::string>& name_deps_existent_str() const;
-    const std::vector<char>& name_deps_existent_char() const;
-    const match_mode& name_deps_existent_match_mode() const;
-    const std::vector<std::string>& name_deps_nonexistent_str() const;
-    const std::vector<char>& name_deps_nonexistent_char() const;
-    const match_mode& name_deps_nonexistent_match_mode() const;
 
     bool is_valid_value(const std::string& v) const;
   private:
@@ -180,13 +168,7 @@ namespace optspp {
     std::string description_;
     size_t max_count_{std::numeric_limits<size_t>::max()};
     size_t min_count_{std::numeric_limits<size_t>::min()};
-
-    std::vector<std::string> name_deps_existent_str_;
-    std::vector<char> name_deps_existent_char_;
-    match_mode name_deps_existent_match_mode_{ANY};
-    std::vector<std::string> name_deps_nonexistent_str_;
-    std::vector<char> name_deps_nonexistent_char_;
-    match_mode name_deps_nonexistent_match_mode_{ALL};
+    std::vector<option> children_;
   };
 
   // --------- Option properties ---------

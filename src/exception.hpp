@@ -2,8 +2,6 @@
 
 #include <exception>
 
-#include "declaration.hpp"
-
 namespace optspp {
   namespace exception {
     struct optspp_exception : std::exception {
@@ -14,6 +12,8 @@ namespace optspp {
       std::string message;
     };
 
+    struct schema_error : optspp_exception {
+    };
 
     struct options_exception : optspp_exception {
     };
@@ -24,6 +24,33 @@ namespace optspp {
     struct value_exception : optspp_exception {
     };
 
+    // Schema errors
+    struct argument_name_conflict : schema_error {
+      argument_name_conflict(const std::string& n) :
+        name_str(n) {
+        message = "Argument name conflict ('" + name_str + "').";
+      }
+      
+      argument_name_conflict(const char& n) :
+        name_char(n) {
+        message = "Argument name conflict ('" + std::string() + name_char + "').";
+      }
+      
+      std::string name_str;
+      char name_char{0};
+    };
+
+        // Schema errors
+    struct argument_value_conflict : schema_error {
+      argument_value_conflict(const std::string& n) :
+        value_str(n) {
+        message = "Argument value conflict ('" + value_str + "').";
+      }
+
+      std::string value_str;
+    };      
+
+    /*
     // --------- Options exceptions ---------
 
     struct long_name_not_found : options_exception {
@@ -279,6 +306,6 @@ namespace optspp {
       std::string name_str;
       char name_char;
     };
-
-  }
+    */
+    } 
 }

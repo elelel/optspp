@@ -4,6 +4,53 @@
 SCENARIO("TDD") {
   using namespace optspp;
 
+  WHEN("Variant 2") {
+    scheme::descriptor arguments;
+    arguments
+      << (positional("command")
+          | (value("useradd")
+             << (named("login", {"username", "user"})
+                 | named('l', {'u'})
+                 | min_count(1)
+                 | max_count(1)
+                 | description("User's login"))
+             << (named("password", {"pw", "pass"})
+                 | named('p')
+                 | max_count(1))
+             << (named("admin", {"administrator"})
+                 | named('a')
+                 | max_count(1)
+                 | (value("true", {"on", "yes"})
+                    << (named("superadmin")
+                        | value("true", {"on", "yes"})
+                        | value("false", {"off", "no"})
+                        | default_value("false")
+                        | implicit_value("true")
+                        | description("Make this administrator a superadministrator")))
+                 | value("false", {"off", "no"})
+                 | default_value("false")
+                 | implicit_value("true")
+                 | description("Make this user administrator")))
+          | (value("userdel")
+             << (named("login", {"username", "user"})
+                 | named('l', {'u'})
+                 | min_count(1)
+                 | max_count(1)
+                 | description("User's login"))
+             << (named("force")
+                 | named('f')
+                 | max_count(1)
+                 //  | values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}})
+                 | default_value("false")
+                 | implicit_value("true")
+                 | description("Force user deletion")))
+          | any_value()  // Allow arbitraty value for "command" positional argument
+          | min_count(1)
+          );
+      
+  }
+
+  /*
   WHEN("Creating min property") {
     option source = min_count(1);
     REQUIRE(source.min_count() == 1);
@@ -225,5 +272,5 @@ SCENARIO("TDD") {
       REQUIRE(option_login == option_u);
     }
   }
-
+  */
 }

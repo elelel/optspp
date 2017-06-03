@@ -83,4 +83,8 @@ namespace optspp {
     set_min_count(count);
   }
 
+  any_value::any_value() {
+    set_allow_arbitrary_value(true);
+  }
+
 }

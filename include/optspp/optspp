@@ -1,6 +1,9 @@
 #pragma once
 
-#include "../../src/declaration.hpp"
-#include "../../src/option.hpp"
-#include "../../src/options.hpp"
-#include "../../src/properties.hpp"
+// Declarations
+#include "../../src/scheme.hpp"
+// Definitions
+#include "../../src/scheme/node.hpp"
+#include "../../src/scheme/name.hpp"
+#include "../../src/scheme/value.hpp"
+#include "../../src/scheme/properties.hpp"
