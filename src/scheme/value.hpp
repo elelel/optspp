@@ -10,7 +10,7 @@ namespace optspp {
     value::~value() {
     }
 
-    void value::validate() {
+    void value::validate() const {
       node::validate();
     }
 
@@ -33,6 +33,11 @@ namespace optspp {
     }
 
     value& value::operator<<(const name& other) {
+      add_child_name(other);
+      return *this;
+    }
+    
+    value& value::operator<<(const std::shared_ptr<name>& other) {
       add_child_name(other);
       return *this;
     }

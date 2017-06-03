@@ -12,7 +12,7 @@ namespace optspp {
     struct name;
     struct value;
 
-    struct node {
+    struct node : std::enable_shared_from_this<node> {
       enum KIND {
         NONE,
         DESCRIPTOR,
@@ -20,7 +20,7 @@ namespace optspp {
         VALUE
       };
 
-      virtual void validate();
+      virtual void validate() const;
 
       node(KIND node_kind);
       virtual ~node();
@@ -54,16 +54,24 @@ namespace optspp {
     struct descriptor : node, std::enable_shared_from_this<descriptor> {
       descriptor();
       virtual ~descriptor();
+
+      virtual void validate() const override;
+      
+      descriptor& operator<<(const std::shared_ptr<name>& other);
+      descriptor& operator<<(const name& other);
       
     };
+
 
     struct name : node, std::enable_shared_from_this<name> {
       name();
       virtual ~name();
-      virtual void validate() override;
+      virtual void validate() const override;
 
       name& operator|(const optspp::description& other);
+      name& operator|(const std::shared_ptr<name>& other);
       name& operator|(const name& other);
+      name& operator|(const std::shared_ptr<value>& other);
       name& operator|(const value& other);
 
       bool operator==(const std::string& n) const;
@@ -119,11 +127,12 @@ namespace optspp {
     struct value : node, std::enable_shared_from_this<value> {
       value();
       virtual ~value();
-      virtual void validate() override;
+      virtual void validate() const override;
 
       value& operator|(const optspp::description& other);
       value& operator|(const value& other);
       
+      value& operator<<(const std::shared_ptr<name>& other);
       value& operator<<(const name& other);
 
       bool operator==(const std::string& s) const;
@@ -180,7 +189,7 @@ namespace optspp {
 
   struct any_value : scheme::name {
     any_value();
-  }
+  };
   
   struct value : scheme::value {
     value(const std::string& main_value);

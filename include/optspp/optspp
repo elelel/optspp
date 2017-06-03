@@ -4,6 +4,7 @@
 #include "../../src/scheme.hpp"
 // Definitions
 #include "../../src/scheme/node.hpp"
+#include "../../src/scheme/descriptor.hpp"
 #include "../../src/scheme/name.hpp"
 #include "../../src/scheme/value.hpp"
 #include "../../src/scheme/properties.hpp"

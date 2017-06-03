@@ -10,7 +10,7 @@ namespace optspp {
     name::~name() {
     }
 
-    void name::validate() {
+    void name::validate() const {
       // TODO: validate same level against self, then all children against self
       node::validate();
     }
@@ -21,39 +21,54 @@ namespace optspp {
       return *this;
     }
     
-    name& name::operator|(const name& other) {
-      is_positional_ = other.is_positional_;
-      allow_arbitrary_values_ = other.allow_arbitrary_values_;
-      if (other.long_name_ != "")
-        set_long_name(other.long_name_);
-      if (other.long_name_synonyms_.size() != 0)
-        for (const auto& x : other.long_name_synonyms_) 
+    name& name::operator|(const std::shared_ptr<name>& other) {
+      is_positional_ = other->is_positional_;
+      allow_arbitrary_values_ = other->allow_arbitrary_values_;
+      if (other->long_name_ != "")
+        set_long_name(other->long_name_);
+      if (other->long_name_synonyms_.size() != 0)
+        for (const auto& x : other->long_name_synonyms_) 
           add_long_name_synonym(x);
-      if (other.short_name_ != 0)
-        set_short_name(other.short_name_);
-      if (other.short_name_synonyms_.size() != 0) 
-        for (const auto& x : other.short_name_synonyms_)
+      if (other->short_name_ != 0)
+        set_short_name(other->short_name_);
+      if (other->short_name_synonyms_.size() != 0) 
+        for (const auto& x : other->short_name_synonyms_)
           add_short_name_synonym(x);
 
-      if (other.default_values_.size() != 0)
-        for (const auto& x : other.default_values_)
+      if (other->default_values_.size() != 0)
+        for (const auto& x : other->default_values_)
           add_default_value(x);
-      if (other.implicit_values_.size() != 0)
-        for (const auto& x : other.implicit_values_)
+      if (other->implicit_values_.size() != 0)
+        for (const auto& x : other->implicit_values_)
           add_implicit_value(x);
 
-      if (other.description_ != "")
-        set_description(other.description_);
-      if (other.max_count_ != std::numeric_limits<size_t>::max())
-        set_max_count(other.max_count_);
-      if (other.min_count_ != std::numeric_limits<size_t>::min())
-        set_min_count(other.min_count_);
+      if (other->description_ != "")
+        set_description(other->description_);
+      if (other->max_count_ != std::numeric_limits<size_t>::max())
+        set_max_count(other->max_count_);
+      if (other->min_count_ != std::numeric_limits<size_t>::min())
+        set_min_count(other->min_count_);
     
-      add_parents(other.parents_);
+      add_parents(other->parents_);
     
       return *this;
     }
 
+    name& name::operator|(const name& other) {
+      auto p = std::make_shared<name>(other);
+      return *this | p;
+    }
+
+    name& name::operator|(const std::shared_ptr<value>& v) {
+      add_child_value(v);
+      return *this;
+    }
+
+    name& name::operator|(const value& v) {
+      add_child_value(v);
+      return *this;
+    }
+    
     bool name::operator==(const std::string& n) const {
       if (long_name_ == n) return true;
       for (const auto& s : long_name_synonyms_)
@@ -74,6 +89,8 @@ namespace optspp {
         for (const auto& s : n->value_synonyms())
           if (*c == s) throw exception::argument_value_conflict(s);
       }
+      child_values_.push_back(n);
+      n->add_parent(std::enable_shared_from_this<name>::shared_from_this());
       return *this;
     }
 

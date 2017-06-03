@@ -11,7 +11,7 @@ namespace optspp {
     node::~node() {
     }
     
-    void node::validate() {
+    void node::validate() const {
       for (const auto& p : parents_) {
         node* n = p.get();
         switch (p->node_kind_) {
@@ -102,6 +102,9 @@ namespace optspp {
         for (const auto& s : n->short_name_synonyms())
           if (*c == s) throw exception::argument_name_conflict(s);
       }
+      child_names_.push_back(n);
+      // TODO: Check if really we have a shared_ptr
+      n->add_parent(shared_from_this());
       return *this;
     }
 
