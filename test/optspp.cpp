@@ -5,7 +5,14 @@ SCENARIO("TDD") {
   using namespace optspp;
 
   WHEN("Variant 2") {
-    scheme::descriptor arguments;
+
+    REQUIRE(named("login")->long_name() == "login");
+    REQUIRE(named("login", {"username", "user"})->long_name() == "login");
+    REQUIRE(named("login", {"username", "user"})->long_name_synonyms() ==
+            std::vector<std::string>({"username", "user"}));
+          
+    
+    auto arguments = make_scheme();
     arguments
       << (positional("command")
           | (value("useradd")
@@ -47,7 +54,6 @@ SCENARIO("TDD") {
           | any_value()  // Allow arbitraty value for "command" positional argument
           | min_count(1)
           );
-      
   }
 
   /*

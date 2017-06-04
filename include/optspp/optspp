@@ -8,3 +8,4 @@
 #include "../../src/scheme/name.hpp"
 #include "../../src/scheme/value.hpp"
 #include "../../src/scheme/properties.hpp"
+#include "../../src/scheme/operations.hpp"
