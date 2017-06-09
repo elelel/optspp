@@ -1,49 +1,40 @@
 #pragma once
 
 namespace optspp {
-  std::shared_ptr<scheme::tree::descriptor> make_scheme() {
-    return std::make_shared<scheme::tree::descriptor>();
+  std::shared_ptr<scheme::arguments> make_arguments() {
+    return std::make_shared<scheme::arguments>();
   }
 
-  namespace scheme {
-    std::shared_ptr<tree::name> operator|(std::shared_ptr<tree::name> n, const std::shared_ptr<tree::value>& v) {
-      if (std::find(n->child_values_.begin(), n->child_values_.end(), v) != n->child_values_.end())
-        return n;
-        
-      for (const auto& c : n->child_values_) {
-        if ((v->main_value() != "") && (*c == v->main_value())) throw exception::argument_value_conflict(v->main_value());
-        for (const auto& s : v->value_synonyms())
-          if ((s != "") && (*c == s)) throw exception::argument_value_conflict(s);
-      }
-      n->child_values_.push_back(v);
-      v->add_parent(n);
-      return n;
-    }
-
-    std::shared_ptr<tree::name> operator|(std::shared_ptr<tree::name> lhs, const std::shared_ptr<description>& rhs) {
-      std::cout << "name | description \n";
+  // Sum attributes or add values to names
+  std::shared_ptr<scheme::attributes> operator|(std::shared_ptr<scheme::attributes> lhs,
+                                                const std::shared_ptr<scheme::attributes>& rhs) {
+    if ((lhs->kind_ == scheme::attributes::KIND::NAME) &&
+        (rhs->kind_ == scheme::attributes::KIND::NAME)) {
       *lhs += *rhs;
-      return lhs;
+    } else {
+      using namespace easytree;
+      auto n = node<std::shared_ptr<scheme::attributes>>(rhs);
+      lhs->pending_.push_back(rhs);
     }
+    return lhs;
+  }
+  
+  // Add a sub-argument (e.g. that is only allowed if this branch was selected)
+  std::shared_ptr<scheme::attributes> operator<<(std::shared_ptr<scheme::attributes> lhs,
+                                                 const std::shared_ptr<scheme::attributes>& rhs) {
+    using namespace easytree;
+    auto n = node<std::shared_ptr<scheme::attributes>>(rhs);
+    lhs->pending_.push_back(rhs);
+    return lhs;
+  }
     
-    std::shared_ptr<tree::name> operator|(std::shared_ptr<tree::name> lhs, const std::shared_ptr<tree::name>& rhs) {
-      std::cout << "name | name \n";
-      *lhs += *rhs;
-      return lhs;
-    }
 
-    namespace tree {
-      template <typename A, typename B>
-      std::shared_ptr<A> operator<<(std::shared_ptr<A> lhs, const std::shared_ptr<B>& rhs) {
-        std::cout << "shared << X " << rhs->long_name() << "\n";
-        *lhs << rhs;
-        return lhs;
-      }
-
-      template <typename NodeSpecialization>
-      std::shared_ptr<node> node_shared_ptr_from(const NodeSpecialization& n) {
-        return (std::shared_ptr<node>())n.shared_from_this();
-      }
-    }
+  std::shared_ptr<scheme::arguments> operator<<(std::shared_ptr<scheme::arguments> lhs,
+                                                const std::shared_ptr<scheme::attributes>& rhs) {
+    using namespace easytree;
+    lhs->root_->add_child(node(rhs));
+    return lhs;
   }
+
+
 }

@@ -1,12 +1,6 @@
 cmake_minimum_required(VERSION 3.4.0)
 project(optspp_test)
 
-if (MSVC)
-  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std:c++latest" )
-else()
-  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++1z" )
-endif()
-
 get_filename_component(TOP_DIR "${CMAKE_CURRENT_SOURCE_DIR}" PATH)
 set(CATCH "${TOP_DIR}/contrib/Catch")
 
@@ -22,5 +16,4 @@ add_executable(optspp_test
   ${TEST_SOURCES})
 
 target_compile_definitions(optspp_test PUBLIC "CATCH_CONFIG_MAIN" "CATCH_CONFIG_COLOUR_NONE")
-target_link_libraries(optspp_test ${LUACPP_LUA_LIBRARIES})
 add_test(CommonTests optspp_test)

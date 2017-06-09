@@ -12,7 +12,7 @@ namespace optspp {
       std::string message;
     };
 
-    struct schema_error : optspp_exception {
+    struct scheme_error : optspp_exception {
     };
 
     struct options_exception : optspp_exception {
@@ -24,14 +24,15 @@ namespace optspp {
     struct value_exception : optspp_exception {
     };
 
-    // Schema errors
-    struct argument_name_conflict : schema_error {
-      argument_name_conflict(const std::string& n) :
+    // Scheme errors
+    
+    struct name_conflict : scheme_error {
+      name_conflict(const std::string& n) :
         name_str(n) {
         message = "Argument name conflict ('" + name_str + "').";
       }
       
-      argument_name_conflict(const char& n) :
+      name_conflict(const char& n) :
         name_char(n) {
         message = "Argument name conflict ('" + std::string() + name_char + "').";
       }
@@ -40,16 +41,24 @@ namespace optspp {
       char name_char{0};
     };
 
-        // Schema errors
-    struct argument_value_conflict : schema_error {
-      argument_value_conflict(const std::string& n) :
+    struct value_conflict : scheme_error {
+      value_conflict(const std::string& n) :
         value_str(n) {
         message = "Argument value conflict ('" + value_str + "').";
       }
 
       std::string value_str;
-    };      
+    };
 
+    struct value_not_found : scheme_error {
+      value_not_found(const std::string& n) :
+        value_str(n) {
+        message = "Argument value '" + n + "' not found.";
+      }
+      
+      std::string value_str;
+    };
+    
     /*
     // --------- Options exceptions ---------
 

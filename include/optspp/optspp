@@ -3,9 +3,7 @@
 // Declarations
 #include "../../src/scheme.hpp"
 // Definitions
-#include "../../src/scheme/node.hpp"
-#include "../../src/scheme/descriptor.hpp"
-#include "../../src/scheme/name.hpp"
-#include "../../src/scheme/value.hpp"
+#include "../../src/scheme/arguments.hpp"
+#include "../../src/scheme/attributes.hpp"
 #include "../../src/scheme/properties.hpp"
 #include "../../src/scheme/operations.hpp"

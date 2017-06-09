@@ -2,61 +2,52 @@
 
 namespace optspp {
   namespace scheme {
-    description::description(const std::string& desc) : node(node::KIND::NONE) {
+    description::description(const std::string& desc) : attributes(KIND::DESCRIPTION) {
       set_description(desc);
     }
     
-    positional::positional(const std::string& name) {
+    positional::positional(const std::string& name) : attributes(KIND::NAME) {
       set_is_positional(true);
       set_long_name(name);
     }
 
-    positional::positional(const std::string& name, std::initializer_list<std::string> synonyms) {
+    positional::positional(const std::string& name, std::initializer_list<std::string> synonyms) : attributes(KIND::NAME) {
       set_is_positional(true);
       set_long_name(name);
       for (const auto& s : synonyms) add_long_name_synonym(s);
     }
 
-    named::named(const std::string& name) {
+    named::named(const std::string& name) : attributes(KIND::NAME) {
       set_is_positional(true);
       set_long_name(name);
     }
 
-    named::named(const std::string& name, std::initializer_list<std::string> synonyms) {
+    named::named(const std::string& name, std::initializer_list<std::string> synonyms) : attributes(KIND::NAME) {
       set_is_positional(false);
       set_long_name(name);
       for (const auto& s : synonyms) add_long_name_synonym(s);
     }
 
-    named::named(const char& name) {
+    named::named(const char& name) : attributes(KIND::NAME) {
       set_is_positional(false);
       set_short_name(name);
     }
 
-    named::named(const char& name, std::initializer_list<char> synonyms) {
+    named::named(const char& name, std::initializer_list<char> synonyms) : attributes(KIND::NAME) {
       set_is_positional(false);
       set_short_name(name);
       for (const auto& s : synonyms) add_short_name_synonym(s);
     }
 
-    min_count::min_count(const size_t& min_count) {
+    min_count::min_count(const size_t& min_count) : attributes(KIND::NAME) {
       set_min_count(min_count);
     }
 
-    max_count::max_count(const size_t& max_count) {
+    max_count::max_count(const size_t& max_count) : attributes(KIND::NAME) {
       set_max_count(max_count);
     }
-  
-    value::value(const std::string& main_value) {
-      set_main_value(main_value);
-    }
-  
-    value::value(const std::string& main_value, std::initializer_list<std::string> synonyms) {
-      set_main_value(main_value);
-      for (const auto& s : synonyms) add_value_synonym(s);
-    }
 
-    default_value::default_value(const std::string& value) {
+    default_value::default_value(const std::string& value) : attributes(KIND::NAME) {
       add_default_value(value);
     }
   
@@ -65,7 +56,7 @@ namespace optspp {
       add_default_value(value);
     }
 
-    implicit_value::implicit_value(const std::string& value) {
+    implicit_value::implicit_value(const std::string& value) : attributes(KIND::NAME) {
       add_implicit_value(value);
     }
   
@@ -74,9 +65,19 @@ namespace optspp {
       add_implicit_value(value);
     }
 
-    any_value::any_value() {
+    any_value::any_value()  : attributes(KIND::NAME) {
       set_allow_arbitrary_values(true);
     }
+    
+    value::value(const std::string& main_value) : attributes(KIND::VALUE) {
+      set_main_value(main_value);
+    }
+  
+    value::value(const std::string& main_value, std::initializer_list<std::string> synonyms) : attributes(KIND::VALUE) {
+      set_main_value(main_value);
+      for (const auto& s : synonyms) add_value_synonym(s);
+    }
+
   }
 
   std::shared_ptr<scheme::description> description(const std::string& desc) {

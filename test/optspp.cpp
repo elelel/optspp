@@ -11,8 +11,7 @@ SCENARIO("TDD") {
     REQUIRE(named("login", {"username", "user"})->long_name_synonyms() ==
             std::vector<std::string>({"username", "user"}));
           
-    
-    auto arguments = make_scheme();
+    auto arguments = make_arguments();
     arguments
       << (positional("command")
           | (value("useradd")
@@ -20,7 +19,8 @@ SCENARIO("TDD") {
                  | named('l', {'u'})
                  | min_count(1)
                  | max_count(1)
-                 | description("User's login"))
+                 | description("User's login")
+                 )
              << (named("password", {"pw", "pass"})
                  | named('p')
                  | max_count(1))
@@ -33,28 +33,35 @@ SCENARIO("TDD") {
                         | value("false", {"off", "no"})
                         | default_value("false")
                         | implicit_value("true")
-                        | description("Make this administrator a superadministrator")))
+                        | description("Make this administrator a superadministrator")
+                        ))
                  | value("false", {"off", "no"})
                  | default_value("false")
                  | implicit_value("true")
-                 | description("Make this user administrator")))
+                 | description("Make this user administrator")
+                 ))
           | (value("userdel")
              << (named("login", {"username", "user"})
                  | named('l', {'u'})
                  | min_count(1)
                  | max_count(1)
-                 | description("User's login"))
+                 | description("User's login")
+                 )
              << (named("force")
                  | named('f')
                  | max_count(1)
-                 //  | values({{"true", {"on", "yes"}}, {"false", {"off", "no"}}})
+                 | value("true", {"on", "yes"})
+                 | value("false", {"off", "no"})
                  | default_value("false")
                  | implicit_value("true")
-                 | description("Force user deletion")))
+                 | description("Force user deletion")
+                 ))
           | any_value()  // Allow arbitraty value for "command" positional argument
           | min_count(1)
           );
+    arguments->validate_scheme();    
   }
+
 
   /*
   WHEN("Creating min property") {

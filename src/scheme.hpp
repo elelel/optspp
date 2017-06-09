@@ -3,197 +3,190 @@
 #include <string>
 #include <vector>
 
+#include "../contrib/easytree/include/easytree/tree"
+#include "../contrib/easytree/include/easytree/breadth_first"
+
 namespace optspp {
   namespace scheme {
     struct description;
 
-    namespace tree {
-      struct node;
-      struct descriptor;
-      struct name;
-      struct value;
-    }
-
-    std::shared_ptr<tree::name> operator|(std::shared_ptr<tree::name> n, const std::shared_ptr<tree::value>& v);
+    // All arguments container
+    struct arguments;
+    // Argument's attributes
+    struct attributes;
   }
+  // Sum attributes
+  std::shared_ptr<scheme::attributes> operator|(std::shared_ptr<scheme::attributes> lhs,
+                                                const std::shared_ptr<scheme::attributes>& rhs);
+  // Add a sub-argument (e.g. that is only allowed if this branch was selected)
+  std::shared_ptr<scheme::attributes> operator<<(std::shared_ptr<scheme::attributes> lhs,
+                                                 const std::shared_ptr<scheme::attributes>& rhs);
+
+  std::shared_ptr<scheme::arguments> operator<<(std::shared_ptr<scheme::arguments> lhs,
+                                                const std::shared_ptr<scheme::attributes>& rhs);
 }
 
 namespace optspp {
   namespace scheme {
-    namespace tree {
-      struct node : std::enable_shared_from_this<node> {
-        enum KIND {
-          NONE,
-          DESCRIPTOR,
-          NAME,
-          VALUE
-        };
-
-        virtual void validate() const;
-
-        node(KIND node_kind);
-        virtual ~node();
-
-        node& set_description(const std::string& desc);
-
-        // Find name in children names
-        std::vector<std::shared_ptr<name>>::const_iterator
-        find_iterator(const std::string& long_name) const;
-        std::shared_ptr<name> find(const std::string& long_name) const;
-        std::vector<std::shared_ptr<name>>::const_iterator
-        find_iterator(const char& short_name) const;
-        std::shared_ptr<name> find(const char& short_name) const;
-
-        const std::string& description() const;
-
-        node& add_parent(const std::shared_ptr<node>& parent);
-        node& remove_parent(const std::shared_ptr<node>& parent);
-        node& add_parents(const std::vector<std::shared_ptr<node>>& parents);
-        node& remove_parents(const std::vector<std::shared_ptr<node>>& parents);
-
-        node& add_child_name(const std::shared_ptr<name>& n);
-      protected:      
-        KIND node_kind_{KIND::NONE};
-        std::string description_;
-        std::vector<std::shared_ptr<node>> parents_;
-        std::vector<std::shared_ptr<name>> child_names_;    
+    struct attributes {
+      enum KIND {
+        ROOT,
+        NAME,
+        VALUE,
+        DESCRIPTION
       };
 
-      struct descriptor : node {
-        descriptor();
-        virtual ~descriptor();
-
-        virtual void validate() const override;
+      attributes(const KIND);
       
-        descriptor& operator<<(const std::shared_ptr<name>& other);
-      };
-
-      struct name : node {
-        name();
-        virtual ~name();
-        virtual void validate() const override;
-
-        friend std::shared_ptr<name> scheme::operator|(std::shared_ptr<name> n, const std::shared_ptr<tree::value>& v);
-
-        name& operator+=(const scheme::description& other);
-        name& operator+=(const name& other);
-
-        bool operator==(const std::string& n) const;
-        bool operator==(const char& n) const;
+      using type = attributes;
       
-        name& set_long_name(const std::string& long_name);
-        name& add_long_name_synonym(const std::string& long_name_synonym);
-        name& set_short_name(const char& short_name);
-        name& add_short_name_synonym(const char& short_name_synonym);
-        name& add_default_value(const std::string& default_value);
-        name& add_implicit_value(const std::string& implicit_value);
-        name& set_max_count(const size_t& max_count);
-        name& set_min_count(const size_t& min_count);
-        name& set_is_positional(const bool& is_positional);
-        name& set_allow_arbitrary_values(const bool& allow);
+      // Set argument name's description
+      type& operator+=(const scheme::description& other);
+      // Reduce (categorical sum) two names
+      type& operator+=(const type& other);
 
-        // Name-related read accessors
-        const std::string& long_name() const;
-        const std::vector<std::string>& long_name_synonyms() const;
-        std::vector<std::string> long_names() const;
-        const char& short_name() const;
-        const std::vector<char>& short_name_synonyms() const;
-        std::vector<char> short_names() const;
-        std::string all_names_to_string() const;
+      // Sum attributes
+      friend std::shared_ptr<attributes> optspp::operator|(std::shared_ptr<attributes> lhs,
+                                                    const std::shared_ptr<attributes>& rhs);
+      // Add a sub-argument (e.g. that is only allowed if this branch was selected)
+      friend std::shared_ptr<attributes> optspp::operator<<(std::shared_ptr<attributes> lhs,
+                                                     const std::shared_ptr<attributes>& rhs);
+
+      type& set_description(const std::string& desc);
+        
+      // Modify arguments's attributes
+      type& set_long_name(const std::string& long_name);
+      type& add_long_name_synonym(const std::string& long_name_synonym);
+      type& set_short_name(const char& short_name);
+      type& add_short_name_synonym(const char& short_name_synonym);
+      type& add_default_value(const std::string& default_value);
+      type& add_implicit_value(const std::string& implicit_value);
+      type& set_max_count(const size_t& max_count);
+      type& set_min_count(const size_t& min_count);
+      type& set_is_positional(const bool& is_positional);
+      type& set_allow_arbitrary_values(const bool& allow);
+
+      type& set_main_value(const std::string& main_value);
+      type& add_value_synonym(const std::string& synonym);
+      type& add_mutually_exclusive_values(const std::vector<std::string>& mutually_exclusive_values);
+
+      // Read accessors
+      const std::string& long_name() const;
+      const std::vector<std::string>& long_name_synonyms() const;
+      std::vector<std::string> long_names() const;
+      const char& short_name() const;
+      const std::vector<char>& short_name_synonyms() const;
+      std::vector<char> short_names() const;
+      std::string all_names_to_string() const;
+      std::vector<std::string> all_long_names() const;
+      std::vector<char> all_short_names() const;
+      const std::string& description() const;
+      const std::string& to_main_value(const std::string& s) const;
+      std::vector<std::string> default_values() const;
+      std::vector<std::string> implicit_values() const;
+      const size_t& max_count() const;
+      const size_t& min_count() const;
+      const bool allow_arbitrary_values() const;
+      const std::string& main_value() const;
+      const std::vector<std::string>& value_synonyms() const;
+
+      friend struct arguments;
       
-        const std::string& description() const;
-        const std::string& to_main_value(const std::string& s) const;
-        std::vector<std::string> default_values() const;
-        std::vector<std::string> implicit_values() const;
-        const size_t& max_count() const;
-        const size_t& min_count() const;
-        const bool allow_arbitrary_values() const;
-    
-      private:
-        std::vector<std::shared_ptr<value>> child_values_;
-        std::string long_name_;
-        std::vector<std::string> long_name_synonyms_;
-        char short_name_{0};
-        std::vector<char> short_name_synonyms_;
-        std::vector<std::string> default_values_;
-        std::vector<std::string> implicit_values_;
+    private:
+      KIND kind_;
+      // Description
+      std::string description_;
+      // Argument's long name, which is expected after long prefix, e.g. --option
+      std::string long_name_;
+      // Long name's synonyms, e.g. --opt, --op, --program_option ...
+      std::vector<std::string> long_name_synonyms_;
+      // Argument's short name, which is expexted after short prefix, e.g. -o
+      char short_name_{0};
+      // Short name's synonyms, e.g. -c, -i ...
+      std::vector<char> short_name_synonyms_;
+      // Argument's default values, assumed if the arg was not specified on command line
+      std::vector<std::string> default_values_;
+      // Argument's implicit values, assumed if the arg was specified withouth a value on command line
+      std::vector<std::string> implicit_values_;
+      // Maximum number of times the argument may be specified on command line
+      size_t max_count_{std::numeric_limits<size_t>::max()};
+      // Minimum number of times the argument may be specified on command line
+      size_t min_count_{std::numeric_limits<size_t>::min()};
+      // Is it a positional argument (the one used without prefices)? 
+      bool is_positional_{false};
+      // Are arbitrary values allowed or only those specified in valid values
+      bool allow_arbitrary_values_{true};
+      // Main value, if a synonym specified this is the value queries will decay to
+      std::string main_value_;
+      // Alternative ways to name the value
+      std::vector<std::string> value_synonyms_;
+      // Values that are incompatible in same invocation
+      std::vector<std::vector<std::string>> mutually_exclusive_values_;
 
-        size_t max_count_{std::numeric_limits<size_t>::max()};
-        size_t min_count_{std::numeric_limits<size_t>::min()};
-
-        bool is_positional_{false};
-        bool allow_arbitrary_values_{false};
-      };
-
-      struct value : node {
-        value();
-        virtual ~value();
-        virtual void validate() const override;
-
-        value& operator+=(const scheme::description& other);
-        value& operator+=(const value& other);
+      // Pending children, will be added to single tree by arguments container
+      std::vector<std::shared_ptr<attributes>> pending_;
       
-        value& operator<<(const std::shared_ptr<name>& other);
+    };
 
-        bool operator==(const std::string& s) const;
-      
-        value& set_main_value(const std::string& main_value);
-        value& add_value_synonym(const std::string& synonym);
+    // Arguments container
+    struct arguments {
+      arguments();
 
-        value& add_mutually_exclusive_values(const std::vector<std::string>& mutually_exclusive_values);
+      friend std::shared_ptr<arguments> optspp::operator<<(std::shared_ptr<arguments> lhs,
+                                                           const std::shared_ptr<scheme::attributes>& rhs);
 
-        const std::string& main_value() const;
-        const std::vector<std::string>& value_synonyms() const;
+      void adopt_pending();
+      void validate_scheme();
 
-      private:
-        std::string main_value_;
-        std::vector<std::string> value_synonyms_;
-        std::vector<std::vector<std::string>> mutually_exclusive_values_;
-      
-      };
-    }
+      std::string main_value(const easytree::tree::node<std::shared_ptr<attributes>>::type_ptr n,
+                             const std::string& vs) const;
+
+        
+    private:
+      easytree::tree::node<std::shared_ptr<attributes>>::type_ptr root_;
+    };
+            
 
     // Properties
-
-    struct description : tree::node {
+    struct description : attributes {
       description(const std::string& desc);
     };
   
-    struct positional : tree::name {
+    struct positional  : attributes {
       positional(const std::string& name);
       positional(const std::string& name, std::initializer_list<std::string> synonyms);
     };
 
-    struct named : tree::name {
+    struct named : attributes {
       named(const std::string& name);
       named(const std::string& name, std::initializer_list<std::string> synonyms);
       named(const char& name);
       named(const char& name, std::initializer_list<char> synonyms);
     };
 
-    struct min_count : tree::name {
+    struct min_count : attributes {
       min_count(const size_t& count);
     };
 
-    struct max_count : tree::name {
+    struct max_count : attributes {
       max_count(const size_t& count);
     };
 
-    struct default_value : tree::name {
+    struct default_value : attributes {
       default_value(const std::string& default_value);
       template <typename... Args> default_value(const std::string& value, Args&&... args);
     };
 
-    struct implicit_value : tree::name {
+    struct implicit_value : attributes {
       implicit_value(const std::string& implicit_value);
       template <typename... Args> implicit_value(const std::string& value, Args&&... args);
     };
 
-    struct any_value : tree::name {
+    struct any_value : attributes {
       any_value();
     };
   
-    struct value : tree::value {
+    struct value : attributes {
       value(const std::string& main_value);
       value(const std::string& main_value, std::initializer_list<std::string> synonyms);
     };
