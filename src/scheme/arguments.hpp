@@ -29,8 +29,9 @@ namespace optspp {
 
     void arguments::build() {
       if (!build_) {
+        build_ = true;
         adopt_pending();
-      build_ = true;
+        validate_scheme();
       }
     }
 
@@ -53,7 +54,6 @@ namespace optspp {
       for (auto it1 = breadth_first<std::shared_ptr<attributes>>(root_).begin();
            it1 != breadth_first<std::shared_ptr<attributes>>(root_).end(); ++it1) {
         auto& n = *it1;
-        std::cout << "Validating node " << (**n)->long_name_ << "\n";
         // Validate same level entities
         std::vector<std::string> long_names;
         std::vector<char> short_names;
@@ -81,10 +81,25 @@ namespace optspp {
           }
         }
         // Validate vertical uniqueness
-
         for (auto it2 = it1.depth_first_iterator();
              it2 != depth_first<std::shared_ptr<attributes>>(root_).end(); ++it2) {
-          
+          auto& o = *it2;
+          if ((it1 != it2) &&
+              ((**o)->kind_ == attributes::KIND::NAME) &&
+              ((**n)->kind_ == attributes::KIND::NAME)) {
+            for (const auto& lhs : (**n)->all_long_names()) {
+              for (const auto& rhs : (**o)->all_long_names()) {
+                if ((lhs != "") && (lhs == rhs))
+                  throw exception::name_conflict(lhs);
+              }
+            }
+            for (const auto& lhs : (**n)->all_short_names()) {
+              for (const auto& rhs : (**o)->all_short_names()) {
+                if ((lhs != 0) && (lhs == rhs))
+                  throw exception::name_conflict(lhs);
+              }
+            }
+          }
         }
       }
     }
