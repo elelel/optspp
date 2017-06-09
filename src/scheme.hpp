@@ -5,6 +5,7 @@
 
 #include "../contrib/easytree/include/easytree/tree"
 #include "../contrib/easytree/include/easytree/breadth_first"
+#include "../contrib/easytree/include/easytree/depth_first"
 
 namespace optspp {
   namespace scheme {

@@ -50,7 +50,9 @@ namespace optspp {
     void arguments::validate_scheme() {
       using namespace easytree;
       build();
-      for (auto& n : breadth_first<std::shared_ptr<attributes>>(root_)) {
+      for (auto it1 = breadth_first<std::shared_ptr<attributes>>(root_).begin();
+           it1 != breadth_first<std::shared_ptr<attributes>>(root_).end(); ++it1) {
+        auto& n = *it1;
         std::cout << "Validating node " << (**n)->long_name_ << "\n";
         // Validate same level entities
         std::vector<std::string> long_names;
@@ -77,6 +79,12 @@ namespace optspp {
                 throw exception::value_conflict(x);
             }
           }
+        }
+        // Validate vertical uniqueness
+
+        for (auto it2 = it1.depth_first_iterator();
+             it2 != depth_first<std::shared_ptr<attributes>>(root_).end(); ++it2) {
+          
         }
       }
     }
