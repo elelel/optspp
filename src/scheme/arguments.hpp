@@ -45,6 +45,7 @@ namespace optspp {
       adopt_pending();
       for (auto& n : breadth_first<std::shared_ptr<attributes>>(root_)) {
         std::cout << "Validating node " << (**n)->long_name_ << "\n";
+        // Validate same level entities
         std::vector<std::string> long_names;
         std::vector<char> short_names;
         std::vector<std::string> values;
@@ -60,6 +61,8 @@ namespace optspp {
                 short_names.push_back(x);
               else
                 throw exception::name_conflict(x);
+          }
+          if ((**c)->kind_ == attributes::KIND::VALUE) {
             for (const auto& x : (**c)->all_values()) {
               if (std::find(values.begin(), values.end(), x) == values.end())
                 values.push_back(x);
