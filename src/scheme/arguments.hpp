@@ -43,8 +43,31 @@ namespace optspp {
     void arguments::validate_scheme() {
       using namespace easytree;
       adopt_pending();
-      for (auto& c : breadth_first<std::shared_ptr<attributes>>(root_)) {
-        std::cout << "Validating node " << (**c)->long_name_ << "\n";
+      for (auto& n : breadth_first<std::shared_ptr<attributes>>(root_)) {
+        std::cout << "Validating node " << (**n)->long_name_ << "\n";
+        std::vector<std::string> long_names;
+        std::vector<char> short_names;
+        std::vector<std::string> values;
+        for (const auto& c : n->children()) {
+          if ((**c)->kind_ == attributes::KIND::NAME) {
+            for (const auto& x : (**c)->all_long_names())
+              if (std::find(long_names.begin(), long_names.end(), x) == long_names.end())
+                long_names.push_back(x);
+              else
+                throw exception::name_conflict(x);
+            for (const auto& x : (**c)->all_short_names())
+              if (std::find(short_names.begin(), short_names.end(), x) == short_names.end())
+                short_names.push_back(x);
+              else
+                throw exception::name_conflict(x);
+            for (const auto& x : (**c)->all_values()) {
+              if (std::find(values.begin(), values.end(), x) == values.end())
+                values.push_back(x);
+              else
+                throw exception::value_conflict(x);
+            }
+          }
+        }
       }
     }
     

@@ -192,6 +192,13 @@ namespace optspp {
       return rslt;
     }
 
+    std::vector<std::string> attributes::all_values() const {
+      std::vector<std::string> rslt;
+      rslt.push_back(main_value_);
+      for (const auto& v : value_synonyms_) rslt.push_back(v);
+      return rslt;
+    }
+
     /*
     std::vector<std::string> attributes::default_values() const {
       std::vector<std::string> rslt;

@@ -91,6 +91,7 @@ namespace optspp {
       const bool allow_arbitrary_values() const;
       const std::string& main_value() const;
       const std::vector<std::string>& value_synonyms() const;
+      std::vector<std::string> all_values() const;
 
       friend struct arguments;
       
