@@ -61,15 +61,19 @@ namespace optspp {
         for (const auto& c : n->children()) {
           if ((**c)->kind_ == attributes::KIND::NAME) {
             for (const auto& x : (**c)->all_long_names())
-              if (std::find(long_names.begin(), long_names.end(), x) == long_names.end())
-                long_names.push_back(x);
-              else
-                throw exception::name_conflict(x);
+              if (x != "") {
+                if (std::find(long_names.begin(), long_names.end(), x) == long_names.end())
+                  long_names.push_back(x);
+                else
+                  throw exception::name_conflict(x);
+              }
             for (const auto& x : (**c)->all_short_names())
-              if (std::find(short_names.begin(), short_names.end(), x) == short_names.end())
-                short_names.push_back(x);
-              else
-                throw exception::name_conflict(x);
+              if (x != 0) {
+                if (std::find(short_names.begin(), short_names.end(), x) == short_names.end())
+                  short_names.push_back(x);
+                else
+                  throw exception::name_conflict(x);
+              }
           }
           if ((**c)->kind_ == attributes::KIND::VALUE) {
             for (const auto& x : (**c)->all_values()) {

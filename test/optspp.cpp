@@ -5,13 +5,14 @@
 
 SCENARIO("TDD") {
   using namespace optspp;
-
-  WHEN("A sane argument definition is created") {
+  WHEN("Testing basic attributes functionality") {
     REQUIRE(named("login")->long_name() == "login");
     REQUIRE(named("login", {"username", "user"})->long_name() == "login");
     REQUIRE(named("login", {"username", "user"})->long_name_synonyms() ==
             std::vector<std::string>({"username", "user"}));
+  }
 
+  WHEN("A sane argument definition is created") {
     auto arguments = make_arguments();
     arguments
       << (positional("command")
@@ -40,6 +41,15 @@ SCENARIO("TDD") {
                  | default_value("false")
                  | implicit_value("true")
                  | description("Make this user administrator")
+                 )
+             << (named("force")
+                 | named('f')
+                 | max_count(1)
+                 | value("true", {"on", "yes"})
+                 | value("false", {"off", "no"})
+                 | default_value("false")
+                 | implicit_value("true")
+                 | description("Force user creation, deleting the old user")
                  ))
           | (value("userdel")
              << (named("login", {"username", "user"})
@@ -62,25 +72,28 @@ SCENARIO("TDD") {
           );
 
     arguments->build();
-    
-    std::map<size_t, std::vector<std::string>> actual_names;
-    std::map<size_t, std::vector<std::string>> actual_values;
-    for (auto it = easytree::breadth_first<std::shared_ptr<optspp::scheme::attributes>>(arguments->root()).begin();
-         it != easytree::breadth_first<std::shared_ptr<optspp::scheme::attributes>>(arguments->root()).end(); ++it) {
-      if ((***it)->kind() == optspp::scheme::attributes::KIND::NAME) {
-        actual_names[it.level()].push_back((***it)->long_name());
-      }
-      if ((***it)->kind() == optspp::scheme::attributes::KIND::VALUE) {
-        actual_values[it.level()].push_back((***it)->main_value());
-      }
-    }
-    REQUIRE(actual_names[1] == std::vector<std::string>({"command"}));
-    REQUIRE(actual_names[3] == std::vector<std::string>({"login", "password", "admin", "login", "force"}));
-    REQUIRE(actual_names[5] == std::vector<std::string>({"superadmin"}));
+    arguments->validate_scheme();
 
-    REQUIRE(actual_values[2] == std::vector<std::string>({"useradd", "userdel"}));
-    REQUIRE(actual_values[4] == std::vector<std::string>({"true", "false", "true", "false"}));
-    REQUIRE(actual_values[6] == std::vector<std::string>({"true", "false"}));
+    THEN("Walk the tree") {
+      std::map<size_t, std::vector<std::string>> actual_names;
+      std::map<size_t, std::vector<std::string>> actual_values;
+      for (auto it = easytree::breadth_first<std::shared_ptr<optspp::scheme::attributes>>(arguments->root()).begin();
+           it != easytree::breadth_first<std::shared_ptr<optspp::scheme::attributes>>(arguments->root()).end(); ++it) {
+        if ((***it)->kind() == optspp::scheme::attributes::KIND::NAME) {
+          actual_names[it.level()].push_back((***it)->long_name());
+        }
+        if ((***it)->kind() == optspp::scheme::attributes::KIND::VALUE) {
+          actual_values[it.level()].push_back((***it)->main_value());
+        }
+      }
+      REQUIRE(actual_names[1] == std::vector<std::string>({"command"}));
+      REQUIRE(actual_names[3] == std::vector<std::string>({"login", "password", "admin", "force", "login", "force"}));
+      REQUIRE(actual_names[5] == std::vector<std::string>({"superadmin"}));
+
+      REQUIRE(actual_values[2] == std::vector<std::string>({"useradd", "userdel"}));
+      REQUIRE(actual_values[4] == std::vector<std::string>({"true", "false", "true", "false", "true", "false"}));
+      REQUIRE(actual_values[6] == std::vector<std::string>({"true", "false"}));
+    }
   }
 }
 
@@ -106,16 +119,18 @@ SCENARIO("Validation errors") {
     }
   }
   WHEN("Two different level, different vertical paths non-unique names") {
-    arguments << (named("unique 1")
-                  | value("a")
-                  | (value("b")
-                     << named("non_unique")))
+    arguments << (named("abc")
+                  | (value("x")
+                     <<  (named("unique 1")
+                          | value("a")
+                          | (value("b")
+                             << named("non_unique")))))
               << (named("unique 2")
                   | value("a")
                   | (value("b")
                      << named("non_unique")));
     THEN("Name conflict exception should be thrown on scheme validation") {
-      REQUIRE_THROWS_AS(arguments->validate_scheme(), exception::name_conflict);
+      REQUIRE_NOTHROW(arguments->validate_scheme());
     }
   }
   WHEN("Two same level non-unique values") {
