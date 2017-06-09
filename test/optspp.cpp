@@ -1,6 +1,8 @@
 #include <catch.hpp>
 #include <optspp/optspp>
 
+#include <map>
+
 SCENARIO("TDD") {
   using namespace optspp;
 
@@ -59,7 +61,30 @@ SCENARIO("TDD") {
           | any_value()  // Allow arbitraty value for "command" positional argument
           | min_count(1)
           );
-    arguments->validate_scheme();    
+
+    arguments->adopt_pending();
+
+    std::map<size_t, std::vector<std::string>> actual_names;
+    std::map<size_t, std::vector<std::string>> actual_values;
+    for (auto it = easytree::breadth_first<std::shared_ptr<optspp::scheme::attributes>>(arguments->root()).begin();
+         it != easytree::breadth_first<std::shared_ptr<optspp::scheme::attributes>>(arguments->root()).end(); ++it) {
+      if ((***it)->kind() == optspp::scheme::attributes::KIND::NAME) {
+        actual_names[it.level()].push_back((***it)->long_name());
+      }
+      if ((***it)->kind() == optspp::scheme::attributes::KIND::VALUE) {
+        actual_values[it.level()].push_back((***it)->main_value());
+      }
+    }
+    REQUIRE(actual_names[1] == std::vector<std::string>({"command"}));
+    REQUIRE(actual_names[3] == std::vector<std::string>({"login", "password", "admin", "login", "force"}));
+    REQUIRE(actual_names[5] == std::vector<std::string>({"superadmin"}));
+
+    REQUIRE(actual_values[2] == std::vector<std::string>({"useradd", "userdel"}));
+    REQUIRE(actual_values[4] == std::vector<std::string>({"true", "false", "true", "false"}));
+    REQUIRE(actual_values[6] == std::vector<std::string>({"true", "false"}));
+            
+      
+
   }
 
 

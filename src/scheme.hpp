@@ -39,6 +39,8 @@ namespace optspp {
       attributes(const KIND);
       
       using type = attributes;
+
+      KIND kind() const;
       
       // Set argument name's description
       type& operator+=(const scheme::description& other);
@@ -142,6 +144,7 @@ namespace optspp {
                              const std::string& vs) const;
 
         
+      const easytree::tree::node<std::shared_ptr<attributes>>::type_ptr& root() const;
     private:
       easytree::tree::node<std::shared_ptr<attributes>>::type_ptr root_;
     };

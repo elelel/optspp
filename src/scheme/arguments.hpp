@@ -15,10 +15,8 @@ namespace optspp {
       while (true) {
         bool child_added{false};
         for (auto& c : breadth_first<std::shared_ptr<attributes>>(root_)) {
-          std::cout << "Testing " << (**c)->long_name_ << " / " << (**c)->main_value_ << "\n";
           if (std::find(visited.begin(), visited.end(), c) == visited.end()) {
             for (const auto& cc : (**c)->pending_) {
-              std::cout << "Adding child\n";
               c->add_child(node(cc));
               child_added = true;
             }
@@ -46,9 +44,15 @@ namespace optspp {
       using namespace easytree;
       adopt_pending();
       for (auto& c : breadth_first<std::shared_ptr<attributes>>(root_)) {
-        std::cout << "Node " << (**c)->long_name_ << "\n";
+        std::cout << "Validating node " << (**c)->long_name_ << "\n";
       }
     }
+    
+    const easytree::tree::node<std::shared_ptr<attributes>>::type_ptr& arguments::root() const {
+      return root_;
+    }
+    
   }
+
 }
   

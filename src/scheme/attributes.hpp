@@ -7,6 +7,10 @@ namespace optspp {
     attributes::attributes(const KIND kind) :
       kind_(kind) {
     }
+
+    auto attributes::kind() const -> KIND {
+      return kind_;
+    }
         
     auto attributes::operator+=(const type& other) -> type& {
       switch (kind_) {
