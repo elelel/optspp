@@ -138,7 +138,7 @@ namespace optspp {
       friend std::shared_ptr<arguments> optspp::operator<<(std::shared_ptr<arguments> lhs,
                                                            const std::shared_ptr<scheme::attributes>& rhs);
 
-      void adopt_pending();
+      void build();
       void validate_scheme();
 
       std::string main_value(const easytree::tree::node<std::shared_ptr<attributes>>::type_ptr n,
@@ -147,7 +147,9 @@ namespace optspp {
         
       const easytree::tree::node<std::shared_ptr<attributes>>::type_ptr& root() const;
     private:
+      void adopt_pending();
       easytree::tree::node<std::shared_ptr<attributes>>::type_ptr root_;
+      bool build_{false};
     };
             
 

@@ -62,8 +62,8 @@ SCENARIO("TDD") {
           | min_count(1)
           );
 
-    arguments->adopt_pending();
-
+    arguments->build();
+    
     std::map<size_t, std::vector<std::string>> actual_names;
     std::map<size_t, std::vector<std::string>> actual_values;
     for (auto it = easytree::breadth_first<std::shared_ptr<optspp::scheme::attributes>>(arguments->root()).begin();

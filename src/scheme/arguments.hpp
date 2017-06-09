@@ -27,6 +27,13 @@ namespace optspp {
       }
     }
 
+    void arguments::build() {
+      if (!build_) {
+        adopt_pending();
+      build_ = true;
+      }
+    }
+
     std::string arguments::main_value(const easytree::tree::node<std::shared_ptr<attributes>>::type_ptr n,
                                       const std::string& vs) const {
       using namespace easytree;
@@ -42,7 +49,7 @@ namespace optspp {
     
     void arguments::validate_scheme() {
       using namespace easytree;
-      adopt_pending();
+      build();
       for (auto& n : breadth_first<std::shared_ptr<attributes>>(root_)) {
         std::cout << "Validating node " << (**n)->long_name_ << "\n";
         // Validate same level entities
