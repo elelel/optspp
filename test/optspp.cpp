@@ -6,13 +6,12 @@
 SCENARIO("TDD") {
   using namespace optspp;
 
-  WHEN("Variant 2") {
-
+  WHEN("A sane argument definition is created") {
     REQUIRE(named("login")->long_name() == "login");
     REQUIRE(named("login", {"username", "user"})->long_name() == "login");
     REQUIRE(named("login", {"username", "user"})->long_name_synonyms() ==
             std::vector<std::string>({"username", "user"}));
-          
+
     auto arguments = make_arguments();
     arguments
       << (positional("command")
@@ -82,10 +81,54 @@ SCENARIO("TDD") {
     REQUIRE(actual_values[2] == std::vector<std::string>({"useradd", "userdel"}));
     REQUIRE(actual_values[4] == std::vector<std::string>({"true", "false", "true", "false"}));
     REQUIRE(actual_values[6] == std::vector<std::string>({"true", "false"}));
-            
-      
-
   }
+}
+
+SCENARIO("Validation errors") {
+  using namespace optspp;
+  auto arguments = make_arguments();
+  WHEN("Two same level non-unique names") {
+    arguments << named("non_unique")
+              << named("unique")
+              << named("non_unique");
+    THEN("Name conflic exception should be thrown on scheme validation") {
+      REQUIRE_THROWS_AS(arguments->validate_scheme(), exception::name_conflict);
+    }
+  }
+  WHEN("Two different level, same vertical path non-unique names") {
+    arguments << named("non_unique")
+              << (named("unique")
+                  | value("a")
+                  | (value("b")
+                     << named("non_unique")));
+    THEN("Name conflict exception should be thrown on scheme validation") {
+      REQUIRE_THROWS_AS(arguments->validate_scheme(), exception::name_conflict);
+    }
+  }
+  WHEN("Two different level, different vertical paths non-unique names") {
+    arguments << (named("unique 1")
+                  | value("a")
+                  | (value("b")
+                     << named("non_unique")))
+              << (named("unique 2")
+                  | value("a")
+                  | (value("b")
+                     << named("non_unique")));
+    THEN("Name conflict exception should be thrown on scheme validation") {
+      REQUIRE_THROWS_AS(arguments->validate_scheme(), exception::name_conflict);
+    }
+  }
+  WHEN("Two same level non-unique values") {
+    arguments << (named("name")
+                  | value("non-unique")
+                  | value("non-unique"));
+    THEN("Name conflict exception should be thrown on scheme validation") {
+      REQUIRE_THROWS_AS(arguments->validate_scheme(), exception::value_conflict);
+    }
+  }
+  
+}
+
 
 
   /*
@@ -311,4 +354,4 @@ SCENARIO("TDD") {
     }
   }
   */
-}
+
