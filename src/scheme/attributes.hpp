@@ -7,13 +7,7 @@ namespace optspp {
     attributes::attributes(const KIND kind) :
       kind_(kind) {
     }
-    
-    /*
-      name& attributes::operator+=(const scheme::description& r) -> type& {
-      if (r->description() != "") description_ = r->description();
-      return *this;
-      }*/
-      
+        
     auto attributes::operator+=(const type& other) -> type& {
       switch (kind_) {
       case KIND::DESCRIPTION :

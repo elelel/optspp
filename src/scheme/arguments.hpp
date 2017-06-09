@@ -11,17 +11,18 @@ namespace optspp {
     
     void arguments::adopt_pending() {
       using namespace easytree;
+      std::vector<easytree::tree::node<std::shared_ptr<attributes>>::type_ptr> visited;
       while (true) {
         bool child_added{false};
         for (auto& c : breadth_first<std::shared_ptr<attributes>>(root_)) {
           std::cout << "Testing " << (**c)->long_name_ << " / " << (**c)->main_value_ << "\n";
-          if ((**c)->pending_.size() != 0) {
+          if (std::find(visited.begin(), visited.end(), c) == visited.end()) {
             for (const auto& cc : (**c)->pending_) {
               std::cout << "Adding child\n";
               c->add_child(node(cc));
               child_added = true;
             }
-            (**c)->pending_.clear();
+            visited.push_back(c);
           }
         }
         if (!child_added) break;
