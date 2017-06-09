@@ -109,8 +109,8 @@ SCENARIO("Validation errors") {
     }
   }
   WHEN("Two different level, same vertical path non-unique names") {
-    arguments << named("non_unique")
-              << (named("unique")
+    arguments << named("unique")
+              << (named("non_unique")
                   | value("a")
                   | (value("b")
                      << named("non_unique")));
@@ -119,17 +119,15 @@ SCENARIO("Validation errors") {
     }
   }
   WHEN("Two different level, different vertical paths non-unique names") {
-    arguments << (named("abc")
-                  | (value("x")
-                     <<  (named("unique 1")
-                          | value("a")
-                          | (value("b")
-                             << named("non_unique")))))
+    arguments << (named("unique 1")
+                  | value("a")
+                  | (value("b")
+                     << named("non_unique")))
               << (named("unique 2")
                   | value("a")
                   | (value("b")
                      << named("non_unique")));
-    THEN("Name conflict exception should be thrown on scheme validation") {
+    THEN("Name conflict exception shouldn't be thrown on scheme validation") {
       REQUIRE_NOTHROW(arguments->validate_scheme());
     }
   }
