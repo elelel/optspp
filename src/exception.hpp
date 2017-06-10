@@ -15,6 +15,9 @@ namespace optspp {
     struct scheme_error : optspp_exception {
     };
 
+    struct parse_error : optspp_exception {
+    };
+
     struct options_exception : optspp_exception {
     };
 
@@ -57,6 +60,85 @@ namespace optspp {
       }
       
       std::string value_str;
+    };
+
+    // Parse errors
+    struct unknown_argument : parse_error {
+      unknown_argument(const token& _t, const std::string& _argument) :
+        t(_t),
+        s(_argument) {
+        message = "Unknown argument '" + s + "'.";
+      }
+
+      token t;
+      std::string s;
+    };
+
+    struct too_many_arguments : parse_error {
+      too_many_arguments(const token& _t, const std::string& _argument) :
+        t(_t),
+        argument(_argument) {
+        message = "Too many arguments, superflous argument '" + argument + "'.";
+      }
+
+      token t;
+      std::string argument;
+    };
+    
+    struct missing_value : parse_error {
+      missing_value(const token& _t, const std::shared_ptr<scheme::attributes>& _arg) :
+        t(_t),
+        arg(_arg) {
+        message = "Missing value for argument '" + arg->all_names_to_string() + "'.";
+      }
+      
+    private:
+      token t;
+      std::shared_ptr<scheme::attributes> arg;
+    };
+    
+    struct invalid_value : parse_error {
+      invalid_value(const token& _t, const std::shared_ptr<scheme::attributes>& _arg, const std::string& s) :
+        t(_t),
+        arg(_arg) {
+        message = "Invalied value '" + s + "' for argument " + arg->all_names_to_string() + ".";
+      }
+      
+    private:
+      token t;
+      std::shared_ptr<scheme::attributes> arg;
+    };
+
+    struct too_many_values : parse_error {
+      too_many_values(const std::shared_ptr<scheme::attributes>& _arg) :
+        arg(_arg) {
+        message = "Too many values for argument '" + arg->all_names_to_string() + ".";
+      }
+      
+      too_many_values(const token& _t, const std::shared_ptr<scheme::attributes>& _arg) :
+        t(_t),
+        arg(_arg) {
+        message = "Too many values for argument '" + arg->all_names_to_string() + ".";
+      }
+    private:
+      token t;
+      std::shared_ptr<scheme::attributes> arg;
+    };
+
+    struct too_few_values : parse_error {
+      too_few_values(const std::shared_ptr<scheme::attributes>& _arg) :
+        arg(_arg) {
+        message = "Too few values for argument '" + arg->all_names_to_string() + ".";
+      }
+      
+      too_few_values(const token& _t, const std::shared_ptr<scheme::attributes>& _arg) :
+        t(_t),
+        arg(_arg) {
+        message = "Too few values for argument '" + arg->all_names_to_string() + ".";
+      }
+    private:
+      token t;
+      std::shared_ptr<scheme::attributes> arg;
     };
     
     /*
@@ -176,16 +258,6 @@ namespace optspp {
     };
 
     // --------- Value exceptions ---------
-    struct unknown_parameter : value_exception {
-      unknown_parameter(const token& _t, const std::string& _parameter) :
-        t(_t),
-        parameter(_parameter) {
-        message = "Unknown parameter '" + parameter + "'.";
-      }
-
-      token t;
-      std::string parameter;
-    };
 
     struct too_many_parameters : value_exception {
       too_many_parameters(const token& _t, const std::string& _argument) :

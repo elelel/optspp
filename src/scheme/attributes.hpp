@@ -175,19 +175,6 @@ namespace optspp {
       return rslt;
     }
 
-    /*
-    std::vector<std::string> attributes::default_values() const {
-      std::vector<std::string> rslt;
-      for (const auto& s : default_values_) rslt.push_back(to_main_value(s));
-      return rslt;
-    }
-  
-    std::vector<std::string> attributes::implicit_values() const {
-      std::vector<std::string> rslt;
-      for (const auto& s : implicit_values_) rslt.push_back(to_main_value(s));
-      return rslt;
-      }*/
-
     const size_t& attributes::max_count() const {
       return max_count_;
     }

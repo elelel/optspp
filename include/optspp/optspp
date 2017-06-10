@@ -1,9 +1,15 @@
 #pragma once
 
+// Forward declarations
+#include "../../src/predeclare.hpp"
 // Declarations
 #include "../../src/scheme.hpp"
+#include "../../src/parser.hpp"
 // Definitions
 #include "../../src/scheme/arguments.hpp"
 #include "../../src/scheme/attributes.hpp"
 #include "../../src/scheme/properties.hpp"
 #include "../../src/scheme/operations.hpp"
+#include "../../src/parser/separation.hpp"
+#include "../../src/parser/token.hpp"
+#include "../../src/parser/parser.hpp"

@@ -11,6 +11,9 @@
 
 namespace optspp {
   namespace scheme {
+    using attributes_ptr = std::shared_ptr<attributes>;
+    using node_ptr = easytree::tree::node<attributes_ptr>::type_ptr;
+
     struct attributes {
       enum KIND {
         ROOT,
@@ -104,7 +107,7 @@ namespace optspp {
       std::vector<std::vector<std::string>> mutually_exclusive_values_;
 
       // Pending children, will be added to single tree by arguments container
-      std::vector<std::shared_ptr<attributes>> pending_;
+      std::vector<attributes_ptr> pending_;
       
     };
 
@@ -119,20 +122,22 @@ namespace optspp {
       void build();
       void validate_scheme();
 
-      std::string main_value(const easytree::tree::node<std::shared_ptr<attributes>>::type_ptr n,
+      std::string main_value(const node_ptr n,
                              const std::string& vs) const;
 
         
-      const easytree::tree::node<std::shared_ptr<attributes>>::type_ptr& root() const;
+      const node_ptr& root() const;
     private:
       void adopt_pending();
-      easytree::tree::node<std::shared_ptr<attributes>>::type_ptr root_;
+      node_ptr root_;
       bool built_{false};
 
       std::vector<std::string> long_prefixes_{"--"};
       std::vector<std::string> short_prefixes_{"-"};
       std::vector<std::string> separators_{"="};
-      std::vector<std::string> end_of_options_arg{"--"};
+      std::vector<std::string> take_as_positionals_args_{"--"};
+
+      size_t max_positional_count_{std::numeric_limits<size_t>::max()};
 
       // Actual value holders
       std::map<std::shared_ptr<scheme::attributes>, std::vector<std::string>> values_;

@@ -7,9 +7,8 @@ SCENARIO("TDD") {
   using namespace optspp;
   WHEN("Testing basic attributes functionality") {
     REQUIRE(named("login")->long_name() == "login");
-    REQUIRE(named("login", {"username", "user"})->long_name() == "login");
-    REQUIRE(named("login", {"username", "user"})->long_name_synonyms() ==
-            std::vector<std::string>({"username", "user"}));
+    REQUIRE(named("login", {"username", "user"})->long_names() ==
+            std::vector<std::string>({"login", "username", "user"}));
   }
 
   WHEN("A sane argument definition is created") {
