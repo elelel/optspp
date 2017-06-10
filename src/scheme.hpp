@@ -7,25 +7,7 @@
 #include "../contrib/easytree/include/easytree/breadth_first"
 #include "../contrib/easytree/include/easytree/depth_first"
 
-namespace optspp {
-  namespace scheme {
-    struct description;
-
-    // All arguments container
-    struct arguments;
-    // Argument's attributes
-    struct attributes;
-  }
-  // Sum attributes
-  std::shared_ptr<scheme::attributes> operator|(std::shared_ptr<scheme::attributes> lhs,
-                                                const std::shared_ptr<scheme::attributes>& rhs);
-  // Add a sub-argument (e.g. that is only allowed if this branch was selected)
-  std::shared_ptr<scheme::attributes> operator<<(std::shared_ptr<scheme::attributes> lhs,
-                                                 const std::shared_ptr<scheme::attributes>& rhs);
-
-  std::shared_ptr<scheme::arguments> operator<<(std::shared_ptr<scheme::arguments> lhs,
-                                                const std::shared_ptr<scheme::attributes>& rhs);
-}
+#include "predeclare.hpp"
 
 namespace optspp {
   namespace scheme {
@@ -75,14 +57,10 @@ namespace optspp {
 
       // Read accessors
       const std::string& long_name() const;
-      const std::vector<std::string>& long_name_synonyms() const;
-      std::vector<std::string> long_names() const;
+      const std::vector<std::string>& long_names() const;
       const char& short_name() const;
-      const std::vector<char>& short_name_synonyms() const;
-      std::vector<char> short_names() const;
+      const std::vector<char>& short_names() const;
       std::string all_names_to_string() const;
-      std::vector<std::string> all_long_names() const;
-      std::vector<char> all_short_names() const;
       const std::string& description() const;
       const std::string& to_main_value(const std::string& s) const;
       std::vector<std::string> default_values() const;
@@ -100,14 +78,12 @@ namespace optspp {
       KIND kind_;
       // Description
       std::string description_;
-      // Argument's long name, which is expected after long prefix, e.g. --option
-      std::string long_name_;
-      // Long name's synonyms, e.g. --opt, --op, --program_option ...
-      std::vector<std::string> long_name_synonyms_;
-      // Argument's short name, which is expexted after short prefix, e.g. -o
-      char short_name_{0};
-      // Short name's synonyms, e.g. -c, -i ...
-      std::vector<char> short_name_synonyms_;
+      // Argument's long name, which is expected after long prefix, e.g. --option (at index 0);
+      // and long name's synonyms, e.g. --opt, --op, --program_option ...
+      std::vector<std::string> long_names_{""};
+      // Argument's short name, which is expexted after short prefix, e.g. -o (at index 0);
+      // and short name's synonyms, e.g. -c, -i ...
+      std::vector<char> short_names_{0};
       // Argument's default values, assumed if the arg was not specified on command line
       std::vector<std::string> default_values_;
       // Argument's implicit values, assumed if the arg was specified withouth a value on command line
@@ -136,6 +112,7 @@ namespace optspp {
     struct arguments {
       arguments();
 
+      friend struct optspp::parser;
       friend std::shared_ptr<arguments> optspp::operator<<(std::shared_ptr<arguments> lhs,
                                                            const std::shared_ptr<scheme::attributes>& rhs);
 
@@ -150,7 +127,17 @@ namespace optspp {
     private:
       void adopt_pending();
       easytree::tree::node<std::shared_ptr<attributes>>::type_ptr root_;
-      bool build_{false};
+      bool built_{false};
+
+      std::vector<std::string> long_prefixes_{"--"};
+      std::vector<std::string> short_prefixes_{"-"};
+      std::vector<std::string> separators_{"="};
+      std::vector<std::string> end_of_options_arg{"--"};
+
+      // Actual value holders
+      std::map<std::shared_ptr<scheme::attributes>, std::vector<std::string>> values_;
+      std::vector<std::string> positional_;
+      
     };
             
 

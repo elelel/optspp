@@ -23,16 +23,16 @@ namespace optspp {
           set_description(other.description_);
         is_positional_ = other.is_positional_;
         allow_arbitrary_values_ = other.allow_arbitrary_values_;
-        if (other.long_name_ != "")
-          set_long_name(other.long_name_);
-        if (other.long_name_synonyms_.size() != 0)
-          for (const auto& x : other.long_name_synonyms_) 
-            add_long_name_synonym(x);
-        if (other.short_name_ != 0)
-          set_short_name(other.short_name_);
-        if (other.short_name_synonyms_.size() != 0) 
-          for (const auto& x : other.short_name_synonyms_)
-            add_short_name_synonym(x);
+        if (other.long_names_[0] != "")
+          set_long_name(other.long_names_[0]);
+        if (other.long_names_.size() > 1)
+          for (auto it = other.long_names_.begin() + 1; it != other.long_names_.end(); ++it) 
+            add_long_name_synonym(*it);
+        if (other.short_names_[0] != 0)
+          set_short_name(other.short_names_[0]);
+        if (other.short_names_.size() > 1) 
+          for (auto it = other.short_names_.begin() + 1; it != other.short_names_.end(); ++it) 
+            add_short_name_synonym(*it);
 
         if (other.default_values_.size() != 0)
           for (const auto& x : other.default_values_)
@@ -67,32 +67,32 @@ namespace optspp {
     }
 
     auto attributes::set_long_name(const std::string& long_name) -> type& {
-      long_name_ = long_name;
+      long_names_[0] = long_name;
       return *this;
     }
   
     auto attributes::add_long_name_synonym(const std::string& long_name_synonym) -> type& {
-      if (std::find(long_name_synonyms_.begin(),
-                    long_name_synonyms_.end(), long_name_synonym)
-          == long_name_synonyms_.end()) {
-          long_name_synonyms_.push_back(long_name_synonym);
+      if (std::find(long_names_.begin(),
+                    long_names_.end(), long_name_synonym)
+          == long_names_.end()) {
+          long_names_.push_back(long_name_synonym);
         }
       return *this;
     }
   
     auto attributes::set_short_name(const char& short_name) -> type& {
       if (short_name != 0) {
-          short_name_ = short_name;
-        }
+        short_names_[0] = short_name;
+      }
       return *this;
     }
   
     auto attributes::add_short_name_synonym(const char& short_name_synonym) -> type& {
       if ((short_name_synonym != 0) &&
-          std::find(short_name_synonyms_.begin(),
-                    short_name_synonyms_.end(), short_name_synonym)
-          == short_name_synonyms_.end()) {
-          short_name_synonyms_.push_back(short_name_synonym);
+          std::find(short_names_.begin(),
+                    short_names_.end(), short_name_synonym)
+          == short_names_.end()) {
+          short_names_.push_back(short_name_synonym);
         }
       return *this;
     }
@@ -139,22 +139,12 @@ namespace optspp {
     std::string attributes::all_names_to_string() const {
       std::string rslt;
       bool need_comma{false};
-      if (long_name_ != "") {
-        if (need_comma) rslt += "/";
-        rslt += long_name_;
-        need_comma = true;
-      }
-      for (const auto& n : long_name_synonyms_) {
+      for (const auto& n : long_names_) {
         if (need_comma) rslt += "/";
         rslt += n;
         need_comma = true;
       }
-      if (short_name_ != 0) {
-        if (need_comma) rslt += "/";
-        rslt += short_name_;
-        need_comma = true;
-      }
-      for (const auto& n : short_name_synonyms_) {
+      for (const auto& n : short_names_) {
         if (need_comma) rslt += "/";
         rslt += n;
         need_comma = true;
@@ -163,33 +153,19 @@ namespace optspp {
     }
   
     const std::string& attributes::long_name() const {
-      return long_name_;
+      return long_names_[0];
     }
 
-    const std::vector<std::string>& attributes::long_name_synonyms() const {
-      return long_name_synonyms_;
+    const std::vector<std::string>& attributes::long_names() const {
+      return long_names_;
     }
 
     const char& attributes::short_name() const {
-      return short_name_;
+      return short_names_[0];
     }
 
-    const std::vector<char>& attributes::short_name_synonyms() const {
-      return short_name_synonyms_;
-    }
-
-    std::vector<std::string> attributes::all_long_names() const {
-      std::vector<std::string> rslt;
-      rslt.push_back(long_name_);
-      for (const auto& n : long_name_synonyms_) rslt.push_back(n);
-      return rslt;
-    }
-
-    std::vector<char> attributes::all_short_names() const {
-      std::vector<char> rslt;
-      rslt.push_back(short_name_);
-      for (const auto& n : short_name_synonyms_) rslt.push_back(n);
-      return rslt;
+    const std::vector<char>& attributes::short_names() const {
+      return short_names_;
     }
 
     std::vector<std::string> attributes::all_values() const {
