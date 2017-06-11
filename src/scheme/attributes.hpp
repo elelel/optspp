@@ -214,5 +214,14 @@ namespace optspp {
     const std::string& attributes::main_value() const {
       return known_values_[0];
     }
+
+    const std::vector<std::string>& attributes::default_values() const {
+      return default_values_;
+    }
+    
+    const std::vector<std::string>& attributes::implicit_values() const {
+      return implicit_values_;
+    }
+    
   }
 }

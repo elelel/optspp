@@ -65,8 +65,8 @@ namespace optspp {
       const std::vector<char>& short_names() const;
       std::string all_names_to_string() const;
       const std::string& description() const;
-      std::vector<std::string> default_values() const;
-      std::vector<std::string> implicit_values() const;
+      const std::vector<std::string>& default_values() const;
+      const std::vector<std::string>& implicit_values() const;
       const size_t& max_count() const;
       const size_t& min_count() const;
       const bool allow_arbitrary_values() const;
