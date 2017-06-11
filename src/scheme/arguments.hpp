@@ -34,18 +34,15 @@ namespace optspp {
         validate_scheme();
       }
     }
-
-    std::string arguments::main_value(const scheme::node_ptr n,
-                                      const std::string& vs) const {
+    
+    const std::string& arguments::main_value(const node_ptr& arg_node,
+                                             const std::string& value_str) const {
       using namespace easytree;
-      for (const auto& c : n->children()) {
-        if ((**c)->main_value_ != "") {
-          if ((**c)->main_value_ == vs) return (**c)->main_value_;
-          auto found = std::find((**c)->value_synonyms_.begin(), (**c)->value_synonyms_.end(), vs);
-          if (found != (**c)->value_synonyms_.end()) return (**c)->main_value_;
-        }
+      for (const auto& c : arg_node->children()) {
+        auto found = std::find((**c)->known_values_.begin(), (**c)->known_values_.end(), value_str);
+        if (found != (**c)->known_values_.end()) return (**c)->known_values_[0];
       }
-      throw exception::value_not_found(vs);
+      throw exception::value_not_found(value_str);
     }
     
     void arguments::validate_scheme() {
@@ -76,7 +73,7 @@ namespace optspp {
               }
           }
           if ((**c)->kind_ == attributes::KIND::VALUE) {
-            for (const auto& x : (**c)->all_values()) {
+            for (const auto& x : (**c)->known_values()) {
               if (std::find(values.begin(), values.end(), x) == values.end())
                 values.push_back(x);
               else
@@ -111,6 +108,7 @@ namespace optspp {
     const scheme::node_ptr& arguments::root() const {
       return root_;
     }
+
 
     /*
     std::vector<std::string> arguments::to_main_value(const scheme::node_ptr& n,

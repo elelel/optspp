@@ -48,11 +48,11 @@ namespace optspp {
       case KIND::VALUE :
         if (other.description_ != "")
           set_description(other.description_);
-        if (other.main_value_ != "")
-          set_main_value(other.main_value_);
-        if (other.value_synonyms_.size() != 0)
-          for (const auto& s : other.value_synonyms_)
-            add_value_synonym(s);
+        if (other.known_values_[0] != "")
+          set_main_value(other.known_values_[0]);
+        if (other.known_values_.size() > 1) 
+          for (auto it = other.known_values_.begin() + 1; it != other.known_values_.end(); ++it) 
+            add_value_synonym(*it);        
         if (other.mutually_exclusive_values_.size() != 0)
           for (const auto& m : other.mutually_exclusive_values_)
             add_mutually_exclusive_values(m);
@@ -68,6 +68,8 @@ namespace optspp {
 
     auto attributes::set_long_name(const std::string& long_name) -> type& {
       long_names_[0] = long_name;
+      long_names_.erase(std::remove(long_names_.begin() + 1, long_names_.end(), long_name),
+                        long_names_.end());
       return *this;
     }
   
@@ -168,11 +170,8 @@ namespace optspp {
       return short_names_;
     }
 
-    std::vector<std::string> attributes::all_values() const {
-      std::vector<std::string> rslt;
-      rslt.push_back(main_value_);
-      for (const auto& v : value_synonyms_) rslt.push_back(v);
-      return rslt;
+    const std::vector<std::string>& attributes::known_values() const {
+      return known_values_;
     }
 
     const size_t& attributes::max_count() const {
@@ -190,16 +189,18 @@ namespace optspp {
     // Value-related
     
     auto attributes::set_main_value(const std::string& main_value) -> type& {
-      value_synonyms_.erase(std::remove(value_synonyms_.begin(), value_synonyms_.end(), main_value),
-                            value_synonyms_.end());
-      main_value_ = main_value;
+      known_values_[0] = main_value;
+      known_values_.erase(std::remove(known_values_.begin() + 1, known_values_.end(), main_value),
+                          known_values_.end());
       return *this;
     }
 
     auto attributes::add_value_synonym(const std::string& synonym) -> type& {
-      if ((synonym != main_value_) &&
-          (std::find(value_synonyms_.begin(), value_synonyms_.end(), synonym) == value_synonyms_.end()))
-        value_synonyms_.push_back(synonym);
+      if (std::find(known_values_.begin(),
+                    known_values_.end(), synonym)
+          == known_values_.end()) {
+          known_values_.push_back(synonym);
+        }
       return *this;
     }
 
@@ -211,11 +212,7 @@ namespace optspp {
     }
 
     const std::string& attributes::main_value() const {
-      return main_value_;
-    }
-
-    const std::vector<std::string>& attributes::value_synonyms() const {
-      return value_synonyms_;
+      return known_values_[0];
     }
   }
 }

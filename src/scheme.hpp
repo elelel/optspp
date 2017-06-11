@@ -65,15 +65,13 @@ namespace optspp {
       const std::vector<char>& short_names() const;
       std::string all_names_to_string() const;
       const std::string& description() const;
-      const std::string& to_main_value(const std::string& s) const;
       std::vector<std::string> default_values() const;
       std::vector<std::string> implicit_values() const;
       const size_t& max_count() const;
       const size_t& min_count() const;
       const bool allow_arbitrary_values() const;
       const std::string& main_value() const;
-      const std::vector<std::string>& value_synonyms() const;
-      std::vector<std::string> all_values() const;
+      const std::vector<std::string>& known_values() const;
 
       bool is_positional() const;
 
@@ -89,10 +87,6 @@ namespace optspp {
       // Argument's short name, which is expexted after short prefix, e.g. -o (at index 0);
       // and short name's synonyms, e.g. -c, -i ...
       std::vector<char> short_names_{0};
-      // Argument's default values, assumed if the arg was not specified on command line
-      std::vector<std::string> default_values_;
-      // Argument's implicit values, assumed if the arg was specified withouth a value on command line
-      std::vector<std::string> implicit_values_;
       // Maximum number of times the argument may be specified on command line
       size_t max_count_{std::numeric_limits<size_t>::max()};
       // Minimum number of times the argument may be specified on command line
@@ -100,11 +94,14 @@ namespace optspp {
       // Is it a positional argument (the one used without prefices)? 
       bool is_positional_{false};
       // Are arbitrary values allowed or only those specified in valid values
-      bool allow_arbitrary_values_{true};
-      // Main value, if a synonym specified this is the value queries will decay to
-      std::string main_value_;
-      // Alternative ways to name the value
-      std::vector<std::string> value_synonyms_;
+      bool allow_arbitrary_values_{false};
+      // Main value, if a synonym specified this is the value queries will decay to (at index 0);
+      // and alternative ways to name the value
+      std::vector<std::string> known_values_{""};
+      // Argument's default values, assumed if the arg was not specified on command line
+      std::vector<std::string> default_values_;
+      // Argument's implicit values, assumed if the arg was specified withouth a value on command line
+      std::vector<std::string> implicit_values_;
       // Values that are incompatible in same invocation
       std::vector<std::vector<std::string>> mutually_exclusive_values_;
 
@@ -124,9 +121,8 @@ namespace optspp {
       void build();
       void validate_scheme();
 
-      std::string main_value(const node_ptr n,
-                             const std::string& vs) const;
-
+      const std::string& main_value(const node_ptr& arg_node,
+                                    const std::string& value_str) const;
         
       const node_ptr& root() const;
     private:
