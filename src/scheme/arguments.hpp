@@ -36,6 +36,12 @@ namespace optspp {
         throw std::runtime_error("Arguments scheme is already built");
       }
     }
+
+    void arguments::parse(const std::vector<std::string>& cmdl_args) {
+      if (!built_) build();
+      parser p(*this, cmdl_args);
+      p.parse();
+    }
     
     const std::string& arguments::main_value(const node_ptr& arg_node,
                                              const std::string& value_str) const {

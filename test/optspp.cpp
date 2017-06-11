@@ -92,6 +92,11 @@ SCENARIO("TDD") {
       REQUIRE(actual_values[4] == std::vector<std::string>({"true", "false", "true", "false", "true", "false"}));
       REQUIRE(actual_values[6] == std::vector<std::string>({"true", "false"}));
     }
+
+    THEN("Parse") {
+      std::vector<std::string> cmdl{"useradd"};
+      arguments->parse(cmdl);
+    }
   }
 }
 

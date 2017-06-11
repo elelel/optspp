@@ -119,6 +119,7 @@ namespace optspp {
                                                            const std::shared_ptr<scheme::attributes>& rhs);
 
       void build();
+      void parse(const std::vector<std::string>& cmdl_args);
 
       const std::string& main_value(const node_ptr& arg_node,
                                     const std::string& value_str) const;

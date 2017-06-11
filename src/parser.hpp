@@ -2,24 +2,9 @@
 
 #include "predeclare.hpp"
 
-namespace optspp {
-  namespace detail {
-    // Helper structure to split single command line argument into key/value
-    struct separation {
-      separation(const std::string& s,
-                 const std::vector<std::string>& separators);
-      // True if was separated
-      explicit operator bool() const noexcept;
+#include <list>
 
-      std::string key;
-      std::string value;
-      size_t value_pos;
-      
-    private:
-      bool was_separated_;
-    };
-  }
-  
+namespace optspp {
   // Token for parsing
   struct token {
     token();
@@ -48,21 +33,23 @@ namespace optspp {
     
   private:
     scheme::arguments& args_;
-    std::deque<token> tokens_;
+    std::list<token> tokens_;
     scheme::node_ptr node_;
+    std::list<token>::iterator token_it_;
     scheme::node_ptr next_node_;
-    bool take_as_positionals_{false};
+    bool ignore_option_prefixes_{false};
 
+    void separate();
+    
     // Extracts argument's value
-    bool parse_value_sources(const token& t, 
-                             const std::shared_ptr<scheme::attributes>& arg,
-                             const detail::separation& separated);
+    bool consume_value_sources(const std::shared_ptr<scheme::attributes>& arg);
+
     // Tries to parse current position as a long-prefixed argument
-    bool parse_long_argument();
+    bool consume_long_argument();
     // Tries to parse current position as a short-prefixed argument
-    bool parse_short_argument();
+    bool consume_short_argument();
     // Tries to parse current position as a positional argument
-    bool parse_positional();
+    bool consume_positional();
     // True if s is prefixed with one of the strings in prefixes
     static bool is_prefixed(const std::string& s, const std::vector<std::string>& prefixes);
     // True if s is prefixed with one of the strings in long prefixes

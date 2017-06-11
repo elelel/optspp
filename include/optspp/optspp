@@ -10,6 +10,5 @@
 #include "../../src/scheme/attributes.hpp"
 #include "../../src/scheme/properties.hpp"
 #include "../../src/scheme/operations.hpp"
-#include "../../src/parser/separation.hpp"
 #include "../../src/parser/token.hpp"
 #include "../../src/parser/parser.hpp"
