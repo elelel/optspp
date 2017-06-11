@@ -4,7 +4,8 @@ namespace optspp {
   parser::parser(scheme::arguments& args,
                  const std::vector<std::string>& cmdl_args) :
     args_(args),
-    candidates_(args_.root_->children()) {
+    node_(args_.root_),
+    next_node_(args_.root_) {
     for (size_t i = 0; i < cmdl_args.size(); ++i)
       tokens_.push_back({i, 0, cmdl_args[i]});
   }
@@ -37,6 +38,7 @@ namespace optspp {
     args_.values_.clear();
     args_.positional_.clear();
     while (tokens_.size() > 0) {
+      node_ = next_node_;
       if (parse_long_argument()) continue;
       if (parse_short_argument()) continue;
       if (parse_positional()) continue;
@@ -90,14 +92,16 @@ namespace optspp {
       // Find the option by name
       const auto& name = separated.key;
 
-      auto found = std::find_if(candidates_.begin(), candidates_.end(),
+      auto found = std::find_if(node_->children().begin(), node_->children().end(),
                                 [&name] (const scheme::node_ptr& n) {
                                   return
                                   (((**n)->kind() == scheme::attributes::KIND::NAME) &&
                                    (std::find((**n)->long_names().begin(), (**n)->long_names().end(), name) != (**n)->long_names().end()));
+                                  // TODO: named/anyvalue
                                 });
       
-      if (found == candidates_.end()) throw exception::unknown_argument(t, name);
+      if (found == node_->children().end()) throw exception::unknown_argument(t, name);
+      next_node_ = *found;
       return parse_value_sources(t, ***found, separated);
     }
     return false;
@@ -131,13 +135,15 @@ namespace optspp {
       // We have a single option
       if (separated.key.size() == 1) {
         char name = separated.key[0];
-        auto found = std::find_if(candidates_.begin(), candidates_.end(),
+        auto found = std::find_if(node_->children().begin(), node_->children().end(),
                                   [&name] (const scheme::node_ptr& n) {
                                     return
                                     (((**n)->kind() == scheme::attributes::KIND::NAME) &&
                                      (std::find((**n)->short_names().begin(), (**n)->short_names().end(), name) != (**n)->short_names().end()));
+                                    // TODO: predefined value/anyvalue
                                   });
-        if (found == candidates_.end()) throw exception::unknown_argument(t, std::string() + name);
+        if (found == node_->children().end()) throw exception::unknown_argument(t, std::string() + name);
+        next_node_ = *found;
         return parse_value_sources(t, ***found, separated);
       }
     }
@@ -149,6 +155,14 @@ namespace optspp {
     if ((is_short_prefixed(t.s) || is_short_prefixed(t.s)) && !take_as_positionals_) return false;
     args_.positional_.push_back(t.s);
     tokens_.pop_front();
+    auto found = std::find_if(node_->children().begin(), node_->children().end(),
+                              [] (const scheme::node_ptr& n) {
+                                return
+                                (((**n)->kind() == scheme::attributes::KIND::NAME) &&
+                                 (**n)->is_positional());
+                                // TODO: named/anyvalue
+                              });
+    next_node_ = *found;
     if (args_.max_positional_count_ < args_.positional_.size())
       throw exception::too_many_arguments(t, t.s);
     return true;

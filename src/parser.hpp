@@ -49,7 +49,8 @@ namespace optspp {
   private:
     scheme::arguments& args_;
     std::deque<token> tokens_;
-    std::vector<scheme::node_ptr> candidates_;
+    scheme::node_ptr node_;
+    scheme::node_ptr next_node_;
     bool take_as_positionals_{false};
 
     // Extracts argument's value

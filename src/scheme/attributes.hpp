@@ -183,6 +183,10 @@ namespace optspp {
       return min_count_;
     }
 
+    bool attributes::is_positional() const {
+      return is_positional_;
+    }
+
     // Value-related
     
     auto attributes::set_main_value(const std::string& main_value) -> type& {

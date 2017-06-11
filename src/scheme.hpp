@@ -75,6 +75,8 @@ namespace optspp {
       const std::vector<std::string>& value_synonyms() const;
       std::vector<std::string> all_values() const;
 
+      bool is_positional() const;
+
       friend struct arguments;
       
     private:
