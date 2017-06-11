@@ -19,43 +19,46 @@ namespace optspp {
           set_description(other.description_);
         break;
       case KIND::NAME :
-        if (other.description_ != "")
-          set_description(other.description_);
-        is_positional_ = other.is_positional_;
-        allow_arbitrary_values_ = other.allow_arbitrary_values_;
-        if (other.long_names_[0] != "")
-          set_long_name(other.long_names_[0]);
-        if (other.long_names_.size() > 1)
-          for (auto it = other.long_names_.begin() + 1; it != other.long_names_.end(); ++it) 
-            add_long_name_synonym(*it);
-        if (other.short_names_[0] != 0)
-          set_short_name(other.short_names_[0]);
-        if (other.short_names_.size() > 1) 
-          for (auto it = other.short_names_.begin() + 1; it != other.short_names_.end(); ++it) 
-            add_short_name_synonym(*it);
-
-        if (other.default_values_.size() != 0)
-          for (const auto& x : other.default_values_)
-            add_default_value(x);
-        if (other.implicit_values_.size() != 0)
-          for (const auto& x : other.implicit_values_)
-            add_implicit_value(x);
-        if (other.max_count_ != std::numeric_limits<size_t>::max())
-          set_max_count(other.max_count_);
-        if (other.min_count_ != std::numeric_limits<size_t>::min())
-          set_min_count(other.min_count_);
+        if (other.kind_ == KIND::NAME) {
+          if (other.description_ != "") set_description(other.description_);
+          std::cout << "Aggregating: " << long_names_[0] << " += " << other.long_names_[0] << " was " << is_positional_ << " will be " << other.is_positional_ << "\n";
+          is_positional_ = other.is_positional_;
+          allow_arbitrary_values_ = other.allow_arbitrary_values_;
+          if (other.long_names_[0] != "")
+            set_long_name(other.long_names_[0]);
+          if (other.long_names_.size() > 1)
+            for (auto it = other.long_names_.begin() + 1; it != other.long_names_.end(); ++it) 
+              add_long_name_synonym(*it);
+          if (other.short_names_[0] != 0)
+            set_short_name(other.short_names_[0]);
+          if (other.short_names_.size() > 1) 
+            for (auto it = other.short_names_.begin() + 1; it != other.short_names_.end(); ++it) 
+              add_short_name_synonym(*it);
+          if (other.default_values_.size() != 0)
+            for (const auto& x : other.default_values_)
+              add_default_value(x);
+          if (other.implicit_values_.size() != 0)
+            for (const auto& x : other.implicit_values_)
+              add_implicit_value(x);
+          if (other.max_count_ != std::numeric_limits<size_t>::max())
+            set_max_count(other.max_count_);
+          if (other.min_count_ != std::numeric_limits<size_t>::min())
+            set_min_count(other.min_count_);
+        }
         break;
       case KIND::VALUE :
-        if (other.description_ != "")
-          set_description(other.description_);
-        if (other.known_values_[0] != "")
-          set_main_value(other.known_values_[0]);
-        if (other.known_values_.size() > 1) 
-          for (auto it = other.known_values_.begin() + 1; it != other.known_values_.end(); ++it) 
-            add_value_synonym(*it);        
-        if (other.mutually_exclusive_values_.size() != 0)
-          for (const auto& m : other.mutually_exclusive_values_)
-            add_mutually_exclusive_values(m);
+        if (other.kind_ == KIND::VALUE) {
+          if (other.description_ != "")
+            set_description(other.description_);
+          if (other.known_values_[0] != "")
+            set_main_value(other.known_values_[0]);
+          if (other.known_values_.size() > 1) 
+            for (auto it = other.known_values_.begin() + 1; it != other.known_values_.end(); ++it) 
+              add_value_synonym(*it);        
+          if (other.mutually_exclusive_values_.size() != 0)
+            for (const auto& m : other.mutually_exclusive_values_)
+              add_mutually_exclusive_values(m);
+        }
         break;
       }
       return *this;
