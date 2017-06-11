@@ -71,7 +71,6 @@ SCENARIO("TDD") {
           );
 
     arguments->build();
-    arguments->validate_scheme();
 
     THEN("Walk the tree") {
       std::map<size_t, std::vector<std::string>> actual_names;
@@ -104,7 +103,7 @@ SCENARIO("Validation errors") {
               << named("unique")
               << named("non_unique");
     THEN("Name conflic exception should be thrown on scheme validation") {
-      REQUIRE_THROWS_AS(arguments->validate_scheme(), exception::name_conflict);
+      REQUIRE_THROWS_AS(arguments->build(), exception::name_conflict);
     }
   }
   WHEN("Two different level, same vertical path non-unique names") {
@@ -114,7 +113,7 @@ SCENARIO("Validation errors") {
                   | (value("b")
                      << named("non_unique")));
     THEN("Name conflict exception should be thrown on scheme validation") {
-      REQUIRE_THROWS_AS(arguments->validate_scheme(), exception::name_conflict);
+      REQUIRE_THROWS_AS(arguments->build(), exception::name_conflict);
     }
   }
   WHEN("Two different level, different vertical paths non-unique names") {
@@ -127,7 +126,7 @@ SCENARIO("Validation errors") {
                   | (value("b")
                      << named("non_unique")));
     THEN("Name conflict exception shouldn't be thrown on scheme validation") {
-      REQUIRE_NOTHROW(arguments->validate_scheme());
+      REQUIRE_NOTHROW(arguments->build());
     }
   }
   WHEN("Two same level non-unique values") {
@@ -135,7 +134,7 @@ SCENARIO("Validation errors") {
                   | value("non-unique")
                   | value("non-unique"));
     THEN("Name conflict exception should be thrown on scheme validation") {
-      REQUIRE_THROWS_AS(arguments->validate_scheme(), exception::value_conflict);
+      REQUIRE_THROWS_AS(arguments->build(), exception::value_conflict);
     }
   }
   

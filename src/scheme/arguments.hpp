@@ -32,6 +32,8 @@ namespace optspp {
         built_ = true;
         adopt_pending();
         validate_scheme();
+      } else {
+        throw std::runtime_error("Arguments scheme is already built");
       }
     }
     
@@ -47,7 +49,6 @@ namespace optspp {
     
     void arguments::validate_scheme() {
       using namespace easytree;
-      build();
       for (auto it1 = breadth_first<attributes_ptr>(root_).begin();
            it1 != breadth_first<attributes_ptr>(root_).end(); ++it1) {
         auto& n = *it1;

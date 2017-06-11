@@ -119,13 +119,13 @@ namespace optspp {
                                                            const std::shared_ptr<scheme::attributes>& rhs);
 
       void build();
-      void validate_scheme();
 
       const std::string& main_value(const node_ptr& arg_node,
                                     const std::string& value_str) const;
         
       const node_ptr& root() const;
     private:
+      void validate_scheme();
       void adopt_pending();
       node_ptr root_;
       bool built_{false};
