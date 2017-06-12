@@ -63,6 +63,9 @@ namespace optspp {
     // Add argument's value
     void add_value(const token& t, const std::shared_ptr<scheme::attributes>& arg, const std::string& s);
 
+    // Find value node for arg node by value's contents
+    auto find_value_node_for(const scheme::node_ptr& arg_node, const std::string& v_str) const -> std::vector<scheme::node_ptr>::const_iterator;
+    
     static std::tuple<size_t, std::string> extract_unprefixed(const std::string& s, const std::vector<std::string>& prefixes);
       
   };

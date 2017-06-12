@@ -62,6 +62,7 @@ namespace optspp {
         std::vector<std::string> long_names;
         std::vector<char> short_names;
         std::vector<std::string> values;
+        size_t positionals{0};
         for (const auto& c : n->children()) {
           if ((**c)->kind_ == attributes::KIND::NAME) {
             for (const auto& x : (**c)->long_names())
@@ -86,6 +87,13 @@ namespace optspp {
               else
                 throw exception::value_conflict(x);
             }
+          }
+          // Only one positional argument at same level
+          if (((**c)->kind_ == attributes::KIND::NAME) &&
+              (**c)->is_positional()) {
+            ++positionals;
+            if (positionals > 1)
+              throw exception::name_conflict((**c)->long_names()[0]);
           }
         }
         // Validate vertical uniqueness

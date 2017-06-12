@@ -52,11 +52,11 @@ namespace optspp {
       type& set_max_count(const size_t& max_count);
       type& set_min_count(const size_t& min_count);
       type& set_is_positional(const bool& is_positional);
-      type& set_allow_arbitrary_values(const bool& allow);
 
       type& set_main_value(const std::string& main_value);
       type& add_value_synonym(const std::string& synonym);
       type& add_mutually_exclusive_values(const std::vector<std::string>& mutually_exclusive_values);
+      type& set_any_value(const bool b);
 
       // Read accessors
       const std::string& long_name() const;
@@ -69,11 +69,11 @@ namespace optspp {
       const std::vector<std::string>& implicit_values() const;
       const size_t& max_count() const;
       const size_t& min_count() const;
-      const bool allow_arbitrary_values() const;
       const std::string& main_value() const;
       const std::vector<std::string>& known_values() const;
 
       bool is_positional() const;
+      bool is_any_value() const;
 
       friend struct arguments;
       
@@ -93,8 +93,6 @@ namespace optspp {
       size_t min_count_{std::numeric_limits<size_t>::min()};
       // Is it a positional argument (the one used without prefices)? 
       bool is_positional_{false};
-      // Are arbitrary values allowed or only those specified in valid values
-      bool allow_arbitrary_values_{false};
       // Main value, if a synonym specified this is the value queries will decay to (at index 0);
       // and alternative ways to name the value
       std::vector<std::string> known_values_{""};
@@ -104,6 +102,7 @@ namespace optspp {
       std::vector<std::string> implicit_values_;
       // Values that are incompatible in same invocation
       std::vector<std::vector<std::string>> mutually_exclusive_values_;
+      bool is_any_value_{false};
 
       // Pending children, will be added to single tree by arguments container
       std::vector<attributes_ptr> pending_;
@@ -151,6 +150,7 @@ namespace optspp {
     };
   
     struct positional  : attributes {
+      positional();
       positional(const std::string& name);
       positional(const std::string& name, std::initializer_list<std::string> synonyms);
     };

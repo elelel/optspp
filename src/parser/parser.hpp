@@ -63,23 +63,45 @@ namespace optspp {
     args_.positional_.clear();
 
     while (tokens_.size() > 0) {
-      std::cout << "Using next_node " << next_node_ << "\n";
+      
       if (next_node_ != nullptr) {
         node_ = next_node_;
+      std::cout << "Using next_node " << next_node_ << " "
+                << (**next_node_)->long_names()[0] << "\n ";
+        std::cout << "Node childern " << next_node_->children().size() << "\n";
+        for (const auto& c : next_node_->children()) {
+          if ((**c)->kind() == scheme::attributes::KIND::NAME) {
+            std::cout << " Expected name " << (**c)->long_names()[0] << "\n";
+          } else {
+            std::cout << " Kind " << (**c)->kind() << "\n";
+          }
+        }
       } else {
         throw exception::unknown_argument(*token_it_, token_it_->s);
       }
+      bool consumed{false};
       for (token_it_ = tokens_.begin(); token_it_ != tokens_.end();) {
         std::cout << "Token: " << token_it_->s << "\n";
         std::cout << "Testing long\n";
-        if (consume_long_argument()) continue;
+        if (consume_long_argument()) {
+          consumed = true;
+          break;
+        }
         std::cout << "Testing short\n";
-        if (consume_short_argument()) continue;
+        if (consume_short_argument()) {
+          consumed = true;
+          break;
+        }
         std::cout << "Testing positional\n";
-        if (consume_positional()) continue;
+        if (consume_positional()) {
+          consumed = true;
+          break;
+        }
         std::cout << "End cycle\n";
       }
-      throw exception::unknown_argument(tokens_.front(), tokens_.front().s);
+      if (!consumed) {
+        std::cout << "No expected arguments for this level found\n";
+      }
     }
   }
 
@@ -95,12 +117,12 @@ namespace optspp {
                                   return
                                   (((**n)->kind() == scheme::attributes::KIND::NAME) &&
                                    (std::find((**n)->long_names().begin(), (**n)->long_names().end(), name) != (**n)->long_names().end()));
-                                  // TODO: named/anyvalue
                                 });
       
-      if (found == node_->children().end()) throw exception::unknown_argument(t, name);
-      next_node_ = *found;
-      return consume_value_sources(***found);
+      if (found != node_->children().end()) {
+        next_node_ = *found;        
+        return consume_value_sources(***found);
+      }
     }
     return false;
   }
@@ -133,7 +155,7 @@ namespace optspp {
                                     // TODO: predefined value/anyvalue
                                   });
         if (found == node_->children().end()) throw exception::unknown_argument(*token_it_, std::string() + name);
-        next_node_ = *found;
+        next_node_ = *found;        
         return consume_value_sources(***found);
       }
     }
@@ -169,28 +191,50 @@ namespace optspp {
     return true;
   }
   
-    
   bool parser::consume_positional() {
     const auto t = tokens_.front();
     if ((is_short_prefixed(t.s) || is_short_prefixed(t.s)) && !ignore_option_prefixes_) return false;
-    std::cout << "Searching\n";
-    auto found = std::find_if(node_->children().begin(), node_->children().end(),
+    auto found_name = std::find_if(node_->children().begin(), node_->children().end(),
                               [] (const scheme::node_ptr& n) {
                                 return
                                 (((**n)->kind() == scheme::attributes::KIND::NAME) &&
                                  (**n)->is_positional());
-                                // TODO: named/anyvalue
                               });
-    std::cout << "Done\n";
-    if (found != node_->children().end()) {
-      args_.positional_.push_back(t.s);
-      next_node_ = *found;
-      std::cout << "Assingned next node";
-      return true;
-    } else {
-      throw exception::unknown_argument(t, t.s);
+    if (found_name != node_->children().end()) {
+      auto found_value = find_value_node_for(*found_name, t.s);
+      if (found_value != (*found_value)->children().end()) {
+        args_.positional_.push_back(t.s);
+        next_node_ = *found_value;
+        tokens_.erase(token_it_);
+        token_it_ = tokens_.begin();
+        return true;
+      } else {
+        // It's a positional, but value doesn't match this arg's value scheme
+        throw exception::unknown_argument(t, t.s);
+      }
     }
     return false;
+  }
+
+  auto parser::find_value_node_for(const scheme::node_ptr& arg_node, const std::string& v_str) const -> std::vector<scheme::node_ptr>::const_iterator {
+    auto found = std::find_if(arg_node->children().cbegin(),
+                              arg_node->children().cend(),
+                              [&v_str] (const scheme::node_ptr& n) {
+                                return ((**n)->kind() == scheme::attributes::KIND::VALUE) &&
+                                (std::find((**n)->known_values().begin(),
+                                           (**n)->known_values().end(),
+                                           v_str) != (**n)->known_values().end());
+                              });
+    if (found != (*found)->children().end()) {
+      return found;
+    }
+    found = std::find_if(arg_node->children().cbegin(),
+                         arg_node->children().cend(),
+                         [] (const scheme::node_ptr& n) {
+                           return ((**n)->kind() == scheme::attributes::KIND::VALUE) &&
+                           (**n)->is_any_value();
+                         });
+    return found;
   }
 
   void parser::add_value_implicit(const token& t, const std::shared_ptr<scheme::attributes>& arg) {

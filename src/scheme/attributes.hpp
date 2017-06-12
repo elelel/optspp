@@ -21,9 +21,8 @@ namespace optspp {
       case KIND::NAME :
         if (other.kind_ == KIND::NAME) {
           if (other.description_ != "") set_description(other.description_);
-          std::cout << "Aggregating: " << long_names_[0] << " += " << other.long_names_[0] << " was " << is_positional_ << " will be " << other.is_positional_ << "\n";
-          is_positional_ = other.is_positional_;
-          allow_arbitrary_values_ = other.allow_arbitrary_values_;
+          if (other.is_positional_)
+            is_positional_ = other.is_positional_;
           if (other.long_names_[0] != "")
             set_long_name(other.long_names_[0]);
           if (other.long_names_.size() > 1)
@@ -50,6 +49,8 @@ namespace optspp {
         if (other.kind_ == KIND::VALUE) {
           if (other.description_ != "")
             set_description(other.description_);
+          if (other.is_any_value_)
+            is_any_value_ = other.is_any_value_;
           if (other.known_values_[0] != "")
             set_main_value(other.known_values_[0]);
           if (other.known_values_.size() > 1) 
@@ -130,11 +131,6 @@ namespace optspp {
       is_positional_ = is_positional;
       return *this;
     }
-
-    auto attributes::set_allow_arbitrary_values(const bool& allow) -> type& {
-      allow_arbitrary_values_ = allow;
-      return *this;
-    }
     
     // Read accessors
     const std::string& attributes::description() const {
@@ -212,6 +208,14 @@ namespace optspp {
         mutually_exclusive_values_.push_back(mutually_exclusive_value);
       }
       return *this;
+    }
+
+    auto attributes::set_any_value(const bool b) -> type& {
+      is_any_value_ = true;
+    }
+
+    bool attributes::is_any_value() const {
+      return is_any_value_;
     }
 
     const std::string& attributes::main_value() const {

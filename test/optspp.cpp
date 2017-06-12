@@ -94,7 +94,7 @@ SCENARIO("TDD") {
     }
 
     THEN("Parse") {
-      std::vector<std::string> cmdl{"useradd"};
+      std::vector<std::string> cmdl{"useradd", "--admin", "true", "--username", "john", "--password", "secret", "add"};
       arguments->parse(cmdl);
     }
   }

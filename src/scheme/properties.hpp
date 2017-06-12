@@ -5,6 +5,10 @@ namespace optspp {
     description::description(const std::string& desc) : attributes(KIND::DESCRIPTION) {
       set_description(desc);
     }
+
+    positional::positional() : attributes(KIND::NAME) {
+      set_is_positional(true);
+    }
     
     positional::positional(const std::string& name) : attributes(KIND::NAME) {
       set_is_positional(true);
@@ -65,8 +69,8 @@ namespace optspp {
       add_implicit_value(value);
     }
 
-    any_value::any_value()  : attributes(KIND::NAME) {
-      set_allow_arbitrary_values(true);
+    any_value::any_value() : attributes(KIND::VALUE) {
+      set_any_value(true);
     }
     
     value::value(const std::string& main_value) : attributes(KIND::VALUE) {
