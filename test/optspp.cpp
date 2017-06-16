@@ -31,7 +31,9 @@ SCENARIO("TDD") {
                     description("Make this user administrator"))
               | (value("true", {"on", "yes"})
                  << (named(name("super-admin"),
-                           description("Make this administrator a superadministrator")))
+                           description("Make this administrator a superadministrator"))
+                     << value("true", {"on", "yes"})
+                     << value("false", {"off", "no"}))
                  << (named(name("rookie-admin"),
                            default_values("false"),
                            implicit_values("true"),
