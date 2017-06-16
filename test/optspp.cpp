@@ -5,22 +5,60 @@
 
 SCENARIO("TDD") {
   using namespace optspp;
-  WHEN("Testing basic attributes functionality") {
-    REQUIRE(named("login")->long_name() == "login");
-    REQUIRE(named("login", {"username", "user"})->long_names() ==
-            std::vector<std::string>({"login", "username", "user"}));
-  }
-
   WHEN("A sane argument definition is created") {
-    auto arguments = make_arguments();
+    auto option_force =
+      named(name("force"),
+            name('f'),
+            default_values("false"),
+            implicit_values("true"))
+      << value("true", {"on", "yes"})
+      << value("false", {"off", "no"});
+    
+    scheme::definition arguments =
+      (positional(name("command"))
+       << (value("useradd")
+           | (named(name("login", {"username", "user"}),
+                    name('l', {'u'}),
+                    min_count(1),
+                    max_count(1),
+                    description("User's login")))
+           | (named(name("password", {"pw", "pass"}),
+                    name('p'),
+                    max_count(1),
+                    description("User's password")))
+           | (named(name("admin", {"administrator"}),
+                    name('a'),
+                    description("Make this user administrator"))
+              | (value("true", {"on", "yes"})
+                 << (named(name("super-admin"),
+                           description("Make this administrator a superadministrator")))
+                 << (named(name("rookie-admin"),
+                           default_values("false"),
+                           implicit_values("true"),
+                           description("Make this administrator a rookie administrator"))
+                     << value("true", {"on", "yes"})
+                     << value("false", {"off", "no"})))
+              | (value("false", {"off", "no"})))
+           | (option_force))
+       << (value("userdel")
+           | (named(name("login", {"username", "user"}),
+                    name('l', {'u'}),
+                    min_count(1),
+                    max_count(1),
+                    description("User's login")))
+           | (option_force))
+       << (value(any())));
+  }
+}
+    /*
     arguments
       << (positional("command")
           | (value("useradd")
-             << (named("login", {"username", "user"})
-                 | named('l', {'u'})
-                 | min_count(1)
-                 | max_count(1)
-                 | description("User's login")
+             << (named("login", {"username", "user"},
+                       named('l', {'u'}),
+                 + min_count(1)
+                 + max_count(1)
+                 + description("User's login")
                  )
              << (named("password", {"pw", "pass"})
                  | named('p')
@@ -88,7 +126,7 @@ SCENARIO("TDD") {
       REQUIRE(actual_names[3] == std::vector<std::string>({"login", "password", "admin", "force", "login", "force"}));
       REQUIRE(actual_names[5] == std::vector<std::string>({"superadmin"}));
 
-      REQUIRE(actual_values[2] == std::vector<std::string>({"useradd", "userdel"}));
+      REQUIRE(actual_values[2] == std::vector<std::string>({"useradd", "userdel", ""}));
       REQUIRE(actual_values[4] == std::vector<std::string>({"true", "false", "true", "false", "true", "false"}));
       REQUIRE(actual_values[6] == std::vector<std::string>({"true", "false"}));
     }
@@ -97,11 +135,11 @@ SCENARIO("TDD") {
       std::vector<std::string> cmdl{"useradd", "--admin", "true", "--username", "john", "--password", "secret", "add"};
       arguments->parse(cmdl);
     }
-  }
-}
+    } */
+
 
 SCENARIO("Validation errors") {
-  using namespace optspp;
+  /* using namespace optspp;
   auto arguments = make_arguments();
   WHEN("Two same level non-unique names") {
     arguments << named("non_unique")
@@ -142,7 +180,7 @@ SCENARIO("Validation errors") {
       REQUIRE_THROWS_AS(arguments->build(), exception::value_conflict);
     }
   }
-  
+  */
 }
 
 

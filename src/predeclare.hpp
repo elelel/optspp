@@ -1,31 +1,44 @@
 #pragma once
 
+#include <memory>
+
+#include "../contrib/easytree/include/easytree/tree"
+
 namespace optspp {
   namespace scheme {
-    struct description;
+    struct definition;
+    struct entity;
 
-    // All arguments container
-    struct arguments;
-    // Argument's attributes
-    struct attributes;
+    // Scheme element (argument definition, value definition)
+    using entity_ptr = std::shared_ptr<entity>;
+    // Scheme's tree node
+    using node_ptr = easytree::tree::node<entity_ptr>::type_ptr;
   }
-  // Sum attributes
-  std::shared_ptr<scheme::attributes> operator|(std::shared_ptr<scheme::attributes> lhs,
-                                                const std::shared_ptr<scheme::attributes>& rhs);
-  // Add a sub-argument (e.g. that is only allowed if this branch was selected)
-  std::shared_ptr<scheme::attributes> operator<<(std::shared_ptr<scheme::attributes> lhs,
-                                                 const std::shared_ptr<scheme::attributes>& rhs);
+  // Properties
+  struct name;
+  struct min_count;
+  struct max_count;
+  struct description;
+  struct default_value;
+  struct implicit_value;
+  struct any;
 
-  std::shared_ptr<scheme::arguments> operator<<(std::shared_ptr<scheme::arguments> lhs,
-                                                const std::shared_ptr<scheme::attributes>& rhs);
+  // Factory functions to create scheme definition nodes
+  // Create positional argument definition
+  template <typename... Properties>
+  scheme::entity_ptr positional(Properties&&... ps);
+  // Create named argument definition
+  template <typename... Properties>
+  scheme::entity_ptr named(Properties&&... ps);
+  // Create value definition
+  scheme::entity_ptr value(const std::string& val);
+  scheme::entity_ptr value(const std::string& val, std::initializer_list<std::string> synonyms);
+  
 
-  // Parsing-related
-  namespace detail {
-    struct separation;
-  }
-  struct token;
-  struct parser;
-
-
+  // Assign argument node to scheme's root
+  std::shared_ptr<scheme::definition>& operator<<(std::shared_ptr<scheme::definition> d, const std::shared_ptr<scheme::entity>& e);
+  // Assign value definition to argument definition and argument definition to value definition; the children are xor-compatible
+  scheme::entity_ptr operator<<(scheme::entity_ptr lhs, const scheme::entity_ptr& rhs);
+  // Assign value definition to argument definition and argument definition to value definition; the children are or-compatible
+  scheme::entity_ptr operator|(scheme::entity_ptr lhs, const scheme::entity_ptr& rhs);
 }
-

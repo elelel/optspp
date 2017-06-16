@@ -1,8 +1,12 @@
 #pragma once
 
-#include "predeclare.hpp"
-
 #include <list>
+
+#include "../contrib/easytree/include/easytree/tree"
+#include "../contrib/easytree/include/easytree/breadth_first"
+#include "../contrib/easytree/include/easytree/depth_first"
+
+#include "predeclare.hpp"
 
 namespace optspp {
   // Token for parsing
@@ -35,8 +39,8 @@ namespace optspp {
     scheme::arguments& args_;
     std::list<token> tokens_;
     scheme::node_ptr node_;
-    std::list<token>::iterator token_it_;
-    scheme::node_ptr next_node_;
+    easytree::tree::node<std::shared_ptr<scheme::attributes>>::type_ptr tree_;
+    std::list<token>::iterator token_;
     bool ignore_option_prefixes_{false};
 
     void separate();
@@ -65,6 +69,8 @@ namespace optspp {
 
     // Find value node for arg node by value's contents
     auto find_value_node_for(const scheme::node_ptr& arg_node, const std::string& v_str) const -> std::vector<scheme::node_ptr>::const_iterator;
+    // Remove from children nodes all other than taken_node nodes of the same kind
+    void remove_alternative_paths(scheme::node_ptr parent_node, const scheme::node_ptr taken_node);
     
     static std::tuple<size_t, std::string> extract_unprefixed(const std::string& s, const std::vector<std::string>& prefixes);
       

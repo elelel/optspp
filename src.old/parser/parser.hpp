@@ -3,13 +3,15 @@
 namespace optspp {
   parser::parser(scheme::arguments& args,
                  const std::vector<std::string>& cmdl_args) :
-    args_(args),
-    next_node_(args_.root_) {
-    for (size_t i = 0; i < cmdl_args.size(); ++i)
-      tokens_.push_back({i, 0, cmdl_args[i]});
+    args_(args) {
+    const auto& source_tree = *args.root_;
+    auto attrs = std::shared_ptr<scheme::attributes>();
+    auto tree_ = easytree::node<std::shared_ptr<scheme::attributes>>(attrs);
+    tree_->copy_by_value(source_tree);
+    node_ = tree_;
+    for (size_t i = 0; i < cmdl_args.size(); ++i) tokens_.push_back({i, 0, cmdl_args[i]});
     separate();
-    for (const auto& t : tokens_)
-      std::cout << "Init token: " << t.s << "\n";
+    for (const auto& t : tokens_) std::cout << "Init token: " << t.s << "\n";
   }
 
   std::tuple<size_t, std::string> parser::extract_unprefixed(const std::string& s, const std::vector<std::string>& prefixes) {
@@ -62,26 +64,26 @@ namespace optspp {
     args_.values_.clear();
     args_.positional_.clear();
 
+    scheme::node_ptr tree_copy;
     while (tokens_.size() > 0) {
       
-      if (next_node_ != nullptr) {
-        node_ = next_node_;
-      std::cout << "Using next_node " << next_node_ << " "
-                << (**next_node_)->long_names()[0] << "\n ";
-        std::cout << "Node childern " << next_node_->children().size() << "\n";
-        for (const auto& c : next_node_->children()) {
+      // TODO: Change exception to a more meaningfull too_many_arguments
+      if (node_ == nullptr)
+        throw std::runtime_error("Node is nullptr");
+      std::cout << "\nUsing node " << node_ << " "
+                << (**node_)->long_names()[0] << "\n ";
+        std::cout << "Node childern " << node_->children().size() << "\n";
+        for (const auto& c : node_->children()) {
           if ((**c)->kind() == scheme::attributes::KIND::NAME) {
             std::cout << " Expected name " << (**c)->long_names()[0] << "\n";
           } else {
             std::cout << " Kind " << (**c)->kind() << "\n";
           }
         }
-      } else {
-        throw exception::unknown_argument(*token_it_, token_it_->s);
-      }
+
       bool consumed{false};
-      for (token_it_ = tokens_.begin(); token_it_ != tokens_.end();) {
-        std::cout << "Token: " << token_it_->s << "\n";
+      for (token_ = tokens_.begin(); token_ != tokens_.end();) {
+        std::cout << "Token: " << token_->s << "\n";
         std::cout << "Testing long\n";
         if (consume_long_argument()) {
           consumed = true;
@@ -97,16 +99,28 @@ namespace optspp {
           consumed = true;
           break;
         }
-        std::cout << "End cycle\n";
       }
       if (!consumed) {
         std::cout << "No expected arguments for this level found\n";
+        node_ = tree_;
       }
     }
   }
 
+  void parser::remove_alternative_paths(scheme::node_ptr parent_node,
+                                       const scheme::node_ptr taken_node) {
+    parent_node->children().erase(std::remove_if(parent_node->children().begin(),
+                                                 parent_node->children().end(),
+                                           [&taken_node] (const scheme::node_ptr& n) {
+                                             bool rslt = (**n != **taken_node) &&
+                                               (**n)->kind() == (**taken_node)->kind();
+                                             std::cout << "Will remove " << (**n).get() << " " << (**n)->long_names()[0] << "\n";
+                                             return rslt;
+                                           }));
+  }
+  
   bool parser::consume_long_argument() {
-    const auto& t = *token_it_;
+    const auto& t = *token_;
     if (is_long_prefixed(t.s)) {
       size_t unprefixed_pos{0};
       std::string name;
@@ -120,8 +134,14 @@ namespace optspp {
                                 });
       
       if (found != node_->children().end()) {
-        next_node_ = *found;        
-        return consume_value_sources(***found);
+        auto name = *found;
+        std::cout << "Removing all but " << (*found).get() << " " << (***found)->long_names()[0] << "\n";
+        remove_alternative_paths(node_, *found);
+        std::cout << "Consuming\n";
+        if (consume_value_sources(**name)) {
+        } else {
+          return false;
+        }
       }
     }
     return false;
@@ -129,19 +149,19 @@ namespace optspp {
   
   bool parser::consume_short_argument() {
     // Copy-construct
-    if (is_short_prefixed(token_it_->s)) {
+    if (!is_long_prefixed(token_->s) && is_short_prefixed(token_->s)) {
       size_t unprefixed_pos{0};
       std::string names;
-      std::tie(unprefixed_pos, names) = extract_unprefixed(token_it_->s, args_.short_prefixes_);
+      std::tie(unprefixed_pos, names) = extract_unprefixed(token_->s, args_.short_prefixes_);
       // See if we have to unpack many short parameters with single prefix
       if (names.size() > 1) {
-        auto t = *token_it_;
-        auto it = tokens_.erase(token_it_);
+        auto t = *token_;
+        auto it = tokens_.erase(token_);
         for (auto i = 0; i < names.size(); ++i) {
           tokens_.insert(it, {t.pos_arg_num, t.pos_in_arg + i,
                 args_.short_prefixes_[0] + names[i]});
         }
-        token_it_ = tokens_.begin();
+        token_ = tokens_.begin();
         return true;
       }
       // We have a single option
@@ -154,9 +174,10 @@ namespace optspp {
                                      (std::find((**n)->short_names().begin(), (**n)->short_names().end(), name) != (**n)->short_names().end()));
                                     // TODO: predefined value/anyvalue
                                   });
-        if (found == node_->children().end()) throw exception::unknown_argument(*token_it_, std::string() + name);
-        next_node_ = *found;        
-        return consume_value_sources(***found);
+        if (found != node_->children().end()) {
+          node_ = *found;        
+          return consume_value_sources(***found);
+        }
       }
     }
     return false;
@@ -165,30 +186,36 @@ namespace optspp {
   bool parser::consume_value_sources(const std::shared_ptr<scheme::attributes>& arg) {
     // Check if we don't have more tokens.
     if (tokens_.size() == 1) {
-      add_value_implicit(*token_it_, arg);
-      tokens_.erase(token_it_);
-      token_it_ = tokens_.begin();
+      add_value_implicit(*token_, arg);
+      tokens_.erase(token_);
+      token_ = tokens_.begin();
       return true;
     }
 
     // Continue looking for value in the next token.
-    std::list<token>::iterator next_it(token_it_);
+    std::list<token>::iterator next_it(token_);
     ++next_it;
     // Next token is a new option
     if ((is_long_prefixed(next_it->s) ||
          is_short_prefixed(next_it->s)) &&
         !ignore_option_prefixes_) {
-      add_value_implicit(*token_it_, arg);
-      tokens_.erase(token_it_);
-      token_it_ = tokens_.begin();
+      add_value_implicit(*token_, arg);
+      tokens_.erase(token_);
+      token_ = tokens_.begin();
       return true;
     }
+    
     // Next token must be our the value
-    add_value(*next_it, arg, next_it->s);
-    // Remove tokens containing name and value
-    tokens_.erase(tokens_.erase(token_it_));
-    token_it_ = tokens_.begin();
-    return true;
+    auto value_node = find_value_node_for(node_, next_it->s);
+    if (value_node != node_->children().end()) {
+      add_value(*next_it, arg, next_it->s);
+      // Remove tokens containing name and value
+      tokens_.erase(tokens_.erase(token_));
+      token_ = tokens_.begin();
+      node_ = *value_node;
+      return true;
+    }
+    return false;
   }
   
   bool parser::consume_positional() {
@@ -201,12 +228,16 @@ namespace optspp {
                                  (**n)->is_positional());
                               });
     if (found_name != node_->children().end()) {
-      auto found_value = find_value_node_for(*found_name, t.s);
+      auto name = *found_name;
+      remove_alternative_paths(node_, *found_name);
+      auto found_value = find_value_node_for(name, t.s);
       if (found_value != (*found_value)->children().end()) {
+        auto value = *found_value;
+        remove_alternative_paths(name, *found_value);
         args_.positional_.push_back(t.s);
-        next_node_ = *found_value;
-        tokens_.erase(token_it_);
-        token_it_ = tokens_.begin();
+        node_ = value;
+        tokens_.erase(token_);
+        token_ = tokens_.begin();
         return true;
       } else {
         // It's a positional, but value doesn't match this arg's value scheme
@@ -254,6 +285,7 @@ namespace optspp {
   }
 
   void parser::add_value(const token& t, const std::shared_ptr<scheme::attributes>& arg, const std::string& s) {
+    
     //    if (arg->is_valid_value(s)) {
     //      args_.values_[arg].push_back(arg->main_value(s));
       check_value_counts(t, arg);
