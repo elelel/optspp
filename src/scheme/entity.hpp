@@ -4,6 +4,25 @@
 
 namespace optspp {
   namespace scheme {
+    entity::entity(const entity& other) :
+      kind_(other.kind_),
+      siblings_group_(other.siblings_group_),
+      description_(other.description_),
+      long_names_(other.long_names_),
+      short_names_(other.short_names_),
+      max_count_(other.max_count_),
+      min_count_(other.min_count_),
+      is_positional_(other.is_positional_),
+      known_values_(other.known_values_),
+      default_values_(other.default_values_),
+      any_value_(other.any_value_) {
+      for (const auto& p : other.pending_) {
+        auto c = std::make_shared<entity>(*p);
+        pending_.push_back(c);
+        pending_siblings_group_[c] = other.pending_siblings_group_.at(p);
+      }
+    }
+    
     entity::entity(const KIND kind) :
       kind_(kind) {
     }

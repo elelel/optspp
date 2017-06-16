@@ -7,13 +7,35 @@
 
 namespace optspp {
   namespace scheme {
+    enum class SIBLINGS_GROUP {
+      NONE,
+      OR,
+      XOR        
+    };
+
+
     struct definition {
-      definition();
-      definition(const entity_ptr e);
-      definition& operator=(const entity_ptr e);
+      void parse();
+      
+      friend struct ::optspp::parser;
+      // Assign argument definition to scheme definition; the children are or-compatible
+      friend definition& optspp::operator<<(definition& lhs, const std::shared_ptr<scheme::entity>& rhs);  
+      // Assign argument definition to scheme definition; the children are or-compatible
+      friend definition& optspp::operator|(definition& lhs, const std::shared_ptr<scheme::entity>& rhs);
+
     private:
-      entity_ptr root_entity_;
-      node_ptr root_;
+      std::vector<std::string> long_prefixes_{"--"};
+      std::vector<std::string> short_prefixes_{"-"};
+      std::vector<std::string> separators_{"="};
+      std::vector<std::string> take_as_positionals_args_{"--"};
+
+      // Children
+      std::vector<entity_ptr> pending_;
+      std::map<entity_ptr, SIBLINGS_GROUP> pending_siblings_group_;
+
+      // Actual value holders
+      std::map<std::shared_ptr<scheme::entity>, std::vector<std::string>> values_;
+      std::vector<std::string> positional_;
     };
 
     struct entity {
@@ -23,13 +45,8 @@ namespace optspp {
         VALUE
       };
 
-      enum class SIBLINGS_GROUP {
-        NONE,
-        OR,
-        XOR        
-      };
-
       entity(const KIND kind);
+      entity(const entity& other);
       void set_siblings_group(const SIBLINGS_GROUP group);
 
       template <typename Property>
@@ -45,6 +62,12 @@ namespace optspp {
       friend std::shared_ptr<entity> optspp::operator<<(std::shared_ptr<entity> lhs, const std::shared_ptr<entity>& rhs);
       // Assign value definition to argument definition and argument definition to value definition; the children are or-compatible
       friend std::shared_ptr<entity> optspp::operator|(std::shared_ptr<entity> lhs, const std::shared_ptr<entity>& rhs);
+      // Assign argument definition to scheme definition; the children are or-compatible
+      friend definition& optspp::operator<<(scheme::definition& lhs, const std::shared_ptr<entity>& rhs);  
+      // Assign argument definition to scheme definition; the children are or-compatible
+      friend definition& optspp::operator|(scheme::definition& lhs, const std::shared_ptr<entity>& rhs);
+
+      friend struct parser;
       
     private:
       KIND kind_{KIND::NONE};
@@ -74,12 +97,10 @@ namespace optspp {
       optional<std::vector<std::string>> default_values_;
       // Argument's implicit values, assumed if the arg was specified withouth a value on command line
       optional<std::vector<std::string>> implicit_values_;
-      // Values that are incompatible in same invocation
-      optional<std::vector<std::vector<std::string>>> mutually_exclusive_values_;
       // Allow to take any value
       optional<bool> any_value_;
 
-      // Children to attach to tree on construction
+      // Children
       std::vector<entity_ptr> pending_;
       std::map<entity_ptr, SIBLINGS_GROUP> pending_siblings_group_;
     };

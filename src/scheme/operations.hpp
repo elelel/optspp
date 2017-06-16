@@ -76,7 +76,7 @@ namespace optspp {
         ((rhs->kind_ == scheme::entity::KIND::ARGUMENT) && (lhs->kind_ == scheme::entity::KIND::VALUE))) {
       if (std::find(lhs->pending_.begin(), lhs->pending_.end(), rhs) == lhs->pending_.end()) {
         lhs->pending_.push_back(rhs);
-        lhs->pending_siblings_group_[rhs] = scheme::entity::SIBLINGS_GROUP::XOR;
+        lhs->pending_siblings_group_[rhs] = scheme::SIBLINGS_GROUP::XOR;
       }
     } else {
       throw std::runtime_error("Scheme entity types are incompatible for combination");
@@ -91,11 +91,42 @@ namespace optspp {
         ((rhs->kind_ == scheme::entity::KIND::ARGUMENT) && (lhs->kind_ == scheme::entity::KIND::VALUE))) {
       if (std::find(lhs->pending_.begin(), lhs->pending_.end(), rhs) == lhs->pending_.end()) {
         lhs->pending_.push_back(rhs);
-        lhs->pending_siblings_group_[rhs] = scheme::entity::SIBLINGS_GROUP::OR;
+        lhs->pending_siblings_group_[rhs] = scheme::SIBLINGS_GROUP::OR;
       }
     } else {
       throw std::runtime_error("Scheme entity types are incompatible for combination: " +
                                std::to_string((int)lhs->kind_) + " and " +
+                               std::to_string((int)rhs->kind_));
+    }
+    return lhs;
+  }
+  
+
+  // Assign argument definition to scheme definition; the children are or-compatible
+  scheme::definition& operator<<(scheme::definition& lhs, const std::shared_ptr<scheme::entity>& rhs) {
+    using namespace easytree;
+    if (rhs->kind_ == scheme::entity::KIND::ARGUMENT) {
+      if (std::find(lhs.pending_.begin(), lhs.pending_.end(), rhs) == lhs.pending_.end()) {
+        lhs.pending_.push_back(rhs);
+        lhs.pending_siblings_group_[rhs] = scheme::SIBLINGS_GROUP::XOR;
+      }
+    } else {
+      throw std::runtime_error("Scheme entity type are incompatible for setting as scheme root element: " +
+                               std::to_string((int)rhs->kind_));
+    }
+    return lhs;
+  }
+  
+  // Assign argument definition to scheme definition; the children are or-compatible
+  scheme::definition& operator|(scheme::definition& lhs, const std::shared_ptr<scheme::entity>& rhs) {
+    using namespace easytree;
+    if (rhs->kind_ == scheme::entity::KIND::ARGUMENT) {
+      if (std::find(lhs.pending_.begin(), lhs.pending_.end(), rhs) == lhs.pending_.end()) {
+        lhs.pending_.push_back(rhs);
+        lhs.pending_siblings_group_[rhs] = scheme::SIBLINGS_GROUP::OR;
+      }
+    } else {
+      throw std::runtime_error("Scheme entity type are incompatible for setting as scheme root element: " +
                                std::to_string((int)rhs->kind_));
     }
     return lhs;

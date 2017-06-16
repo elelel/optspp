@@ -6,6 +6,23 @@
 SCENARIO("TDD") {
   using namespace optspp;
   WHEN("A sane argument definition is created") {
+    scheme::definition args1;
+    args1 << (named(name("first"))
+              << (value("yes"))
+              << (value("no")))
+          << (named(name("second"))
+              << (value("yes"))
+              << (value("no")));
+
+    scheme::definition args2;
+    args2 | (named(name("first"))
+              << (value("yes"))
+              << (value("no")))
+          | (named(name("second"))
+              << (value("yes"))
+              << (value("no")));
+
+          
     auto option_force =
       named(name("force"),
             name('f'),
@@ -13,8 +30,10 @@ SCENARIO("TDD") {
             implicit_values("true"))
       << value("true", {"on", "yes"})
       << value("false", {"off", "no"});
+
     
-    scheme::definition arguments =
+    scheme::definition arguments;
+    arguments <<
       (positional(name("command"))
        << (value("useradd")
            | (named(name("login", {"username", "user"}),
@@ -31,11 +50,13 @@ SCENARIO("TDD") {
                     description("Make this user administrator"))
               | (value("true", {"on", "yes"})
                  << (named(name("super-admin"),
+                           default_values("false"),
+                           implicit_values("true"),
                            description("Make this administrator a superadministrator"))
                      << value("true", {"on", "yes"})
                      << value("false", {"off", "no"}))
                  << (named(name("rookie-admin"),
-                           default_values("false"),
+                           default_values("true"),
                            implicit_values("true"),
                            description("Make this administrator a rookie administrator"))
                      << value("true", {"on", "yes"})
