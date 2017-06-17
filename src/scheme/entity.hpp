@@ -7,6 +7,7 @@ namespace optspp {
     entity::entity(const entity& other) :
       kind_(other.kind_),
       siblings_group_(other.siblings_group_),
+      color_(other.color_),
       description_(other.description_),
       long_names_(other.long_names_),
       short_names_(other.short_names_),
@@ -117,6 +118,26 @@ namespace optspp {
       if (p.count) {
         min_count_ = p.count;
       }
+    }
+
+    std::string entity::all_names_to_string() const {
+      std::string rslt;
+      bool need_comma{false};
+      if (long_names_) {
+        for (const auto& n : *long_names_) {
+          if (need_comma) rslt += "/";
+          rslt += n;
+          need_comma = true;
+        }
+      }
+      if (short_names_) {
+        for (const auto& n : *short_names_) {
+          if (need_comma) rslt += "/";
+          rslt += n;
+          need_comma = true;
+        }
+      }
+      return rslt;
     }
     
   }

@@ -21,32 +21,19 @@ namespace optspp {
     private:
       bool some_{false};
     };
-
-    struct node {
-      enum COLOR {
-        NONE,
-        VISITED,
-        BLOCKED
-      };
-
-      scheme::entity_ptr entity;
-      COLOR color;
-    };
       
-    parser(scheme::definition& scheme_def,
-           const std::vector<std::string>& cmdl_args);
+    parser(scheme::definition& scheme_def, const std::vector<std::string>& cmdl_args);
 
     void parse();
 
   private:
     scheme::definition& scheme_def_;
     std::list<token> tokens_;
-    std::list<token>::iterator token_;
     scheme::entity_ptr entity_;
     bool ignore_option_prefixes_{false};
 
     // Split name/values with custom separators
-    void separate();
+    void preprocess();
 
     // Prefix-related utils
     // True if s is prefixed with one of the strings in prefixes
@@ -58,9 +45,22 @@ namespace optspp {
     // Extract unprefixed name and return it with it's position
     static std::tuple<size_t, std::string> extract_unprefixed(const std::string& s, const std::vector<std::string>& prefixes);
 
+    // Color taken entity_ptr as TAKEN, and XOR-grouped siblings as BLOCKED
+    static void color_siblings(std::vector<scheme::entity_ptr>& siblings, const scheme::entity_ptr& taken);
+
+    // Translates value to a main value, if available
+    const std::string& main_value(const scheme::entity_ptr& arg_def, const std::string& s);
+    // Adds named value to results
+    void add_value(const scheme::entity_ptr& arg_def, const std::string& s);
+    // Pushes positional argument value to results
+    void push_positional_value(const scheme::entity_ptr& arg_def, const std::string& s);
+    // Adds implicit value, throws if no implicit values left
+    void add_value_implicit(scheme::entity_ptr& arg_def, const token& token);
+
+    
     // Consume different types of tokens
-    // Extracts argument's value
-    bool consume_value_sources(const scheme::entity_ptr& e);
+    // Extracts argument's value, returns matched value entity_ptr
+    scheme::entity_ptr consume_value(scheme::entity_ptr& arg_def, const std::list<token>::iterator& token);
     // Tries to parse current position as a long-prefixed argument
     bool consume_long_argument();
     // Tries to parse current position as a short-prefixed argument

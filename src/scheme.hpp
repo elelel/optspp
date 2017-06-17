@@ -34,8 +34,8 @@ namespace optspp {
       std::map<entity_ptr, SIBLINGS_GROUP> pending_siblings_group_;
 
       // Actual value holders
-      std::map<std::shared_ptr<scheme::entity>, std::vector<std::string>> values_;
-      std::vector<std::string> positional_;
+      std::map<scheme::entity_ptr, std::vector<std::string>> values_;
+      std::vector<scheme::entity_ptr> positional_;
     };
 
     struct entity {
@@ -43,6 +43,12 @@ namespace optspp {
         NONE,
         ARGUMENT,
         VALUE
+      };
+      
+      enum class COLOR {
+        NONE,
+        TAKEN,
+        BLOCKED
       };
 
       entity(const KIND kind);
@@ -67,11 +73,14 @@ namespace optspp {
       // Assign argument definition to scheme definition; the children are or-compatible
       friend definition& optspp::operator|(scheme::definition& lhs, const std::shared_ptr<entity>& rhs);
 
-      friend struct parser;
+      std::string all_names_to_string() const;
+      
+      friend struct optspp::parser;
       
     private:
       KIND kind_{KIND::NONE};
       SIBLINGS_GROUP siblings_group_{SIBLINGS_GROUP::NONE};
+      COLOR color_{COLOR::NONE};
 
       // Attributes
       //   Argument's attributes
