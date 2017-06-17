@@ -56,20 +56,22 @@ namespace optspp {
       if (kind_ == KIND::ARGUMENT) {
         if (p.long_names) {
           if (!long_names_) long_names_ = std::vector<std::string>{};
-          auto lhs = *long_names_;
-          auto rhs = *p.long_names;
+          auto& lhs = *long_names_;
+          auto& rhs = *p.long_names;
           lhs.push_back(rhs[0]);
           for (auto it = rhs.begin() + 1; it != rhs.end(); ++it) 
             if (std::find(lhs.begin(), lhs.end(), *it) == lhs.end()) lhs.push_back(*it);
         }
         if (p.short_names) {
           if (!short_names_) short_names_ = std::vector<char>{};
-          auto lhs = *short_names_;
-          auto rhs = *p.short_names;
+          auto& lhs = *short_names_;
+          auto& rhs = *p.short_names;
           lhs.push_back(rhs[0]);
           for (auto it = rhs.begin() + 1; it != rhs.end(); ++it) 
             if (std::find(lhs.begin(), lhs.end(), *it) == lhs.end()) lhs.push_back(*it);
         }        
+      } else {
+        throw std::runtime_error("Can't assign name to a non-argument entity");
       }
     }
 
@@ -78,7 +80,7 @@ namespace optspp {
       if (kind_ == KIND::ARGUMENT) {
         if (p.values) {
           if (!default_values_) default_values_ = std::vector<std::string>{};
-          auto lhs = *default_values_;
+          auto& lhs = *default_values_;
           for (const auto& s : *p.values) {
             lhs.push_back(s);
           }
@@ -91,7 +93,7 @@ namespace optspp {
       if (kind_ == KIND::ARGUMENT) {
         if (p.values) {
           if (!implicit_values_) implicit_values_ = std::vector<std::string>{};
-          auto lhs = *implicit_values_;
+          auto& lhs = *implicit_values_;
           for (const auto& s : *p.values) {
             lhs.push_back(s);
           }
@@ -120,6 +122,18 @@ namespace optspp {
       }
     }
 
+    auto entity::kind() const -> KIND {
+      return kind_;
+    }
+    
+    const optional<std::vector<std::string>>& entity::long_names() const {
+      return long_names_;
+    }
+
+    const optional<std::vector<char>>& entity::short_names() const {
+      return short_names_;
+    }
+    
     std::string entity::all_names_to_string() const {
       std::string rslt;
       bool need_comma{false};

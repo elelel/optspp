@@ -13,9 +13,8 @@ namespace optspp {
       XOR        
     };
 
-
     struct definition {
-      void parse();
+      void parse(const std::vector<std::string>& cmdl_args);
       
       friend struct ::optspp::parser;
       // Assign argument definition to scheme definition; the children are or-compatible
@@ -23,7 +22,11 @@ namespace optspp {
       // Assign argument definition to scheme definition; the children are or-compatible
       friend definition& optspp::operator|(definition& lhs, const std::shared_ptr<scheme::entity>& rhs);
 
+      void validate() const;
+
     private:
+      bool parsed_{false};
+      
       std::vector<std::string> long_prefixes_{"--"};
       std::vector<std::string> short_prefixes_{"-"};
       std::vector<std::string> separators_{"="};
@@ -36,6 +39,9 @@ namespace optspp {
       // Actual value holders
       std::map<scheme::entity_ptr, std::vector<std::string>> values_;
       std::vector<scheme::entity_ptr> positional_;
+
+      static void validate_entity(const entity_ptr& e);
+
     };
 
     struct entity {
@@ -73,9 +79,14 @@ namespace optspp {
       // Assign argument definition to scheme definition; the children are or-compatible
       friend definition& optspp::operator|(scheme::definition& lhs, const std::shared_ptr<entity>& rhs);
 
+      KIND kind() const;
+      
       std::string all_names_to_string() const;
+      const optional<std::vector<std::string>>& long_names() const;
+      const optional<std::vector<char>>& short_names() const;
       
       friend struct optspp::parser;
+      friend struct scheme::definition;
       
     private:
       KIND kind_{KIND::NONE};

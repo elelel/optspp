@@ -88,7 +88,7 @@ namespace optspp {
         iv.erase(iv.begin());
       }
     }
-    throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
+    throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value (tried implicit)");
   }
 
   void parser::add_value_default(scheme::entity_ptr& arg_def, const parser::token& token) {
@@ -99,13 +99,14 @@ namespace optspp {
         iv.erase(iv.begin());
       }
     }
-    throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
+    throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value (tried default)");
   }
   
   scheme::entity_ptr parser::consume_value(scheme::entity_ptr& arg_def,
                                            const std::list<token>::iterator& token) {
     // Check if we don't have more tokens.
     if (tokens_.size() == 1) {
+      std::cout << "consume value no more tokens left\n";
       add_value_implicit(arg_def, *token);
       tokens_.erase(token);
       return nullptr;
@@ -118,6 +119,7 @@ namespace optspp {
     if ((is_long_prefixed(next_it->s) ||
          is_short_prefixed(next_it->s)) &&
         !ignore_option_prefixes_) {
+      std::cout << "consume value next is prefixed\n";
       add_value_implicit(arg_def, *token);
       tokens_.erase(token);
       return nullptr;
@@ -138,13 +140,15 @@ namespace optspp {
         }
       });
     if (found == val_siblings.end()) {
+      std::cout << "Value definition for " << next_it->s << " not found\n";
       found = find_if(val_siblings.begin(), val_siblings.end(), [] (const scheme::entity_ptr& e) {
           return e->any_value_ && *(e->any_value_);
         });
-    }
+    } 
     if (found != val_siblings.end()) {
+      std::cout << "Adding explicit value (consuming two tokens)\n";
       color_siblings(val_siblings, *found);
-      //TODO add_value(*next_it, arg_def, next_it->s);
+      add_value(arg_def, next_it->s);
       // Remove tokens containing name and value
       tokens_.erase(tokens_.erase(token));
       return *found;
@@ -158,6 +162,50 @@ namespace optspp {
       if ((s != taken) && (s->kind_ == taken->kind_) && (s->siblings_group_ == scheme::SIBLINGS_GROUP::XOR))
         s->color_ = scheme::entity::COLOR::BLOCKED;
     }
+  }
+
+  bool parser::consume_long(scheme::entity_ptr& parent, std::vector<scheme::entity_ptr>* arg_siblings) {
+    bool rslt{false};
+    // Long-named
+    while (true) {
+      std::cout << "Long named cycle\n";
+      // Find matching argument
+      for (auto& arg_def : *arg_siblings) {
+        if ((arg_def->kind_ == scheme::entity::KIND::ARGUMENT) &&
+            (arg_def->color_ != scheme::entity::COLOR::BLOCKED) &&
+            (arg_def->is_positional_ && !*arg_def->is_positional_)) {
+          std::cout << "Trying arg def " << arg_def->all_names_to_string() << "\n";
+          // Find token that matches argument's definition by long name
+          auto token = std::find_if(tokens_.begin(), tokens_.end(), [this, &arg_def] (const parser::token& t) {
+              std::cout << " Comparing to token " << t.s << "\n";
+              if (is_long_prefixed(t.s)) {
+                auto up = extract_unprefixed(t.s, scheme_def_.long_prefixes_);
+                std::cout << " Unprefixed " << std::get<1>(up) << "\n";
+                if (arg_def->long_names_) {
+                  auto& long_names = *arg_def->long_names_;
+                  for (const auto& s : long_names) std::cout << " Candidate long name " << s << "\n";
+                  return std::find(long_names.begin(), long_names.end(), std::get<1>(up)) != long_names.end();
+                } else {
+                  std::cout << "No long name for argument!\n";
+                }
+              } else {
+                std::cout << "Not long prefixed " << t.s << "\n";
+              }
+              return false;
+            });
+          if (token != tokens_.end()) {
+            color_siblings(*arg_siblings, arg_def);
+            parent = consume_value(arg_def, token);
+            // parent = value_entity_ptr
+            rslt = true;
+            break;
+          } else break;
+        } else break;
+      }
+      // If no more next siblings, we have to move to another argument matching type
+      if ((tokens_.size() == 0) || !rslt) break;
+    }
+    return rslt;
   }
 
   // Parse
@@ -177,62 +225,32 @@ namespace optspp {
       if (tokens_.size() > 0) {
         //TODO If no more nodes to walk, but tokens left - throw superflous paremeter
       } else {
+        std::cout << "Still " << tokens_.size() << " tokens left\n";
         // Finish with success
         break;
       }
 
-      bool arg_matched_long{false};
-      bool arg_matched_short{false};
-      bool arg_matched_positional{false};
-      // Long-named
-      while (true) {
-        // Find matching argument
-        for (auto& arg_def : *arg_siblings) {
-          if ((arg_def->kind_ == scheme::entity::KIND::ARGUMENT) &&
-              (arg_def->color_ != scheme::entity::COLOR::BLOCKED)) {
-            // Find token that matches argument's definition by long name
-            auto token = std::find_if(tokens_.begin(), tokens_.end(), [this, &arg_def] (const parser::token& t) {
-                if (is_long_prefixed(t.s)) {
-                  auto up = extract_unprefixed(t.s, scheme_def_.long_prefixes_);
-                  if (arg_def->long_names_) {
-                    auto& long_names = *arg_def->long_names_;
-                    return std::find(long_names.begin(), long_names.end(), std::get<1>(up)) != long_names.end();
-                  }
-                }
-                return false;
-              });
-            if (token != tokens_.end()) {
-              color_siblings(*arg_siblings, arg_def);
-              parent = consume_value(arg_def, token);
-              // parent = value_entity_ptr
-              arg_matched_long = true;
-              break;
-            } else {
-              // Insert it as default value if available
-              add_value_default(arg_def, *token);
-              tokens_.erase(token);
-              arg_matched_long = true;
-              break;
-            }
-          } else {
-            throw std::runtime_error("Scheme definition error: argument kind expected");
-          }
-        }
-        // If no more next siblings, we have to move to another argument matching type
-        if (!arg_matched_long) break;
-      }
-      if (arg_matched_long) {
+      bool arg_matched_long = consume_long(parent, arg_siblings);
+      if ((tokens_.size() == 0) || (arg_matched_long)) {
         // TODO: Color arg node
         continue;
       }
       // Short-named
-      
+      bool arg_matched_short{false};      
       // Positional
-
+      bool arg_matched_positional{false};
 
       if (!(arg_matched_long || arg_matched_short || arg_matched_positional)) {
-        // throw unknown argument tokens
+        throw std::runtime_error("Input contains unknown tokens");
       }
     }
   }
+
+  /*
+    TODO: move this to after parsing func
+    // Insert it as default value if available
+    add_value_default(arg_def, *token);
+    tokens_.erase(token);
+    arg_matched_long = true;*/
+
 }

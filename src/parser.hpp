@@ -58,13 +58,12 @@ namespace optspp {
     void add_value_implicit(scheme::entity_ptr& arg_def, const token& token);
     // Adds default value, throws if no default values left
     void add_value_default(scheme::entity_ptr& arg_def, const token& token);
-
     
     // Consume different types of tokens
     // Extracts argument's value, returns matched value entity_ptr
     scheme::entity_ptr consume_value(scheme::entity_ptr& arg_def, const std::list<token>::iterator& token);
     // Tries to parse current position as a long-prefixed argument
-    bool consume_long_argument();
+    bool consume_long(scheme::entity_ptr& parent, std::vector<scheme::entity_ptr>* arg_siblings);
     // Tries to parse current position as a short-prefixed argument
     bool consume_short_argument();
     // Tries to parse current position as a positional argument
