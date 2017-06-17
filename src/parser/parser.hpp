@@ -90,6 +90,17 @@ namespace optspp {
     }
     throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
   }
+
+  void parser::add_value_default(scheme::entity_ptr& arg_def, const parser::token& token) {
+    if (arg_def->default_values_) {
+      auto& iv = *arg_def->default_values_;
+      if (iv.size() > 0) {
+        add_value(arg_def, main_value(arg_def, iv[0]));
+        iv.erase(iv.begin());
+      }
+    }
+    throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
+  }
   
   scheme::entity_ptr parser::consume_value(scheme::entity_ptr& arg_def,
                                            const std::list<token>::iterator& token) {
@@ -140,7 +151,7 @@ namespace optspp {
     }
     throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
   }
-
+  
   void parser::color_siblings(std::vector<scheme::entity_ptr>& siblings, const scheme::entity_ptr& taken) {
     taken->color_ = scheme::entity::COLOR::TAKEN;
     for (auto& s : siblings) {
@@ -198,12 +209,10 @@ namespace optspp {
               break;
             } else {
               // Insert it as default value if available
-              if (arg_def->default_values_ && (*arg_def->default_values_).size() > 0) {
-                // TODO: insert default value
-                tokens_.erase(token);
-                arg_matched_long = true;
-                break;
-              }
+              add_value_default(arg_def, *token);
+              tokens_.erase(token);
+              arg_matched_long = true;
+              break;
             }
           } else {
             throw std::runtime_error("Scheme definition error: argument kind expected");

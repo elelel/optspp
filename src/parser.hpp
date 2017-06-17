@@ -56,6 +56,8 @@ namespace optspp {
     void push_positional_value(const scheme::entity_ptr& arg_def, const std::string& s);
     // Adds implicit value, throws if no implicit values left
     void add_value_implicit(scheme::entity_ptr& arg_def, const token& token);
+    // Adds default value, throws if no default values left
+    void add_value_default(scheme::entity_ptr& arg_def, const token& token);
 
     
     // Consume different types of tokens
