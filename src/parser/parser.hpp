@@ -101,9 +101,44 @@ namespace optspp {
     }
     throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value (tried default)");
   }
-  
+
   scheme::entity_ptr parser::consume_value(scheme::entity_ptr& arg_def,
-                                           const std::list<token>::iterator& token) {
+                                           const std::list<token>::iterator& value_token) {
+    // Next token must be our the value
+    // Find value entity that matches actual value
+    auto& val_siblings = arg_def->pending_;
+    auto found = find_if(val_siblings.begin(), val_siblings.end(), [&value_token] (const scheme::entity_ptr& e) {
+        if ((e->kind_ == scheme::entity::KIND::VALUE) && (e->known_values_)) {
+          auto& known_values = *e->known_values_;
+          auto found_value = find_if(known_values.begin(), known_values.end(), [&value_token] (const std::string& s) {
+              return s == value_token->s;
+            });
+          return found_value != known_values.end();
+        } else {
+          return false;
+        }
+      });
+    if (found == val_siblings.end()) {
+      std::cout << "Value definition for " << value_token->s << " (argument " << arg_def->all_names_to_string() << ") not found\n";
+      found = find_if(val_siblings.begin(), val_siblings.end(), [] (const scheme::entity_ptr& e) {
+          return e->any_value_ && *(e->any_value_);
+        });
+    } 
+    if (found != val_siblings.end()) {
+      std::cout << "Adding explicit value (consuming two tokens)\n";
+      color_siblings(val_siblings, *found);
+      add_value(arg_def, value_token->s);
+      // Remove tokens containing name and value
+      auto name_token(value_token);
+      --name_token;
+      tokens_.erase(tokens_.erase(name_token));
+      return *found;
+    }
+    throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
+  }
+  
+  scheme::entity_ptr parser::consume_value_with_implicit(scheme::entity_ptr& arg_def,
+                                                         const std::list<token>::iterator& token) {
     // Check if we don't have more tokens.
     if (tokens_.size() == 1) {
       std::cout << "consume value no more tokens left\n";
@@ -124,36 +159,7 @@ namespace optspp {
       tokens_.erase(token);
       return nullptr;
     }
-    
-    // Next token must be our the value
-    // Find value entity that matches actual value
-    auto& val_siblings = arg_def->pending_;
-    auto found = find_if(val_siblings.begin(), val_siblings.end(), [&next_it] (const scheme::entity_ptr& e) {
-        if ((e->kind_ == scheme::entity::KIND::VALUE) && (e->known_values_)) {
-          auto& known_values = *e->known_values_;
-          auto found_value = find_if(known_values.begin(), known_values.end(), [&next_it] (const std::string& s) {
-              return s == next_it->s;
-            });
-          return found_value != known_values.end();
-        } else {
-          return false;
-        }
-      });
-    if (found == val_siblings.end()) {
-      std::cout << "Value definition for " << next_it->s << " not found\n";
-      found = find_if(val_siblings.begin(), val_siblings.end(), [] (const scheme::entity_ptr& e) {
-          return e->any_value_ && *(e->any_value_);
-        });
-    } 
-    if (found != val_siblings.end()) {
-      std::cout << "Adding explicit value (consuming two tokens)\n";
-      color_siblings(val_siblings, *found);
-      add_value(arg_def, next_it->s);
-      // Remove tokens containing name and value
-      tokens_.erase(tokens_.erase(token));
-      return *found;
-    }
-    throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
+    return consume_value(arg_def, next_it);
   }
   
   void parser::color_siblings(std::vector<scheme::entity_ptr>& siblings, const scheme::entity_ptr& taken) {
@@ -165,8 +171,8 @@ namespace optspp {
   }
 
   bool parser::consume_long(scheme::entity_ptr& parent, std::vector<scheme::entity_ptr>* arg_siblings) {
+    if (ignore_option_prefixes_) return false;
     bool rslt{false};
-    // Long-named
     while (true) {
       std::cout << "Long named cycle\n";
       // Find matching argument
@@ -195,8 +201,7 @@ namespace optspp {
             });
           if (token != tokens_.end()) {
             color_siblings(*arg_siblings, arg_def);
-            parent = consume_value(arg_def, token);
-            // parent = value_entity_ptr
+            parent = consume_value_with_implicit(arg_def, token);
             rslt = true;
             break;
           } else break;
@@ -207,6 +212,82 @@ namespace optspp {
     }
     return rslt;
   }
+
+  bool parser::consume_short(scheme::entity_ptr& parent, std::vector<scheme::entity_ptr>* arg_siblings) {
+    if (ignore_option_prefixes_) return false;
+    bool rslt{false};
+    while (true) {
+      std::cout << "Short named cycle\n";
+      // Find matching argument
+      for (auto& arg_def : *arg_siblings) {
+        if ((arg_def->kind_ == scheme::entity::KIND::ARGUMENT) &&
+            (arg_def->color_ != scheme::entity::COLOR::BLOCKED) &&
+            (arg_def->is_positional_ && !*arg_def->is_positional_)) {
+          std::cout << "Trying arg def " << arg_def->all_names_to_string() << "\n";
+          // Find token that matches argument's definition by short name
+          auto token = std::find_if(tokens_.begin(), tokens_.end(), [this, &arg_def] (const parser::token& t) {
+              std::cout << " Comparing to token " << t.s << "\n";
+              if (is_short_prefixed(t.s)) {
+                auto up = extract_unprefixed(t.s, scheme_def_.short_prefixes_);
+                std::cout << " Unprefixed " << std::get<1>(up) << "\n";
+                if (arg_def->short_names_) {
+                  auto& short_names = *arg_def->short_names_;
+                  for (const auto& s : short_names) std::cout << " Candidate short name " << s << "\n";
+                  return std::find(short_names.begin(), short_names.end(), std::get<1>(up)[0]) != short_names.end();
+                } else {
+                  std::cout << "No short name for argument!\n";
+                }
+              } else {
+                std::cout << "Not short prefixed " << t.s << "\n";
+              }
+              return false;
+            });
+          if (token != tokens_.end()) {
+            color_siblings(*arg_siblings, arg_def);
+            parent = consume_value_with_implicit(arg_def, token);
+            rslt = true;
+            break;
+          } else break;
+        } else break;
+      }
+      // If no more next siblings, we have to move to another argument matching type
+      if ((tokens_.size() == 0) || !rslt) break;
+    }
+    return rslt;
+  }
+  
+  bool parser::consume_positonal(scheme::entity_ptr& parent, std::vector<scheme::entity_ptr>* arg_siblings) {
+    bool rslt{false};
+    while (true) {
+      std::cout << "Positional named cycle\n";
+      // Find matching argument
+      for (auto& arg_def : *arg_siblings) {
+        if ((arg_def->kind_ == scheme::entity::KIND::ARGUMENT) &&
+            (arg_def->color_ != scheme::entity::COLOR::BLOCKED) &&
+            (arg_def->is_positional_ && *arg_def->is_positional_)) {
+          std::cout << "Trying positional arg def " << arg_def->all_names_to_string() << "\n";
+          // Find token that matches argument's definition by positional name
+          auto token = std::find_if(tokens_.begin(), tokens_.end(), [this, &arg_def] (const parser::token& t) {
+              return ignore_option_prefixes_ || (!is_long_prefixed(t.s) && !is_short_prefixed(t.s));
+            });
+          if (token != tokens_.end()) {
+            color_siblings(*arg_siblings, arg_def);
+            std::cout << "Adding as positional " << token->s << "\n";
+            parent = consume_value(arg_def, token);
+            rslt = true;
+            break;
+          } else {
+            std::cout << "no positionals found\n";
+            break;
+          }
+        } else break;
+      }
+      // If no more next siblings, we have to move to another argument matching type
+      if ((tokens_.size() == 0) || !rslt) break;
+    }
+    return rslt;
+  }
+  
 
   // Parse
   void parser::parse() {
@@ -223,24 +304,34 @@ namespace optspp {
     }
     while (true) {
       if (tokens_.size() > 0) {
+        std::cout << "Still " << tokens_.size() << " tokens left\n";
         //TODO If no more nodes to walk, but tokens left - throw superflous paremeter
       } else {
-        std::cout << "Still " << tokens_.size() << " tokens left\n";
         // Finish with success
         break;
       }
 
       bool arg_matched_long = consume_long(parent, arg_siblings);
-      if ((tokens_.size() == 0) || (arg_matched_long)) {
-        // TODO: Color arg node
-        continue;
-      }
+      if ((tokens_.size() == 0) || (arg_matched_long)) continue;
       // Short-named
-      bool arg_matched_short{false};      
+      bool arg_matched_short = consume_short(parent, arg_siblings);   
+      if ((tokens_.size() == 0) || (arg_matched_long)) continue;
       // Positional
-      bool arg_matched_positional{false};
+      bool arg_matched_positional = consume_positonal(parent, arg_siblings);
+      if ((tokens_.size() == 0) || (arg_matched_long)) continue;
 
       if (!(arg_matched_long || arg_matched_short || arg_matched_positional)) {
+        std::cout << "Expected one of the following:\n";
+        for (const auto& s : *arg_siblings) {
+          std::cout << " ";
+          if (s->is_positional() && *s->is_positional())
+            std::cout << "positional argument";
+          else
+            std::cout << "named argument";
+          auto all_names = s->all_names_to_string();
+          if (all_names != "") std::cout << " " << all_names;
+          std::cout << "\n";
+        }
         throw std::runtime_error("Input contains unknown tokens");
       }
     }

@@ -16,6 +16,8 @@ namespace optspp {
         if (e->is_positional_ && *e->is_positional_) {
           if (e->short_names_)
             throw std::runtime_error("Scheme validation error: positional argument has short names");
+          if (e->implicit_values_)
+            throw std::runtime_error("Scheme validation error: positional argument has implicit values");
         } else {
           bool short_undefined = !e->short_names_ || (e->short_names_ && (*e->short_names_).size() == 0);
           bool long_undefined = !e->long_names_ || (e->long_names_ && (*e->long_names_).size() == 0);
@@ -31,6 +33,7 @@ namespace optspp {
       for (const auto& c : e->pending_) {
         validate_entity(c);
       }
+      // TODO value has only arg childs
     }
     
     void definition::validate() const {

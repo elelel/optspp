@@ -84,6 +84,7 @@ namespace optspp {
       std::string all_names_to_string() const;
       const optional<std::vector<std::string>>& long_names() const;
       const optional<std::vector<char>>& short_names() const;
+      const optional<bool>& is_positional() const;
       
       friend struct optspp::parser;
       friend struct scheme::definition;

@@ -133,6 +133,10 @@ namespace optspp {
     const optional<std::vector<char>>& entity::short_names() const {
       return short_names_;
     }
+
+    const optional<bool>& entity::is_positional() const {
+      return is_positional_;
+    }
     
     std::string entity::all_names_to_string() const {
       std::string rslt;
