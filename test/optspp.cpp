@@ -46,6 +46,9 @@ SCENARIO("Test entity properties") {
   REQUIRE(n1->kind() == scheme::entity::KIND::ARGUMENT);
   REQUIRE(n1->long_names());
   REQUIRE((*n1->long_names()).size() == 1);
+  auto v1 = value("yes");
+  REQUIRE(v1->known_values());
+  REQUIRE(*v1->known_values() == std::vector<std::string>({"yes"}));
 }
 
 SCENARIO("TDD") {
@@ -119,6 +122,7 @@ SCENARIO("TDD") {
            | (option_force))
        << (value(any())));
 
-    arguments.parse(args_input);
+    std::vector<std::string> arguments_input{"useradd", "--super-admin", "--admin", "yes", "--login", "mylogin"};
+    arguments.parse(arguments_input);
   }
 }

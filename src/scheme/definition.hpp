@@ -4,6 +4,10 @@
 
 namespace optspp {
   namespace scheme {
+    definition::definition() {
+      root_ = std::make_shared<entity>(entity::KIND::NONE);
+    }
+    
     void definition::parse(const std::vector<std::string>& cmdl_args) {
       if (parsed_) return;
       validate();
@@ -29,15 +33,24 @@ namespace optspp {
             throw std::runtime_error("Scheme validation error: argument entity has non-value child");
           }
         }
+        // Implicitly allow any value
+        if (std::find_if(e->pending_.begin(), e->pending_.end(), [] (const entity_ptr& v) {
+              return v->kind_ == entity::KIND::VALUE;
+            }) == e->pending_.end()) {
+          std::cout << "Adding ANY value to " << e->all_names_to_string() << "\n";
+          e->pending_.push_back(::optspp::value(any()));
+        }
       }
       for (const auto& c : e->pending_) {
         validate_entity(c);
       }
       // TODO value has only arg childs
+      // TODO any valued positionals can't have named subchildren
+      // TODO either known_values, or any_value
     }
     
     void definition::validate() const {
-      for (const auto& c : pending_) {
+      for (const auto& c : root_->pending_) {
         validate_entity(c);
       }
     }

@@ -14,6 +14,7 @@ namespace optspp {
     };
 
     struct definition {
+      definition();
       void parse(const std::vector<std::string>& cmdl_args);
       
       friend struct ::optspp::parser;
@@ -32,9 +33,7 @@ namespace optspp {
       std::vector<std::string> separators_{"="};
       std::vector<std::string> take_as_positionals_args_{"--"};
 
-      // Children
-      std::vector<entity_ptr> pending_;
-      std::map<entity_ptr, SIBLINGS_GROUP> pending_siblings_group_;
+      entity_ptr root_;
 
       // Actual value holders
       std::map<scheme::entity_ptr, std::vector<std::string>> values_;
@@ -53,7 +52,8 @@ namespace optspp {
       
       enum class COLOR {
         NONE,
-        TAKEN,
+        BORDER,
+        VISITED,
         BLOCKED
       };
 
@@ -67,8 +67,8 @@ namespace optspp {
       void set_positional();
       void set_named();
 
-      void set_value(const std::vector<std::string>& vs);
-      void set_value(::optspp::any);
+      void set_known_value(const std::vector<std::string>& vs);
+      void set_known_value(::optspp::any);
 
       // Assign value definition to argument definition and argument definition to value definition; the children are xor-compatible
       friend std::shared_ptr<entity> optspp::operator<<(std::shared_ptr<entity> lhs, const std::shared_ptr<entity>& rhs);
@@ -85,6 +85,7 @@ namespace optspp {
       const optional<std::vector<std::string>>& long_names() const;
       const optional<std::vector<char>>& short_names() const;
       const optional<bool>& is_positional() const;
+      const optional<std::vector<std::string>>& known_values() const;
       
       friend struct optspp::parser;
       friend struct scheme::definition;

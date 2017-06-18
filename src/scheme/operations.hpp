@@ -45,7 +45,7 @@ namespace optspp {
 
   scheme::entity_ptr value(const std::string& val) {
     scheme::entity_ptr e = std::make_shared<scheme::entity>(scheme::entity::KIND::VALUE);
-    e->set_value(std::vector<std::string>{val});
+    e->set_known_value(std::vector<std::string>{val});
     return e;
   }
   
@@ -55,19 +55,17 @@ namespace optspp {
     for (const auto& s : synonyms) {
       vs.push_back(s);
     }
-    e->set_value(vs);
+    e->set_known_value(vs);
     return e;
   }
 
   scheme::entity_ptr value(any) {
     scheme::entity_ptr e = std::make_shared<scheme::entity>(scheme::entity::KIND::VALUE);
-    e->set_value(any());
+    e->set_known_value(any());
     return e;
   }
 
-  // Assign argument node to scheme's root
-  std::shared_ptr<scheme::definition>& operator<<(std::shared_ptr<scheme::definition> d, const std::shared_ptr<scheme::entity>& e) {
-  }
+  // TODO COPY by value to children???
   
   // Assign value definition to argument definition and argument definition to value definition; the children are xor-compatible
   std::shared_ptr<scheme::entity> operator<<(std::shared_ptr<scheme::entity> lhs, const std::shared_ptr<scheme::entity>& rhs) {
@@ -106,9 +104,8 @@ namespace optspp {
   scheme::definition& operator<<(scheme::definition& lhs, const std::shared_ptr<scheme::entity>& rhs) {
     using namespace easytree;
     if (rhs->kind_ == scheme::entity::KIND::ARGUMENT) {
-      if (std::find(lhs.pending_.begin(), lhs.pending_.end(), rhs) == lhs.pending_.end()) {
-        lhs.pending_.push_back(rhs);
-        lhs.pending_siblings_group_[rhs] = scheme::SIBLINGS_GROUP::XOR;
+      if (std::find(lhs.root_->pending_.begin(), lhs.root_->pending_.end(), rhs) == lhs.root_->pending_.end()) {
+        lhs.root_->pending_.push_back(rhs);
       }
     } else {
       throw std::runtime_error("Scheme entity type are incompatible for setting as scheme root element: " +
@@ -121,9 +118,8 @@ namespace optspp {
   scheme::definition& operator|(scheme::definition& lhs, const std::shared_ptr<scheme::entity>& rhs) {
     using namespace easytree;
     if (rhs->kind_ == scheme::entity::KIND::ARGUMENT) {
-      if (std::find(lhs.pending_.begin(), lhs.pending_.end(), rhs) == lhs.pending_.end()) {
-        lhs.pending_.push_back(rhs);
-        lhs.pending_siblings_group_[rhs] = scheme::SIBLINGS_GROUP::OR;
+      if (std::find(lhs.root_->pending_.begin(), lhs.root_->pending_.end(), rhs) == lhs.root_->pending_.end()) {
+        lhs.root_->pending_.push_back(rhs);
       }
     } else {
       throw std::runtime_error("Scheme entity type are incompatible for setting as scheme root element: " +

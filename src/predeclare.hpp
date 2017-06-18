@@ -35,6 +35,7 @@ namespace optspp {
   // Create value definition
   scheme::entity_ptr value(const std::string& val);
   scheme::entity_ptr value(const std::string& val, std::initializer_list<std::string> synonyms);
+  scheme::entity_ptr value(any);
   
 
   // Assign argument node to scheme's root

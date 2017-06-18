@@ -29,7 +29,6 @@ namespace optspp {
   private:
     scheme::definition& scheme_def_;
     std::list<token> tokens_;
-    scheme::entity_ptr entity_;
     bool ignore_option_prefixes_{false};
 
     // Split name/values with custom separators
@@ -45,8 +44,14 @@ namespace optspp {
     // Extract unprefixed name and return it with it's position
     static std::tuple<size_t, std::string> extract_unprefixed(const std::string& s, const std::vector<std::string>& prefixes);
 
-    // Color taken entity_ptr as TAKEN, and XOR-grouped siblings as BLOCKED
-    static void color_siblings(std::vector<scheme::entity_ptr>& siblings, const scheme::entity_ptr& taken);
+    // Color taken entity_ptr as VISITED, and XOR-grouped siblings as BLOCKED
+    void color_siblings(scheme::entity_ptr& entity, std::vector<scheme::entity_ptr>& siblings);
+    // Revert visited state to none for the tree branch
+    void clear_visited(scheme::entity_ptr& e);
+    // Test if there are nodes that still can be visited in this pass
+    bool visitables_left(scheme::entity_ptr e);
+    // Find next node in tree to try parsing the argument
+    bool pass_tree();
 
     // Translates value to a main value, if available
     const std::string& main_value(const scheme::entity_ptr& arg_def, const std::string& s);
@@ -61,15 +66,15 @@ namespace optspp {
     
     // Consume different types of tokens
     // Extracts argument's value, returns matched value entity_ptr
-    scheme::entity_ptr consume_value(scheme::entity_ptr& arg_def, const std::list<token>::iterator& token);
+    bool consume_value(scheme::entity_ptr& arg_def, const std::list<token>::iterator& token);
     // Extracts argument's value taking into considiration implicit values
-    scheme::entity_ptr consume_value_with_implicit(scheme::entity_ptr& arg_def, const std::list<token>::iterator& value_token);
+    bool consume_value_with_implicit(scheme::entity_ptr& arg_def, const std::list<token>::iterator& value_token);
     // Tries to parse current position as a long-prefixed argument
-    bool consume_long(scheme::entity_ptr& parent, std::vector<scheme::entity_ptr>* arg_siblings);
+    bool consume_long(std::vector<scheme::entity_ptr>& arg_siblings);
     // Tries to parse current position as a short-prefixed argument
-    bool consume_short(scheme::entity_ptr& parent, std::vector<scheme::entity_ptr>* arg_siblings);
-    // Tries to parse current position as a positional argument
-    bool consume_positonal(scheme::entity_ptr& parent, std::vector<scheme::entity_ptr>* arg_siblings);
+    bool consume_short(std::vector<scheme::entity_ptr>& arg_siblings);
+    // Tries to parse current position as a positional argument, only for predefined values
+    bool consume_positonal_known(std::vector<scheme::entity_ptr>& arg_siblings);
     
   };
 }

@@ -36,17 +36,16 @@ namespace optspp {
       is_positional_ = true;
     }
 
-
     void entity::set_named() {
       is_positional_ = false;
     }
 
-    void entity::set_value(const std::vector<std::string>& vs) {
+    void entity::set_known_value(const std::vector<std::string>& vs) {
       known_values_ = vs;
       any_value_ = false;
     }
 
-    void entity::set_value(any) {
+    void entity::set_known_value(any) {
       known_values_ = optional<std::vector<std::string>>();
       any_value_ = true;
     }
@@ -136,6 +135,10 @@ namespace optspp {
 
     const optional<bool>& entity::is_positional() const {
       return is_positional_;
+    }
+
+    const optional<std::vector<std::string>>& entity::known_values() const {
+      return known_values_;
     }
     
     std::string entity::all_names_to_string() const {
