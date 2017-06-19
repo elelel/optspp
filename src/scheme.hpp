@@ -59,6 +59,7 @@ namespace optspp {
         NONE,
         BORDER,
         VISITED,
+        VISITED_BEFORE,
         BLOCKED
       };
 

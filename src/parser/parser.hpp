@@ -213,8 +213,8 @@ namespace optspp {
               consume_named_value(arg_def, token);
               std::cout << "consume_named: Consumed named arg " << arg_def->all_names_to_string() << " color is now " << (int)arg_def->color_ << "\n";
               return true;
-            } else break;
-          } else break;
+            }
+          }
         }
         std::cout << "consume_named: repeating\n";
         break;
@@ -269,7 +269,8 @@ namespace optspp {
     }
 
     void parser::clear_color(entity_ptr& e) {
-      if (e->color_ != entity::COLOR::BLOCKED) e->color_ = entity::COLOR::NONE;
+      if (e->color_ != entity::COLOR::BLOCKED)
+        e->color_ = entity::COLOR::NONE;
       for (auto& c : e->pending_) clear_color(c);
     }
 
@@ -288,13 +289,10 @@ namespace optspp {
         q.pop();
         if (p->color_ == entity::COLOR::BORDER) {
           std::cout << "find_border_arg_def: trying kind " << (int)p->kind_ << "\n";
-          if (std::find_if(p->pending_.begin(), p->pending_.end(), [] (const entity_ptr& e) {
-                if ((e->kind_ == entity::KIND::ARGUMENT) &&
-                        (e->color_ != entity::COLOR::VISITED))
-                  std::cout << "find_border_arg_def: potentially good argument " << e->all_names_to_string() << "\n";
-                return ((e->kind_ == entity::KIND::ARGUMENT) &&
-                        (e->color_ != entity::COLOR::VISITED));
-              }) != p->pending_.end()) return p;
+          for (const auto& e : p->pending_) {
+            if ((e->kind_ == entity::KIND::ARGUMENT) && (e->color_ != entity::COLOR::VISITED))
+              return p;
+          }
         }
         for (const auto& c : p->pending_) q.push(c);
       }
@@ -302,17 +300,18 @@ namespace optspp {
     }
 
     void parser::move_border(entity_ptr& parent, entity_ptr& child) {
-      parent->color_ = entity::COLOR::VISITED;
       child->color_ = entity::COLOR::BORDER;
       std::cout << "Marking siblings";
       if (child->kind_ == entity::KIND::ARGUMENT) std::cout << " of " << child->all_names_to_string();
       std::cout << "\n";
       if (child->siblings_group_ == SIBLINGS_GROUP::XOR) {
-        std::cout << "Group is xor\n";
+        parent->color_ = entity::COLOR::VISITED;
         for (auto& s : parent->pending_) {
           if ((s != child) && (s->kind_ == child->kind_) && (s->siblings_group_ == SIBLINGS_GROUP::XOR))
             s->color_ = entity::COLOR::BLOCKED;
         }
+      }
+      if (child->siblings_group_ == SIBLINGS_GROUP::OR) {
       }
     }
 
