@@ -23,12 +23,12 @@ namespace optspp {
         bool some_{false};
       };
       
-      parser(scheme::definition& scheme_def, const std::vector<std::string>& cmdl_args);
+      parser(definition& scheme_def, const std::vector<std::string>& cmdl_args);
 
       void parse();
 
     private:
-      scheme::definition& scheme_def_;
+      definition& scheme_def_;
       std::list<token> tokens_;
       bool ignore_option_prefixes_{false};
 
@@ -45,37 +45,37 @@ namespace optspp {
       // Return position, prefix, unprefixed
       std::tuple<size_t, std::string, std::string> unprefix(const std::string& s);
 
-      // Color taken entity_ptr as VISITED, and XOR-grouped siblings as BLOCKED
-      void color_siblings(scheme::entity_ptr& entity, std::vector<scheme::entity_ptr>& siblings);
-      // Revert visited state to none for the tree branch
-      void clear_visited(scheme::entity_ptr& e);
+      // Clear color for a tree branch
+      void clear_color(entity_ptr& e);
       // Test if there are nodes that still can be visited in this pass
-      bool visitables_left(scheme::entity_ptr e);
+      bool visitables_left(entity_ptr e);
+      void initialize_pass();
+      entity_ptr find_border_arg_def() const;
       // Find next node in tree to try parsing the argument
       bool pass_tree();
+      // Add node to tree border, color taken entity_ptr as VISITED, and XOR-grouped siblings as BLOCKED
+      void add_to_border(entity_ptr& parent, entity_ptr& entity, std::vector<entity_ptr>& siblings);
 
       // Translates value to a main value, if available
-      const std::string& main_value(const scheme::entity_ptr& arg_def, const std::string& s);
+      const std::string& main_value(const entity_ptr& arg_def, const std::string& s);
       // Adds named value to results
-      void add_value(const scheme::entity_ptr& arg_def, const std::string& s);
+      void add_value(const entity_ptr& arg_def, const std::string& s);
       // Pushes positional argument value to results
-      void push_positional_value(const scheme::entity_ptr& arg_def, const std::string& s);
+      void push_positional_value(const entity_ptr& arg_def, const std::string& s);
       // Adds implicit value, throws if no implicit values left
-      void add_value_implicit(scheme::entity_ptr& arg_def, const token& token);
+      void add_value_implicit(entity_ptr& arg_def, const token& token);
       // Adds default value, throws if no default values left
-      void add_value_default(scheme::entity_ptr& arg_def, const token& token);
+      void add_value_default(entity_ptr& arg_def, const token& token);
     
       // Consume different types of tokens
-      // Extracts argument's value, returns matched value entity_ptr
-      bool consume_value(scheme::entity_ptr& arg_def, const std::list<token>::iterator& token);
-      // Extracts argument's value taking into considiration implicit values
-      bool consume_value_with_implicit(scheme::entity_ptr& arg_def, const std::list<token>::iterator& value_token);
+      // Extracts named argument's value taking into considiration implicit values
+      bool consume_named_value(entity_ptr& arg_def, const std::list<token>::iterator& value_token);
       // Finds token that matches named arg definition
-      std::list<parser::token>::iterator find_token_for_named(const scheme::entity_ptr& e);
+      std::list<parser::token>::iterator find_token_for_named(const entity_ptr& e);
       // Tries to parse current position as a prefixed named argument
-      scheme::entity_ptr consume_named(std::vector<scheme::entity_ptr>& arg_siblings);
+      bool consume_named(entity_ptr& parent);
       // Tries to parse current position as a positional argument, only for predefined values
-      scheme::entity_ptr consume_positional_known(std::vector<scheme::entity_ptr>& arg_siblings);
+      entity_ptr consume_positional_known(entity_ptr& arg_siblings);
     
     };
   }

@@ -61,7 +61,9 @@ SCENARIO("TDD") {
           << (named(name("second"))
               << (value("yes"))
               << (value("no")));
-
+    const std::vector<std::string> args_input2{"--first", "yes", "--second", "no"};
+    args1.parse(args_input2);
+    /*
     scheme::definition args2;
     args2 | (named(name("first"))
               << (value("yes"))
@@ -70,8 +72,6 @@ SCENARIO("TDD") {
               << (value("yes"))
               << (value("no")));
 
-    const std::vector<std::string> args_input{"--first", "yes"};
-    args1.parse(args_input);
     
     auto option_force =
       named(name("force"),
@@ -124,5 +124,6 @@ SCENARIO("TDD") {
 
     std::vector<std::string> arguments_input{"useradd", "--super-admin", "--admin", "yes", "--login", "mylogin"};
     arguments.parse(arguments_input);
+    */
   }
 }
