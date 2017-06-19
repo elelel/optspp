@@ -63,5 +63,9 @@ namespace optspp {
       return std::find(short_prefixes_.begin(), short_prefixes_.end(), s) != short_prefixes_.end();
     }
 
+    const entity_ptr& definition::root() const {
+      return root_;
+    }
+
   }
 }

@@ -72,8 +72,9 @@ namespace optspp {
     if (((lhs->kind_ == scheme::entity::KIND::ARGUMENT) && (rhs->kind_ == scheme::entity::KIND::VALUE)) ||
         ((rhs->kind_ == scheme::entity::KIND::ARGUMENT) && (lhs->kind_ == scheme::entity::KIND::VALUE))) {
       if (std::find(lhs->pending_.begin(), lhs->pending_.end(), rhs) == lhs->pending_.end()) {
-        lhs->pending_.push_back(rhs);
-        lhs->pending_siblings_group_[rhs] = scheme::SIBLINGS_GROUP::XOR;
+        auto e = std::make_shared<scheme::entity>(*rhs);
+        e->siblings_group_ = scheme::SIBLINGS_GROUP::XOR;
+        lhs->pending_.push_back(e);
       }
     } else {
       throw std::runtime_error("Scheme entity types are incompatible for combination");
@@ -86,8 +87,9 @@ namespace optspp {
     if (((lhs->kind_ == scheme::entity::KIND::ARGUMENT) && (rhs->kind_ == scheme::entity::KIND::VALUE)) ||
         ((rhs->kind_ == scheme::entity::KIND::ARGUMENT) && (lhs->kind_ == scheme::entity::KIND::VALUE))) {
       if (std::find(lhs->pending_.begin(), lhs->pending_.end(), rhs) == lhs->pending_.end()) {
-        lhs->pending_.push_back(rhs);
-        lhs->pending_siblings_group_[rhs] = scheme::SIBLINGS_GROUP::OR;
+        auto e = std::make_shared<scheme::entity>(*rhs);
+        e->siblings_group_ = scheme::SIBLINGS_GROUP::OR;
+        lhs->pending_.push_back(e);
       }
     } else {
       throw std::runtime_error("Scheme entity types are incompatible for combination: " +
@@ -102,7 +104,9 @@ namespace optspp {
   scheme::definition& operator<<(scheme::definition& lhs, const std::shared_ptr<scheme::entity>& rhs) {
     if (rhs->kind_ == scheme::entity::KIND::ARGUMENT) {
       if (std::find(lhs.root_->pending_.begin(), lhs.root_->pending_.end(), rhs) == lhs.root_->pending_.end()) {
-        lhs.root_->pending_.push_back(rhs);
+        auto e = std::make_shared<scheme::entity>(*rhs);
+        e->siblings_group_ = scheme::SIBLINGS_GROUP::XOR;
+        lhs.root_->pending_.push_back(e);
       }
     } else {
       throw std::runtime_error("Scheme entity type are incompatible for setting as scheme root element: " +
@@ -115,7 +119,9 @@ namespace optspp {
   scheme::definition& operator|(scheme::definition& lhs, const std::shared_ptr<scheme::entity>& rhs) {
     if (rhs->kind_ == scheme::entity::KIND::ARGUMENT) {
       if (std::find(lhs.root_->pending_.begin(), lhs.root_->pending_.end(), rhs) == lhs.root_->pending_.end()) {
-        lhs.root_->pending_.push_back(rhs);
+        auto e = std::make_shared<scheme::entity>(*rhs);
+        e->siblings_group_ = scheme::SIBLINGS_GROUP::OR;
+        lhs.root_->pending_.push_back(e);
       }
     } else {
       throw std::runtime_error("Scheme entity type are incompatible for setting as scheme root element: " +

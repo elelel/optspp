@@ -51,6 +51,139 @@ SCENARIO("Test entity properties") {
   REQUIRE(*v1->known_values() == std::vector<std::string>({"yes"}));
 }
 
+SCENARIO("Test XOR scheme without 'any' values and positional args") {
+  using namespace optspp;
+  WHEN("Created the scheme") {
+    scheme::definition args;
+    args
+      << (named(name("Arg_L1_1"))
+          << (value("Val_L2_1")
+              << (named(name("Arg_L3_1"))
+                  << (value("Val_L4_1"))
+                  << (value("Val_L4_2")))
+              << (named(name("Arg_L3_2"))))
+          << (value("Val_L2_2"))
+          )
+      << (named(name("Arg_L1_2"))
+          << (value("Val_L2_2_1"))
+          << (value("Val_L2_2_2")));
+    REQUIRE(args.root()->children().size() == 2);
+    auto& arg_l1_1 = args.root()->children()[0];
+    auto& val_l2_1 = arg_l1_1->children()[0];
+    auto& arg_l3_1 = val_l2_1->children()[0];
+    auto& val_l4_1 = arg_l3_1->children()[0];
+    auto& val_l4_2 = arg_l3_1->children()[1];
+    auto& arg_l3_2 = val_l2_1->children()[1];
+    auto& val_l2_2 = arg_l1_1->children()[1];
+    auto& arg_l1_2 = args.root()->children()[1];
+
+
+    REQUIRE(arg_l1_1->long_names());
+    REQUIRE((*arg_l1_1->long_names())[0] == "Arg_L1_1");
+    REQUIRE(arg_l1_1->siblings_group() == scheme::SIBLINGS_GROUP::XOR);
+    REQUIRE(arg_l1_2->long_names());
+    REQUIRE((*arg_l1_2->long_names())[0] == "Arg_L1_2");
+    REQUIRE(arg_l1_2->siblings_group() == scheme::SIBLINGS_GROUP::XOR);
+    REQUIRE(val_l2_1->known_values());
+    REQUIRE((*val_l2_1->known_values())[0] == "Val_L2_1");
+    REQUIRE(val_l2_2->known_values());
+    REQUIRE((*val_l2_2->known_values())[0] == "Val_L2_2");
+    
+    THEN("Command line: --Arg_L1_1 Val_L2_1 --Arg_L3_1 Val_L4_2") {
+      scheme::parser p(args, {"--Arg_L1_1", "Val_L2_1",  "--Arg_L3_1", "Val_L4_2"});
+      p.initialize_pass();
+      auto parent = p.find_border_entity();
+      REQUIRE(parent == args.root());
+      REQUIRE(p.consume_named(parent));
+      REQUIRE(arg_l1_1->color() == scheme::entity::COLOR::VISITED);
+      REQUIRE(arg_l1_2->color() == scheme::entity::COLOR::BLOCKED);
+      REQUIRE(val_l2_1->color() == scheme::entity::COLOR::BORDER);
+      REQUIRE(val_l2_2->color() == scheme::entity::COLOR::BLOCKED);
+      parent = p.find_border_entity();
+      REQUIRE(parent == val_l2_1);
+      REQUIRE(p.consume_named(parent));
+      REQUIRE(arg_l3_1->color() == scheme::entity::COLOR::VISITED);
+      REQUIRE(arg_l3_2->color() == scheme::entity::COLOR::BLOCKED);
+      REQUIRE(val_l4_1->color() == scheme::entity::COLOR::BLOCKED);
+      REQUIRE(val_l4_2->color() == scheme::entity::COLOR::BORDER);
+      REQUIRE(p.find_border_entity() == nullptr);
+    }
+  }            
+}
+
+SCENARIO("Test XOR/OR scheme without 'any' values and positional args") {
+  using namespace optspp;
+  WHEN("Created the scheme") {
+    scheme::definition args;
+    args
+      | (named(name("Arg_L1_1"))
+          << (value("Val_L2_1")
+              << (named(name("Arg_L3_1"))
+                  | (value("Val_L4_1"))
+                  | (value("Val_L4_2")))
+              << (named(name("Arg_L3_2"))))
+          << (value("Val_L2_2"))
+          )
+      | (named(name("Arg_L1_2"))
+          << (value("Val_L2_2_1"))
+          << (value("Val_L2_2_2")));
+    REQUIRE(args.root()->children().size() == 2);
+    auto& arg_l1_1 = args.root()->children()[0];
+    auto& val_l2_1 = arg_l1_1->children()[0];
+    auto& arg_l3_1 = val_l2_1->children()[0];
+    auto& val_l4_1 = arg_l3_1->children()[0];
+    auto& val_l4_2 = arg_l3_1->children()[1];
+    auto& arg_l3_2 = val_l2_1->children()[1];
+    auto& val_l2_2 = arg_l1_1->children()[1];
+    auto& arg_l1_2 = args.root()->children()[1];
+
+
+    REQUIRE(arg_l1_1->long_names());
+    REQUIRE((*arg_l1_1->long_names())[0] == "Arg_L1_1");
+    REQUIRE(arg_l1_1->siblings_group() == scheme::SIBLINGS_GROUP::OR);
+    REQUIRE(arg_l1_2->long_names());
+    REQUIRE((*arg_l1_2->long_names())[0] == "Arg_L1_2");
+    REQUIRE(arg_l1_2->siblings_group() == scheme::SIBLINGS_GROUP::OR);
+    REQUIRE(val_l2_1->known_values());
+    REQUIRE((*val_l2_1->known_values())[0] == "Val_L2_1");
+    REQUIRE(val_l2_2->known_values());
+    REQUIRE((*val_l2_2->known_values())[0] == "Val_L2_2");
+    
+    THEN("Command line: --Arg_L1_1 Val_L2_1 --Arg_L3_1 Val_L4_2") {
+      scheme::parser p(args, {"--Arg_L1_1", "Val_L2_1",  "--Arg_L3_1", "Val_L4_2", "--Arg_L3_1", "Val_L4_1", "--Arg_L1_2", "Val_L2_2_2" });
+      p.initialize_pass();
+      auto parent = p.find_border_entity();
+      REQUIRE(parent == args.root());
+      REQUIRE(p.consume_named(parent));
+      REQUIRE(arg_l1_1->color() == scheme::entity::COLOR::VISITED);
+      REQUIRE(arg_l1_2->color() == scheme::entity::COLOR::NONE);
+      REQUIRE(val_l2_1->color() == scheme::entity::COLOR::BORDER);
+      REQUIRE(val_l2_2->color() == scheme::entity::COLOR::BLOCKED);
+      parent = p.find_border_entity();
+      REQUIRE(parent == val_l2_1);
+      REQUIRE(p.consume_named(parent));
+      REQUIRE(arg_l3_1->color() == scheme::entity::COLOR::VISITED);
+      REQUIRE(arg_l3_2->color() == scheme::entity::COLOR::BLOCKED);
+      REQUIRE(val_l4_1->color() == scheme::entity::COLOR::NONE);
+      REQUIRE(val_l4_2->color() == scheme::entity::COLOR::BORDER);
+      REQUIRE(p.find_border_entity() == nullptr);
+      THEN("Second tree pass") {
+        p.initialize_pass();
+        REQUIRE(arg_l1_1->color() == scheme::entity::COLOR::NONE);
+        REQUIRE(arg_l1_2->color() == scheme::entity::COLOR::NONE);
+        REQUIRE(val_l2_1->color() == scheme::entity::COLOR::NONE);
+        REQUIRE(val_l2_2->color() == scheme::entity::COLOR::BLOCKED);
+        REQUIRE(arg_l3_1->color() == scheme::entity::COLOR::NONE);
+        REQUIRE(arg_l3_2->color() == scheme::entity::COLOR::BLOCKED);
+        REQUIRE(val_l4_1->color() == scheme::entity::COLOR::NONE);
+        REQUIRE(val_l4_2->color() == scheme::entity::COLOR::NONE);
+      }
+    }
+  }            
+}
+
+/*
+
 SCENARIO("TDD") {
   using namespace optspp;
   WHEN("A sane argument definition is created") {
@@ -63,7 +196,7 @@ SCENARIO("TDD") {
               << (value("no")));
     const std::vector<std::string> args_input2{"--first", "yes", "--second", "no"};
     args1.parse(args_input2);
-    /*
+    
     scheme::definition args2;
     args2 | (named(name("first"))
               << (value("yes"))
@@ -124,6 +257,6 @@ SCENARIO("TDD") {
 
     std::vector<std::string> arguments_input{"useradd", "--super-admin", "--admin", "yes", "--login", "mylogin"};
     arguments.parse(arguments_input);
-    */
+    
   }
-}
+  }*/

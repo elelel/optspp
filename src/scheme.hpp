@@ -28,6 +28,8 @@ namespace optspp {
       bool is_long_prefix(const std::string& s) const;
       bool is_short_prefix(const std::string& s) const;
 
+      const entity_ptr& root() const;
+
     private:
       bool parsed_{false};
       
@@ -86,7 +88,10 @@ namespace optspp {
       bool name_matches(const char& c) const;
       
       KIND kind() const;
-      
+      SIBLINGS_GROUP siblings_group() const;
+      COLOR color() const;
+      const std::vector<entity_ptr>& children() const;
+
       std::string all_names_to_string() const;
       const optional<std::vector<std::string>>& long_names() const;
       const optional<std::vector<char>>& short_names() const;
@@ -130,7 +135,6 @@ namespace optspp {
 
       // Children
       std::vector<entity_ptr> pending_;
-      std::map<entity_ptr, SIBLINGS_GROUP> pending_siblings_group_;
     };
   }
 

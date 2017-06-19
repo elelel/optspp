@@ -155,7 +155,7 @@ namespace optspp {
           });
       } 
       if (found != val_siblings.end()) {
-        add_to_border(arg_def, *found, val_siblings);
+        move_border(arg_def, *found);
         add_value(arg_def, next_it->s);
         // Remove tokens containing name and value
         tokens_.erase(tokens_.erase(token));
@@ -209,9 +209,9 @@ namespace optspp {
                       << " color " << (int)arg_def->color_ << "\n";
             auto token = find_token_for_named(arg_def);
             if (token != tokens_.end()) {
-              add_to_border(parent, arg_def, arg_siblings);
+              move_border(parent, arg_def);
               consume_named_value(arg_def, token);
-              std::cout << "consume_named: Consumed named arg " << arg_def->all_names_to_string() << "\n";
+              std::cout << "consume_named: Consumed named arg " << arg_def->all_names_to_string() << " color is now " << (int)arg_def->color_ << "\n";
               return true;
             } else break;
           } else break;
@@ -269,8 +269,7 @@ namespace optspp {
     }
 
     void parser::clear_color(entity_ptr& e) {
-      if (e->color_ == entity::COLOR::VISITED)
-        e->color_ = entity::COLOR::NONE;
+      if (e->color_ != entity::COLOR::BLOCKED) e->color_ = entity::COLOR::NONE;
       for (auto& c : e->pending_) clear_color(c);
     }
 
@@ -281,15 +280,18 @@ namespace optspp {
       }
     }
 
-    entity_ptr parser::find_border_arg_def() const {
+    entity_ptr parser::find_border_entity() const {
       std::queue<entity_ptr> q;
       if (scheme_def_.root_->color_ != entity::COLOR::BLOCKED) q.push(scheme_def_.root_);
       while (q.size() > 0) {
         auto p = q.front();
         q.pop();
         if (p->color_ == entity::COLOR::BORDER) {
-          std::cout << "Trying border, kind " << (int)p->kind_ << "\n";
+          std::cout << "find_border_arg_def: trying kind " << (int)p->kind_ << "\n";
           if (std::find_if(p->pending_.begin(), p->pending_.end(), [] (const entity_ptr& e) {
+                if ((e->kind_ == entity::KIND::ARGUMENT) &&
+                        (e->color_ != entity::COLOR::VISITED))
+                  std::cout << "find_border_arg_def: potentially good argument " << e->all_names_to_string() << "\n";
                 return ((e->kind_ == entity::KIND::ARGUMENT) &&
                         (e->color_ != entity::COLOR::VISITED));
               }) != p->pending_.end()) return p;
@@ -299,12 +301,16 @@ namespace optspp {
       return nullptr;
     }
 
-    void parser::add_to_border(entity_ptr& parent, entity_ptr& entity, std::vector<entity_ptr>& siblings) {
+    void parser::move_border(entity_ptr& parent, entity_ptr& child) {
       parent->color_ = entity::COLOR::VISITED;
-      entity->color_ = entity::COLOR::BORDER;
-      if (entity->siblings_group_ == SIBLINGS_GROUP::XOR) {
-        for (auto& s : siblings) {
-          if ((s != entity) && (s->kind_ == entity->kind_) && (s->siblings_group_ == SIBLINGS_GROUP::XOR))
+      child->color_ = entity::COLOR::BORDER;
+      std::cout << "Marking siblings";
+      if (child->kind_ == entity::KIND::ARGUMENT) std::cout << " of " << child->all_names_to_string();
+      std::cout << "\n";
+      if (child->siblings_group_ == SIBLINGS_GROUP::XOR) {
+        std::cout << "Group is xor\n";
+        for (auto& s : parent->pending_) {
+          if ((s != child) && (s->kind_ == child->kind_) && (s->siblings_group_ == SIBLINGS_GROUP::XOR))
             s->color_ = entity::COLOR::BLOCKED;
         }
       }
@@ -329,12 +335,12 @@ namespace optspp {
 
       while (true) {
         std::cout << "pass_tree: cycle start\n";
-        auto parent = find_border_arg_def();
+        auto parent = find_border_entity();
         if (parent == nullptr) {
           return rslt;
         }
         if (consume_named(parent)) {
-          return true;
+          rslt = true;
         } else {
           parent->color_ = entity::COLOR::VISITED;
         }

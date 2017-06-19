@@ -20,7 +20,6 @@ namespace optspp {
       for (const auto& p : other.pending_) {
         auto c = std::make_shared<entity>(*p);
         pending_.push_back(c);
-        pending_siblings_group_[c] = other.pending_siblings_group_.at(p);
       }
     }
     
@@ -140,6 +139,18 @@ namespace optspp {
 
     auto entity::kind() const -> KIND {
       return kind_;
+    }
+
+    auto entity::siblings_group() const -> SIBLINGS_GROUP {
+      return siblings_group_;
+    }
+
+    auto entity::color() const -> COLOR {
+      return color_;
+    }
+
+    const std::vector<entity_ptr>& entity::children() const {
+      return pending_;
     }
     
     const optional<std::vector<std::string>>& entity::long_names() const {
