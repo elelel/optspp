@@ -1,7 +1,8 @@
 #pragma once
 
 namespace optspp {
-  parser::parser(scheme::definition& scheme_def,
+  namespace scheme {
+  parser::parser(definition& scheme_def,
                  const std::vector<std::string>& cmdl_args) :
     scheme_def_(scheme_def) {
     for (size_t i = 0; i < cmdl_args.size(); ++i) tokens_.push_back({i, 0, cmdl_args[i]});
@@ -61,9 +62,9 @@ namespace optspp {
     return is_prefixed(s, scheme_def_.short_prefixes_);
   }
 
-  const std::string& parser::main_value(const scheme::entity_ptr& arg_def, const std::string& s) {
+  const std::string& parser::main_value(const entity_ptr& arg_def, const std::string& s) {
     for (const auto& c : arg_def->pending_) {
-      if ((c->kind_ == scheme::entity::KIND::VALUE) && c->known_values_) {
+      if ((c->kind_ == entity::KIND::VALUE) && c->known_values_) {
         const auto& known_values = *c->known_values_;
         auto found = std::find(known_values.begin(), known_values.end(), s);
         if (found != known_values.end()) {
@@ -74,19 +75,19 @@ namespace optspp {
     return s;
   }
 
-  void parser::add_value(const scheme::entity_ptr& arg_def, const std::string& s) {
+  void parser::add_value(const entity_ptr& arg_def, const std::string& s) {
     auto& v = scheme_def_.values_[arg_def];
     v.push_back(s);
   }
   
-  void parser::push_positional_value(const scheme::entity_ptr& arg_def, const std::string& s) {
+  void parser::push_positional_value(const entity_ptr& arg_def, const std::string& s) {
     auto& v = scheme_def_.values_[arg_def];
     v.push_back(s);
     // TODO: Incorrect! It should be sorted, because push is now not in cmdl order
     scheme_def_.positional_.push_back(arg_def);
   }
   
-  void parser::add_value_implicit(scheme::entity_ptr& arg_def, const token& token) {
+  void parser::add_value_implicit(entity_ptr& arg_def, const token& token) {
     if (arg_def->implicit_values_) {
       auto& iv = *arg_def->implicit_values_;
       if (iv.size() > 0) {
@@ -97,7 +98,7 @@ namespace optspp {
     throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value (tried implicit)");
   }
 
-  void parser::add_value_default(scheme::entity_ptr& arg_def, const parser::token& token) {
+  void parser::add_value_default(entity_ptr& arg_def, const parser::token& token) {
     if (arg_def->default_values_) {
       auto& iv = *arg_def->default_values_;
       if (iv.size() > 0) {
@@ -108,14 +109,14 @@ namespace optspp {
     throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value (tried default)");
   }
 
-  bool parser::consume_value(scheme::entity_ptr& arg_def,
+  bool parser::consume_value(entity_ptr& arg_def,
                              const std::list<token>::iterator& value_token) {
     std::cout << "Consuming value\n";
     // Next token must be our the value
     // Find value entity that matches actual value
     auto& val_siblings = arg_def->pending_;
-    auto found = find_if(val_siblings.begin(), val_siblings.end(), [&value_token] (const scheme::entity_ptr& e) {
-        if ((e->kind_ == scheme::entity::KIND::VALUE) && (e->known_values_)) {
+    auto found = find_if(val_siblings.begin(), val_siblings.end(), [&value_token] (const entity_ptr& e) {
+        if ((e->kind_ == entity::KIND::VALUE) && (e->known_values_)) {
           auto& known_values = *e->known_values_;
           auto found_value = find_if(known_values.begin(), known_values.end(), [&value_token] (const std::string& s) {
               return s == value_token->s;
@@ -127,7 +128,7 @@ namespace optspp {
       });
     if (found == val_siblings.end()) {
       std::cout << "Trying to find any value definition in " << val_siblings.size() << " children of " << arg_def->all_names_to_string() << "\n";
-      found = find_if(val_siblings.begin(), val_siblings.end(), [] (const scheme::entity_ptr& e) {
+      found = find_if(val_siblings.begin(), val_siblings.end(), [] (const entity_ptr& e) {
           return e->any_value_ && *(e->any_value_);
         });
     } 
@@ -145,7 +146,7 @@ namespace optspp {
     throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
   }
   
-  bool parser::consume_value_with_implicit(scheme::entity_ptr& arg_def,
+  bool parser::consume_value_with_implicit(entity_ptr& arg_def,
                                            const std::list<token>::iterator& token) {
     // Check if we don't have more tokens.
     if (tokens_.size() == 1) {
@@ -170,7 +171,7 @@ namespace optspp {
     return consume_value(arg_def, next_it);
   }
 
-  std::list<parser::token>::iterator parser::find_token_for_named(const scheme::entity_ptr& arg_def) {
+  std::list<parser::token>::iterator parser::find_token_for_named(const entity_ptr& arg_def) {
     // Find token that matches argument's definition by long name
     for (auto t = tokens_.begin(); t != tokens_.end(); ++t) {
       std::cout << " Comparing to token " << t->s << "\n";
@@ -199,15 +200,15 @@ namespace optspp {
     return tokens_.end();
   }
 
-  scheme::entity_ptr parser::consume_named(std::vector<scheme::entity_ptr>& arg_siblings) {
+  entity_ptr parser::consume_named(std::vector<entity_ptr>& arg_siblings) {
     if (ignore_option_prefixes_) return nullptr;
-    scheme::entity_ptr rslt;
+    entity_ptr rslt;
     while (true) {
       std::cout << "Named cycle\n";
       // Find matching argument
       for (auto& arg_def : arg_siblings) {
-        if ((arg_def->kind_ == scheme::entity::KIND::ARGUMENT) &&
-            (arg_def->color_ != scheme::entity::COLOR::BLOCKED) &&
+        if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
+            (arg_def->color_ != entity::COLOR::BLOCKED) &&
             (arg_def->is_positional_ && !*arg_def->is_positional_)) {
           std::cout << "Trying arg def " << arg_def->all_names_to_string() << "\n";
           auto token = find_token_for_named(arg_def);
@@ -225,20 +226,20 @@ namespace optspp {
     return rslt;
   }
   
-  scheme::entity_ptr parser::consume_positional_known(std::vector<scheme::entity_ptr>& arg_siblings) {
-    scheme::entity_ptr rslt;
+  entity_ptr parser::consume_positional_known(std::vector<entity_ptr>& arg_siblings) {
+    entity_ptr rslt;
     while (true) {
       std::cout << "Positional named cycle\n";
       // Find matching argument
       for (auto& arg_def : arg_siblings) {
-        if ((arg_def->kind_ == scheme::entity::KIND::ARGUMENT) &&
-            (arg_def->color_ != scheme::entity::COLOR::BLOCKED) &&
+        if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
+            (arg_def->color_ != entity::COLOR::BLOCKED) &&
             (arg_def->is_positional_ && *arg_def->is_positional_)) {
           std::cout << "Trying positional arg def " << arg_def->all_names_to_string() << "\n";
           auto& val_siblings = arg_def->pending_;
           for (auto& val_def : val_siblings) {
             // Find token that matches value definition, value def should not be "any"
-            if ((val_def->kind_ == scheme::entity::KIND::VALUE) &&
+            if ((val_def->kind_ == entity::KIND::VALUE) &&
                 (val_def->known_values_) && ((*val_def->known_values_).size() > 0)) {
               std::cout << " Trying val def " << (*val_def->known_values_)[0] << "\n";
               auto token = std::find_if(tokens_.begin(), tokens_.end(), [this, &val_def] (const parser::token& t) {
@@ -270,17 +271,17 @@ namespace optspp {
     return rslt;
   }
 
-  void parser::clear_visited(scheme::entity_ptr& e) {
-    if (e->color_ == scheme::entity::COLOR::VISITED)
-      e->color_ = scheme::entity::COLOR::NONE;
+  void parser::clear_visited(entity_ptr& e) {
+    if (e->color_ == entity::COLOR::VISITED)
+      e->color_ = entity::COLOR::NONE;
     for (auto& c : e->pending_) clear_visited(c);
   }
 
   bool parser::pass_tree() {
     std::cout << "Starting pass\n";
     bool rslt = false;
-    std::list<scheme::entity_ptr> q;
-    if (scheme_def_.root_->color_ != scheme::entity::COLOR::BLOCKED) {
+    std::list<entity_ptr> q;
+    if (scheme_def_.root_->color_ != entity::COLOR::BLOCKED) {
       clear_visited(scheme_def_.root_);
       q.push_back(scheme_def_.root_);
     }
@@ -288,30 +289,30 @@ namespace optspp {
     while (q.size() > 0) {
       std::cout << "Q size " << q.size() << "\n";
       for (const auto& x : q) {
-        if (x->kind_ == scheme::entity::KIND::ARGUMENT)
+        if (x->kind_ == entity::KIND::ARGUMENT)
           std::cout << "   " << x->all_names_to_string() << "\n";
-        if (x->kind_ == scheme::entity::KIND::VALUE)
+        if (x->kind_ == entity::KIND::VALUE)
           std::cout << "   " << (*x->known_values_)[0] << "\n";
       }
       auto p = q.front();
       q.pop_front();
-      p->color_ = scheme::entity::COLOR::VISITED;
+      p->color_ = entity::COLOR::VISITED;
       // Find non-blocked child
-      std::vector<scheme::entity_ptr> arg_siblings;
+      std::vector<entity_ptr> arg_siblings;
       for (const auto& x : p->pending_) {
         std::cout << " Checking non-blocked child " << x->all_names_to_string() << "\n";
       }
-      std::copy_if(p->pending_.begin(), p->pending_.end(), std::back_inserter(arg_siblings), [] (const scheme::entity_ptr& c) {
+      std::copy_if(p->pending_.begin(), p->pending_.end(), std::back_inserter(arg_siblings), [] (const entity_ptr& c) {
           return
-          (c->color_ != scheme::entity::COLOR::BLOCKED) &&
-          (c->color_ != scheme::entity::COLOR::VISITED) &&
-          (c->kind_ == scheme::entity::KIND::ARGUMENT);
+          (c->color_ != entity::COLOR::BLOCKED) &&
+          (c->color_ != entity::COLOR::VISITED) &&
+          (c->kind_ == entity::KIND::ARGUMENT);
         });
       if (arg_siblings.size() > 0) {
-        scheme::entity_ptr consumed;
+        entity_ptr consumed;
         if (consumed == nullptr) consumed = consume_named(arg_siblings);
         if (consumed == nullptr) consumed = consume_positional_known(arg_siblings);
-        if ((consumed != nullptr) && (consumed->kind_ == scheme::entity::KIND::VALUE)) {
+        if ((consumed != nullptr) && (consumed->kind_ == entity::KIND::VALUE)) {
           std::cout << "Pushing " << (*consumed->known_values_)[0] << "\n";
           q.push_back(consumed);
           rslt = true;
@@ -325,7 +326,7 @@ namespace optspp {
       }
       std::cout << "Pushing more nodes\n";
       for (const auto& c : p->pending_) {
-        if (c->color_ != scheme::entity::COLOR::BLOCKED) {
+        if (c->color_ != entity::COLOR::BLOCKED) {
           q.push_back(p);
         }
       }
@@ -334,22 +335,22 @@ namespace optspp {
     return rslt;
   }
 
-  void parser::color_siblings(scheme::entity_ptr& entity, std::vector<scheme::entity_ptr>& siblings) {
-    entity->color_ = scheme::entity::COLOR::VISITED;
-    if (entity->siblings_group_ == scheme::SIBLINGS_GROUP::XOR) {
+  void parser::color_siblings(entity_ptr& entity, std::vector<entity_ptr>& siblings) {
+    entity->color_ = entity::COLOR::VISITED;
+    if (entity->siblings_group_ == SIBLINGS_GROUP::XOR) {
       for (auto& s : siblings) {
-        if ((s != entity) && (s->kind_ == entity->kind_) && (s->siblings_group_ == scheme::SIBLINGS_GROUP::XOR))
-          s->color_ = scheme::entity::COLOR::BLOCKED;
+        if ((s != entity) && (s->kind_ == entity->kind_) && (s->siblings_group_ == SIBLINGS_GROUP::XOR))
+          s->color_ = entity::COLOR::BLOCKED;
       }
     }
   }
 
-  bool parser::visitables_left(scheme::entity_ptr e) {
+  bool parser::visitables_left(entity_ptr e) {
     bool rslt{false};
-    if ((e->color_ != scheme::entity::COLOR::VISITED) &&
-        (e->color_ != scheme::entity::COLOR::BLOCKED)) return true;
+    if ((e->color_ != entity::COLOR::VISITED) &&
+        (e->color_ != entity::COLOR::BLOCKED)) return true;
     for (auto& c : e->pending_)
-      if (c->color_ != scheme::entity::COLOR::BLOCKED) {
+      if (c->color_ != entity::COLOR::BLOCKED) {
         rslt = rslt | visitables_left(c);
       };
     return rslt;
@@ -391,5 +392,5 @@ namespace optspp {
     add_value_default(arg_def, *token);
     tokens_.erase(token);
     arg_matched_long = true;*/
-
+  }
 }

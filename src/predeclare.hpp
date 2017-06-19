@@ -9,7 +9,8 @@ namespace optspp {
 
     // Scheme element (argument definition, value definition)
     using entity_ptr = std::shared_ptr<entity>;
-    // Scheme's tree node
+
+    struct parser;
   }
   // Properties
   struct name;
@@ -20,7 +21,7 @@ namespace optspp {
   struct implicit_value;
   struct any;
 
-  struct parser;
+
 
   // Factory functions to create scheme definition nodes
   // Create positional argument definition

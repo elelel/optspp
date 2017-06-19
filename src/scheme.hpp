@@ -17,7 +17,7 @@ namespace optspp {
       definition();
       void parse(const std::vector<std::string>& cmdl_args);
       
-      friend struct ::optspp::parser;
+      friend struct ::optspp::scheme::parser;
       // Assign argument definition to scheme definition; the children are or-compatible
       friend definition& optspp::operator<<(definition& lhs, const std::shared_ptr<scheme::entity>& rhs);  
       // Assign argument definition to scheme definition; the children are or-compatible
@@ -93,7 +93,7 @@ namespace optspp {
       const optional<bool>& is_positional() const;
       const optional<std::vector<std::string>>& known_values() const;
       
-      friend struct optspp::parser;
+      friend struct optspp::scheme::parser;
       friend struct scheme::definition;
       
     private:
