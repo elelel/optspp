@@ -25,6 +25,9 @@ namespace optspp {
 
       void validate() const;
 
+      bool is_long_prefix(const std::string& s) const;
+      bool is_short_prefix(const std::string& s) const;
+
     private:
       bool parsed_{false};
       
@@ -79,6 +82,9 @@ namespace optspp {
       // Assign argument definition to scheme definition; the children are or-compatible
       friend definition& optspp::operator|(scheme::definition& lhs, const std::shared_ptr<entity>& rhs);
 
+      bool name_matches(const std::string& s) const;
+      bool name_matches(const char& c) const;
+      
       KIND kind() const;
       
       std::string all_names_to_string() const;

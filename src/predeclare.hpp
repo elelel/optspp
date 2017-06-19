@@ -2,8 +2,6 @@
 
 #include <memory>
 
-#include "../contrib/easytree/include/easytree/tree"
-
 namespace optspp {
   namespace scheme {
     struct definition;
@@ -12,7 +10,6 @@ namespace optspp {
     // Scheme element (argument definition, value definition)
     using entity_ptr = std::shared_ptr<entity>;
     // Scheme's tree node
-    using node_ptr = easytree::tree::node<entity_ptr>::type_ptr;
   }
   // Properties
   struct name;

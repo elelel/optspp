@@ -31,16 +31,21 @@ namespace optspp {
     // TODO: Add value(any) to arguments without value definition
   }
 
-  // Prefix-related
-  std::tuple<size_t, std::string> parser::extract_unprefixed(const std::string& s, const std::vector<std::string>& prefixes) {
-    for (const auto& prefix : prefixes) {
+  // Return position, prefix, unprefixed
+  std::tuple<size_t, std::string, std::string> parser::unprefix(const std::string& s) {
+    for (const auto& prefix : scheme_def_.long_prefixes_) {
       if (s.find(prefix) == 0) {
-        return {prefix.size(), s.substr(prefix.size(), s.size())};
+        return {prefix.size(), prefix, s.substr(prefix.size(), s.size())};
       }
     }
-    return {0, s};
+    for (const auto& prefix : scheme_def_.short_prefixes_) {
+      if (s.find(prefix) == 0) {
+        return {prefix.size(), prefix, s.substr(prefix.size(), s.size())};
+      }
+    }
+    return {0, "", s};
   }
-    
+
   bool parser::is_prefixed(const std::string& s, const std::vector<std::string>& prefixes) {
     for (const auto& prefix : prefixes) {
       if (s.find(prefix) == 0) return true;
@@ -165,79 +170,51 @@ namespace optspp {
     return consume_value(arg_def, next_it);
   }
 
-  bool parser::consume_long(std::vector<scheme::entity_ptr>& arg_siblings) {
-    if (ignore_option_prefixes_) return false;
-    bool rslt{false};
-    while (true) {
-      std::cout << "Long named cycle\n";
-      // Find matching argument
-      for (auto& arg_def : arg_siblings) {
-        if ((arg_def->kind_ == scheme::entity::KIND::ARGUMENT) &&
-            (arg_def->color_ != scheme::entity::COLOR::BLOCKED) &&
-            (arg_def->is_positional_ && !*arg_def->is_positional_)) {
-          std::cout << "Trying arg def " << arg_def->all_names_to_string() << "\n";
-          // Find token that matches argument's definition by long name
-          auto token = std::find_if(tokens_.begin(), tokens_.end(), [this, &arg_def] (const parser::token& t) {
-              std::cout << " Comparing to token " << t.s << "\n";
-              if (is_long_prefixed(t.s)) {
-                auto up = extract_unprefixed(t.s, scheme_def_.long_prefixes_);
-                if (arg_def->long_names_) {
-                  auto& long_names = *arg_def->long_names_;
-                  //                  for (const auto& s : long_names) std::cout << " Candidate long name " << s << "\n";
-                  return std::find(long_names.begin(), long_names.end(), std::get<1>(up)) != long_names.end();
-                } else {
-                  std::cout << "No long name for argument!\n";
-                }
-              } else {
-                std::cout << "Not long prefixed " << t.s << "\n";
-              }
-              return false;
-            });
-          if (token != tokens_.end()) {
-            color_siblings(arg_def, arg_siblings);
-            consume_value_with_implicit(arg_def, token);
-            return true;
-          } else break;
-        } else break;
+  std::list<parser::token>::iterator parser::find_token_for_named(const scheme::entity_ptr& arg_def) {
+    // Find token that matches argument's definition by long name
+    for (auto t = tokens_.begin(); t != tokens_.end(); ++t) {
+      std::cout << " Comparing to token " << t->s << "\n";
+      auto up = unprefix(t->s);
+      auto& prefix = std::get<1>(up);
+      auto& name = std::get<2>(up);
+      if ((scheme_def_.is_long_prefix(prefix)) && (arg_def->name_matches(name))) {
+        return t;
       }
-      // If no more next siblings, we have to move to another argument matching type
-      if ((tokens_.size() == 0) || !rslt) break;
+      if (scheme_def_.is_short_prefix(prefix)) {
+        size_t pos = std::get<0>(up);
+        if (name.size() > 1) {
+          for (const auto& short_name : name) {
+            parser::token new_token{t->pos_arg_num, pos, scheme_def_.short_prefixes_[0] + short_name};
+            tokens_.insert(t, new_token);
+            ++pos;
+          }
+          tokens_.erase(t);
+          t = tokens_.begin();
+        } else {
+          if (arg_def->name_matches(name[0]))
+            return t;
+        }
+      }
     }
-    return rslt;
+    return tokens_.end();
   }
 
-  bool parser::consume_short(std::vector<scheme::entity_ptr>& arg_siblings) {
-    if (ignore_option_prefixes_) return false;
-    bool rslt{false};
+  scheme::entity_ptr parser::consume_named(std::vector<scheme::entity_ptr>& arg_siblings) {
+    if (ignore_option_prefixes_) return nullptr;
+    scheme::entity_ptr rslt;
     while (true) {
-      std::cout << "Short named cycle\n";
+      std::cout << "Named cycle\n";
       // Find matching argument
       for (auto& arg_def : arg_siblings) {
         if ((arg_def->kind_ == scheme::entity::KIND::ARGUMENT) &&
             (arg_def->color_ != scheme::entity::COLOR::BLOCKED) &&
             (arg_def->is_positional_ && !*arg_def->is_positional_)) {
           std::cout << "Trying arg def " << arg_def->all_names_to_string() << "\n";
-          // Find token that matches argument's definition by short name
-          auto token = std::find_if(tokens_.begin(), tokens_.end(), [this, &arg_def] (const parser::token& t) {
-              std::cout << " Comparing to token " << t.s << "\n";
-              if (is_short_prefixed(t.s)) {
-                auto up = extract_unprefixed(t.s, scheme_def_.short_prefixes_);
-                if (arg_def->short_names_) {
-                  auto& short_names = *arg_def->short_names_;
-                  //                  for (const auto& s : short_names) std::cout << " Candidate short name " << s << "\n";
-                  return std::find(short_names.begin(), short_names.end(), std::get<1>(up)[0]) != short_names.end();
-                } else {
-                  std::cout << "No short name for argument!\n";
-                }
-              } else {
-                std::cout << "Not short prefixed " << t.s << "\n";
-              }
-              return false;
-            });
+          auto token = find_token_for_named(arg_def);
           if (token != tokens_.end()) {
             color_siblings(arg_def, arg_siblings);
             consume_value_with_implicit(arg_def, token);
-            rslt = true;
+            rslt = arg_def;
             break;
           } else break;
         } else break;
@@ -248,8 +225,8 @@ namespace optspp {
     return rslt;
   }
   
-  bool parser::consume_positonal_known(std::vector<scheme::entity_ptr>& arg_siblings) {
-    bool rslt{false};
+  scheme::entity_ptr parser::consume_positional_known(std::vector<scheme::entity_ptr>& arg_siblings) {
+    scheme::entity_ptr rslt;
     while (true) {
       std::cout << "Positional named cycle\n";
       // Find matching argument
@@ -277,7 +254,7 @@ namespace optspp {
                 color_siblings(val_def, val_siblings);
                 add_value(arg_def, token->s);
                 tokens_.erase(token);
-                return true;
+                return arg_def;
               }
             } else {
               std::cout << "no positionals found\n";
@@ -288,7 +265,7 @@ namespace optspp {
         } else break;
       }
       // If no more next siblings, we have to move to another argument matching type
-      if ((tokens_.size() == 0) || !rslt) return false;
+      if ((tokens_.size() == 0) || !rslt) return nullptr;
     }
     return rslt;
   }
@@ -300,14 +277,21 @@ namespace optspp {
   }
 
   bool parser::pass_tree() {
+    std::cout << "Starting pass\n";
+    bool rslt = false;
     std::list<scheme::entity_ptr> q;
-    if (scheme_def_.root_->color_ != scheme::entity::COLOR::BLOCKED)
+    if (scheme_def_.root_->color_ != scheme::entity::COLOR::BLOCKED) {
+      clear_visited(scheme_def_.root_);
       q.push_back(scheme_def_.root_);
+    }
     
     while (q.size() > 0) {
       std::cout << "Q size " << q.size() << "\n";
       for (const auto& x : q) {
-        std::cout << "   " << x->all_names_to_string() << "\n";
+        if (x->kind_ == scheme::entity::KIND::ARGUMENT)
+          std::cout << "   " << x->all_names_to_string() << "\n";
+        if (x->kind_ == scheme::entity::KIND::VALUE)
+          std::cout << "   " << (*x->known_values_)[0] << "\n";
       }
       auto p = q.front();
       q.pop_front();
@@ -315,21 +299,28 @@ namespace optspp {
       // Find non-blocked child
       std::vector<scheme::entity_ptr> arg_siblings;
       for (const auto& x : p->pending_) {
-        std::cout << "X kind " << (int)x->kind_ << "\n";
+        std::cout << " Checking non-blocked child " << x->all_names_to_string() << "\n";
       }
-      copy_if(p->pending_.begin(), p->pending_.end(),
-              std::back_inserter(arg_siblings),
-              [] (const scheme::entity_ptr& c) {
+      std::copy_if(p->pending_.begin(), p->pending_.end(), std::back_inserter(arg_siblings), [] (const scheme::entity_ptr& c) {
           return
           (c->color_ != scheme::entity::COLOR::BLOCKED) &&
           (c->color_ != scheme::entity::COLOR::VISITED) &&
           (c->kind_ == scheme::entity::KIND::ARGUMENT);
         });
       if (arg_siblings.size() > 0) {
-        if (consume_long(arg_siblings) || consume_short(arg_siblings) || consume_positonal_known(arg_siblings))
-          return true;
+        scheme::entity_ptr consumed;
+        if (consumed == nullptr) consumed = consume_named(arg_siblings);
+        if (consumed == nullptr) consumed = consume_positional_known(arg_siblings);
+        if ((consumed != nullptr) && (consumed->kind_ == scheme::entity::KIND::VALUE)) {
+          std::cout << "Pushing " << (*consumed->known_values_)[0] << "\n";
+          q.push_back(consumed);
+          rslt = true;
+          continue;
+        } else {
+          return rslt;
+        }
       } else {
-        std::cout << "No arguments among childs\n";
+        std::cout << "No arguments or unvisited children\n";
         break;
       }
       std::cout << "Pushing more nodes\n";
@@ -340,7 +331,7 @@ namespace optspp {
       }
     }
     std::cout << "Returning false\n";
-    return false;
+    return rslt;
   }
 
   void parser::color_siblings(scheme::entity_ptr& entity, std::vector<scheme::entity_ptr>& siblings) {
@@ -374,16 +365,19 @@ namespace optspp {
       if (tokens_.size() > 0) {
         // If this tree pass did not result in parsed argument
         if (!pass_tree()) {
+          bool cont{false};
           for (auto& e : scheme_def_.root_->pending_) {
-            if (visitables_left(e)) continue;
+            if (visitables_left(e)) cont = true;
           }
+          if (cont) continue;
           std::cout << "Still " << tokens_.size() << " tokens left:\n";
           for (const auto& t : tokens_) std::cout << " * " << t.s << "\n";
           throw std::runtime_error("Unexpected arguments");
-        } else {
-          // Finish with success
-          break;
         }
+        std::cout << "Tokens left after pass: " << tokens_.size() << "\n";
+      } else {
+        // Finish with success
+        break;
       }
     }
       

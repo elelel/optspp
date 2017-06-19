@@ -41,8 +41,8 @@ namespace optspp {
     bool is_long_prefixed(const std::string& s) const;
     // True if s is prefixed with one of the strings in short prefixes
     bool is_short_prefixed(const std::string& s) const;
-    // Extract unprefixed name and return it with it's position
-    static std::tuple<size_t, std::string> extract_unprefixed(const std::string& s, const std::vector<std::string>& prefixes);
+    // Return position, prefix, unprefixed
+    std::tuple<size_t, std::string, std::string> unprefix(const std::string& s);
 
     // Color taken entity_ptr as VISITED, and XOR-grouped siblings as BLOCKED
     void color_siblings(scheme::entity_ptr& entity, std::vector<scheme::entity_ptr>& siblings);
@@ -69,12 +69,12 @@ namespace optspp {
     bool consume_value(scheme::entity_ptr& arg_def, const std::list<token>::iterator& token);
     // Extracts argument's value taking into considiration implicit values
     bool consume_value_with_implicit(scheme::entity_ptr& arg_def, const std::list<token>::iterator& value_token);
-    // Tries to parse current position as a long-prefixed argument
-    bool consume_long(std::vector<scheme::entity_ptr>& arg_siblings);
-    // Tries to parse current position as a short-prefixed argument
-    bool consume_short(std::vector<scheme::entity_ptr>& arg_siblings);
+    // Finds token that matches named arg definition
+    std::list<parser::token>::iterator find_token_for_named(const scheme::entity_ptr& e);
+    // Tries to parse current position as a prefixed named argument
+    scheme::entity_ptr consume_named(std::vector<scheme::entity_ptr>& arg_siblings);
     // Tries to parse current position as a positional argument, only for predefined values
-    bool consume_positonal_known(std::vector<scheme::entity_ptr>& arg_siblings);
+    scheme::entity_ptr consume_positional_known(std::vector<scheme::entity_ptr>& arg_siblings);
     
   };
 }

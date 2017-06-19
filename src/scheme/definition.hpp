@@ -54,5 +54,14 @@ namespace optspp {
         validate_entity(c);
       }
     }
+
+    bool definition::is_long_prefix(const std::string& s) const {
+      return std::find(long_prefixes_.begin(), long_prefixes_.end(), s) != long_prefixes_.end();
+    }
+
+    bool definition::is_short_prefix(const std::string& s) const {
+      return std::find(short_prefixes_.begin(), short_prefixes_.end(), s) != short_prefixes_.end();
+    }
+
   }
 }

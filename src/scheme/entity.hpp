@@ -121,6 +121,23 @@ namespace optspp {
       }
     }
 
+    bool entity::name_matches(const std::string& s) const {
+      if (long_names_) {
+        auto& long_names = *long_names_;
+        return std::find(long_names.begin(), long_names.end(), s) != long_names.end();
+      }
+      return false;
+    }
+    
+    bool entity::name_matches(const char& c) const {
+      if (short_names_) {
+        auto& short_names = *short_names_;
+        return std::find(short_names.begin(), short_names.end(), c) != short_names.end();
+      }
+      return false;
+    }
+
+
     auto entity::kind() const -> KIND {
       return kind_;
     }

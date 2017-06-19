@@ -69,7 +69,6 @@ namespace optspp {
   
   // Assign value definition to argument definition and argument definition to value definition; the children are xor-compatible
   std::shared_ptr<scheme::entity> operator<<(std::shared_ptr<scheme::entity> lhs, const std::shared_ptr<scheme::entity>& rhs) {
-    using namespace easytree;
     if (((lhs->kind_ == scheme::entity::KIND::ARGUMENT) && (rhs->kind_ == scheme::entity::KIND::VALUE)) ||
         ((rhs->kind_ == scheme::entity::KIND::ARGUMENT) && (lhs->kind_ == scheme::entity::KIND::VALUE))) {
       if (std::find(lhs->pending_.begin(), lhs->pending_.end(), rhs) == lhs->pending_.end()) {
@@ -84,7 +83,6 @@ namespace optspp {
   
   // Assign value definition to argument definition and argument definition to value definition; the children are or-compatible
   std::shared_ptr<scheme::entity> operator|(std::shared_ptr<scheme::entity> lhs, const std::shared_ptr<scheme::entity>& rhs) {
-    using namespace easytree;
     if (((lhs->kind_ == scheme::entity::KIND::ARGUMENT) && (rhs->kind_ == scheme::entity::KIND::VALUE)) ||
         ((rhs->kind_ == scheme::entity::KIND::ARGUMENT) && (lhs->kind_ == scheme::entity::KIND::VALUE))) {
       if (std::find(lhs->pending_.begin(), lhs->pending_.end(), rhs) == lhs->pending_.end()) {
@@ -102,7 +100,6 @@ namespace optspp {
 
   // Assign argument definition to scheme definition; the children are or-compatible
   scheme::definition& operator<<(scheme::definition& lhs, const std::shared_ptr<scheme::entity>& rhs) {
-    using namespace easytree;
     if (rhs->kind_ == scheme::entity::KIND::ARGUMENT) {
       if (std::find(lhs.root_->pending_.begin(), lhs.root_->pending_.end(), rhs) == lhs.root_->pending_.end()) {
         lhs.root_->pending_.push_back(rhs);
@@ -116,7 +113,6 @@ namespace optspp {
   
   // Assign argument definition to scheme definition; the children are or-compatible
   scheme::definition& operator|(scheme::definition& lhs, const std::shared_ptr<scheme::entity>& rhs) {
-    using namespace easytree;
     if (rhs->kind_ == scheme::entity::KIND::ARGUMENT) {
       if (std::find(lhs.root_->pending_.begin(), lhs.root_->pending_.end(), rhs) == lhs.root_->pending_.end()) {
         lhs.root_->pending_.push_back(rhs);
