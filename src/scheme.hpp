@@ -1,6 +1,9 @@
 #pragma once
 
+#include <algorithm>
+#include <map>
 #include <memory>
+#include <vector>
 
 #include "predeclare.hpp"
 #include "misc.hpp"
