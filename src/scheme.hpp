@@ -59,7 +59,6 @@ namespace optspp {
         NONE,
         BORDER,
         VISITED,
-        VISITED_BEFORE,
         BLOCKED
       };
 
@@ -87,6 +86,7 @@ namespace optspp {
 
       bool name_matches(const std::string& s) const;
       bool name_matches(const char& c) const;
+      bool value_matches(const std::string& s) const;
       
       KIND kind() const;
       SIBLINGS_GROUP siblings_group() const;
@@ -98,6 +98,7 @@ namespace optspp {
       const optional<std::vector<char>>& short_names() const;
       const optional<bool>& is_positional() const;
       const optional<std::vector<std::string>>& known_values() const;
+      const optional<bool>& is_any_value() const;
       
       friend struct optspp::scheme::parser;
       friend struct scheme::definition;

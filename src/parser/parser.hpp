@@ -166,6 +166,42 @@ namespace optspp {
       throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
     }
 
+    bool parser::consume_positional_known_value(entity_ptr& arg_def,
+                                                const std::list<token>::iterator& token) {
+      if (arg_def->is_positional_ && *arg_def->is_positional_) {
+        if (!ignore_option_prefixes_ &&
+            (is_prefixed(token->s, scheme_def_.long_prefixes_) ||
+             is_prefixed(token->s, scheme_def_.short_prefixes_))) return false;
+        std::vector<entity_ptr>& val_siblings = arg_def->pending_;
+        while (true) {
+          auto& val_siblings = arg_def->pending_;
+          auto found = find_if(val_siblings.begin(), val_siblings.end(), [&token] (const entity_ptr& e) {
+              if ((e->kind_ == entity::KIND::VALUE) && (e->known_values_)) {
+                auto& known_values = *e->known_values_;
+                auto found_value = find_if(known_values.begin(), known_values.end(), [&token] (const std::string& s) {
+                    return s == token->s;
+                  });
+                return found_value != known_values.end();
+              } else {
+                return false;
+              }
+            });
+          if (found != val_siblings.end()) {
+            std::cout << "Found\n";
+            move_border(arg_def, *found);
+            add_value(arg_def, token->s);
+            // Remove tokens containing name and value
+            tokens_.erase(token);
+            return true;
+          } else {
+            std::cout << "Warning! Value definition for " << token->s << " (positional argument " << arg_def->all_names_to_string() << ") not found\n";
+            break;
+          }
+        }
+      }
+      return false;
+    }
+
     std::list<parser::token>::iterator parser::find_token_for_named(const entity_ptr& arg_def) {
       // Find token that matches argument's definition by long name
       for (auto t = tokens_.begin(); t != tokens_.end(); ++t) {
@@ -195,79 +231,57 @@ namespace optspp {
       return tokens_.end();
     }
 
-    bool parser::consume_named(entity_ptr& parent) {
+    bool parser::consume_argument(entity_ptr& parent) {
       if (ignore_option_prefixes_) return false;
-      std::vector<entity_ptr>& arg_siblings = parent->pending_;
-      while (true) {
-        std::cout << "consume_named: Named cycle\n";
-        // Find matching argument
-        for (auto& arg_def : arg_siblings) {
-          if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
-              (arg_def->color_ != entity::COLOR::BLOCKED) &&
-              (arg_def->is_positional_ && !*arg_def->is_positional_)) {
-            std::cout << "consume_named: Trying arg def " << arg_def->all_names_to_string() << "\n"
-                      << " color " << (int)arg_def->color_ << "\n";
-            auto token = find_token_for_named(arg_def);
-            if (token != tokens_.end()) {
-              move_border(parent, arg_def);
-              consume_named_value(arg_def, token);
-              std::cout << "consume_named: Consumed named arg " << arg_def->all_names_to_string() << " color is now " << (int)arg_def->color_ << "\n";
-              return true;
+      auto& arg_siblings = parent->pending_;
+      std::cout << "consume_named: Named cycle\n";
+      // Find matching argument
+      for (auto& arg_def : arg_siblings) {
+        if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
+            (arg_def->color_ != entity::COLOR::BLOCKED) &&
+            (arg_def->is_positional_ && !*arg_def->is_positional_)) {
+          std::cout << "consume_named: Trying named arg def " << arg_def->all_names_to_string() << "\n"
+                    << " color " << (int)arg_def->color_ << "\n";
+          auto t = find_token_for_named(arg_def);
+          if (t != tokens_.end()) {
+            move_border(parent, arg_def);
+            consume_named_value(arg_def, t);
+            std::cout << "consume_named: Consumed named arg " << arg_def->all_names_to_string() << " color is now " << (int)arg_def->color_ << "\n";
+            return true;
+          }
+        }
+      }
+      // Positional
+      for (auto& arg_def : arg_siblings) {
+        if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
+            (arg_def->color_ != entity::COLOR::BLOCKED) &&
+            (arg_def->is_positional_ && *arg_def->is_positional_)) {
+          std::cout << "consume_named: Trying positional arg def " << arg_def->all_names_to_string() << "\n"
+                    << " color " << (int)arg_def->color_ << "\n";
+          auto& val_siblings = arg_def->pending_;
+          move_border(parent, arg_def);
+          for (auto& val_def : val_siblings) {
+            if ((val_def->kind_ == entity::KIND::VALUE) &&
+                (val_def->color_ != entity::COLOR::BLOCKED) &&
+                (val_def->any_value_ && (*val_def->any_value_ == false))) {
+              std::cout << "trynig value " << (*val_def->known_values_)[0] << "\n";
+              for (auto t = tokens_.begin(); t != tokens_.end(); ++t) {
+                if ((std::get<1>(unprefix(t->s)) == "") || (ignore_option_prefixes_)) {
+                  if (val_def->value_matches(t->s)) {
+                    
+                    consume_positional_known_value(arg_def, t);
+                    return true;
+                  }
+                }
+              }
             }
           }
         }
-        std::cout << "consume_named: repeating\n";
-        break;
       }
+      // Nothing consumed
       return false;
     }
-  
-    entity_ptr parser::consume_positional_known(entity_ptr& parent) {
-      /*  entity_ptr rslt;
-      std::vector<entity_ptr>& arg_siblings = parent->pending_;
-      while (true) {
-        std::cout << "Positional named cycle\n";
-        // Find matching argument
-        for (auto& arg_def : arg_siblings) {
-          if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
-              (arg_def->color_ != entity::COLOR::BLOCKED) &&
-              (arg_def->is_positional_ && *arg_def->is_positional_)) {
-            std::cout << "Trying positional arg def " << arg_def->all_names_to_string() << "\n";
-            auto& val_siblings = arg_def->pending_;
-            for (auto& val_def : val_siblings) {
-              // Find token that matches value definition, value def should not be "any"
-              if ((val_def->kind_ == entity::KIND::VALUE) &&
-                  (val_def->known_values_) && ((*val_def->known_values_).size() > 0)) {
-                std::cout << " Trying val def " << (*val_def->known_values_)[0] << "\n";
-                auto token = std::find_if(tokens_.begin(), tokens_.end(), [this, &val_def] (const parser::token& t) {
-                    std::cout << "  Testing token " << t.s << "\n";
-                    if (ignore_option_prefixes_ || (!is_long_prefixed(t.s) && !is_short_prefixed(t.s))) {
-                      auto& known_values = *val_def->known_values_;
-                      return std::find(known_values.begin(), known_values.end(), t.s) != known_values.end();
-                    }
-                  });
-                if (token != tokens_.end()) {
-                  color_siblings(arg_def, arg_siblings);
-                  std::cout << "Adding as positional " << token->s << "\n";
-                  color_siblings(val_def, val_siblings);
-                  add_value(arg_def, token->s);
-                  tokens_.erase(token);
-                  return arg_def;
-                }
-              } else {
-                std::cout << "no positionals found\n";
-                break;
-              }
-              if (rslt) break;
-            }
-          } else break;
-        }
-        // If no more next siblings, we have to move to another argument matching type
-        if ((tokens_.size() == 0) || !rslt) return nullptr;
-      }
-      return rslt;*/
-    }
-
+    
     void parser::clear_color(entity_ptr& e) {
       if (e->color_ != entity::COLOR::BLOCKED)
         e->color_ = entity::COLOR::NONE;
@@ -326,7 +340,6 @@ namespace optspp {
       return rslt;
     }
 
-
     bool parser::pass_tree() {
       std::cout << "pass_tree: starting\n";
       bool rslt = false;
@@ -336,9 +349,10 @@ namespace optspp {
         std::cout << "pass_tree: cycle start\n";
         auto parent = find_border_entity();
         if (parent == nullptr) {
+          // No more parents found
           return rslt;
         }
-        if (consume_named(parent)) {
+        if (consume_argument(parent)) {
           rslt = true;
         } else {
           parent->color_ = entity::COLOR::VISITED;

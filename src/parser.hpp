@@ -43,11 +43,14 @@ namespace optspp {
       // Extracts named argument's value taking into considiration implicit values
       bool consume_named_value(entity_ptr& arg_def, const std::list<token>::iterator& value_token);
       // Finds token that matches named arg definition
-      std::list<parser::token>::iterator find_token_for_named(const entity_ptr& e);
-      // Tries to parse current position as a prefixed named argument
-      bool consume_named(entity_ptr& parent);
-      // Tries to parse current position as a positional argument, only for predefined values
-      entity_ptr consume_positional_known(entity_ptr& arg_siblings);
+      std::list<parser::token>::iterator find_token_for_named(const entity_ptr& arg_def);
+      // Extracts positional argument's value, only for predefined positional values
+      bool consume_positional_known_value(entity_ptr& arg_def,
+                                          const std::list<token>::iterator& token);
+      // Find token that looks like a positional arg
+      std::list<parser::token>::iterator find_token_for_positional(const entity_ptr& arg_def);
+      // Tries to parse current position as a prefixed named argument, then as positional with known value
+      bool consume_argument(entity_ptr& parent);
     
     private:
       definition& scheme_def_;

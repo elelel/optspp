@@ -136,6 +136,18 @@ namespace optspp {
       return false;
     }
 
+    bool entity::value_matches(const std::string& s) const {
+      if (kind_ == KIND::VALUE) {
+        if (any_value_ && *any_value_) return true;
+        if (known_values_) {
+          auto found = std::find_if((*known_values_).begin(), (*known_values_).end(), [&s] (const std::string& val) {
+              return val == s;
+            });
+          if (found != (*known_values_).end()) return true;
+        }
+      }
+      return false;
+    }
 
     auto entity::kind() const -> KIND {
       return kind_;
@@ -165,6 +177,10 @@ namespace optspp {
       return is_positional_;
     }
 
+    const optional<bool>& entity::is_any_value() const {
+      return any_value_;
+    }
+    
     const optional<std::vector<std::string>>& entity::known_values() const {
       return known_values_;
     }
