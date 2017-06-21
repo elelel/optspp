@@ -161,6 +161,7 @@ SCENARIO("XOR/OR scheme without 'any' values and positional args") {
     std::cout << "========================= \n";
     THEN("Command line: --Arg_L1_1 Val_L2_1 --Arg_L3_1 Val_L4_2") {
       scheme::parser p(args, {"--Arg_L1_1", "Val_1_L2_1",  "--Arg_L3_1", "Val_3_L4_2", "--Arg_L3_1", "Val_3_L4_1", "--Arg_L1_2", "Val_2_L2_2" });
+      // Cycle 1
       p.initialize_pass();
       auto parent = p.find_border_entity();
       REQUIRE(parent == args.root());
@@ -170,25 +171,34 @@ SCENARIO("XOR/OR scheme without 'any' values and positional args") {
       REQUIRE(val_1_l2_1->color() == scheme::entity::COLOR::BORDER);
       REQUIRE(val_1_l2_2->color() == scheme::entity::COLOR::BLOCKED);
       parent = p.find_border_entity();
-      REQUIRE(parent == args.root());
-      REQUIRE(p.consume_argument(parent));
-      REQUIRE(arg_l1_1->color() == scheme::entity::COLOR::VISITED);
-      REQUIRE(arg_l1_2->color() == scheme::entity::COLOR::VISITED);
-      REQUIRE(val_2_l2_1->color() == scheme::entity::COLOR::BLOCKED);
-      REQUIRE(val_2_l2_2->color() == scheme::entity::COLOR::BORDER);
-      parent = p.find_border_entity();
       REQUIRE(parent == val_1_l2_1);
       REQUIRE(p.consume_argument(parent));
       REQUIRE(arg_l3_1->color() == scheme::entity::COLOR::BORDER);
       REQUIRE(arg_l3_2->color() == scheme::entity::COLOR::BLOCKED);
       REQUIRE(val_3_l4_1->color() == scheme::entity::COLOR::NONE);
       REQUIRE(val_3_l4_2->color() == scheme::entity::COLOR::BORDER);
+      parent = p.find_border_entity();
+      REQUIRE(parent == nullptr);
+      // Cycle 2
+      p.initialize_pass();
+      parent = p.find_border_entity();
+      REQUIRE(parent == args.root());
+      REQUIRE(p.consume_argument(parent));
+      REQUIRE(arg_l1_1->color() == scheme::entity::COLOR::BORDER);
+      REQUIRE(arg_l1_2->color() == scheme::entity::COLOR::VISITED);
+      REQUIRE(val_2_l2_1->color() == scheme::entity::COLOR::BLOCKED);
+      REQUIRE(val_2_l2_2->color() == scheme::entity::COLOR::BORDER);
+      parent = p.find_border_entity();
       REQUIRE(p.find_border_entity() == nullptr);
       p.initialize_pass();
       parent = p.find_border_entity();
       REQUIRE(parent == args.root());
       REQUIRE(!p.consume_argument(parent));
-      // Continuing requires setting color_ to visited
+      p.initialize_pass();
+      parent = p.find_border_entity();
+      REQUIRE(parent == args.root());
+      REQUIRE(!p.consume_argument(parent));
+      parent = p.find_border_entity();
       
       THEN("Check results") {
         REQUIRE(args["Arg_L1_1"].size() == 1);
@@ -258,9 +268,11 @@ SCENARIO("XOR/OR scheme with 'any' values and positional args") {
     REQUIRE((*val_1_l2_2->known_values())[0] == "Val_1_L2_2");
     REQUIRE(val_3_2_l4_1->known_values());
     REQUIRE((*val_3_2_l4_1->known_values())[0] == "Val_3_2_L4_1");
-    
-    THEN("Command line: --Arg_L1_1 Val_L2_1 --Arg_L3_1 Val_L4_2") {
-      scheme::parser p(args, {"--Arg_L1_1", "Val_1_L2_1",  "--Arg_L3_1", "Val_3_L4_2", "--Arg_L3_1", "Val_3_L4_1", "--Arg_L1_2", "Val_2_L2_2", "pos_val1" });
+
+    std::vector<std::string> input{"--Arg_L1_1", "Val_1_L2_1",  "--Arg_L3_1", "Val_3_L4_2", "--Arg_L3_1", "Val_3_L4_1", "--Arg_L1_2", "Val_2_L2_2", "pos_val1" };
+    THEN("Step by step") {
+      scheme::parser p(args, input);
+      // Cycle 1
       p.initialize_pass();
       auto parent = p.find_border_entity();
       REQUIRE(parent == args.root());
@@ -270,19 +282,75 @@ SCENARIO("XOR/OR scheme with 'any' values and positional args") {
       REQUIRE(val_1_l2_1->color() == scheme::entity::COLOR::BORDER);
       REQUIRE(val_1_l2_2->color() == scheme::entity::COLOR::BLOCKED);
       parent = p.find_border_entity();
+      REQUIRE(parent == val_1_l2_1);
+      REQUIRE(p.consume_argument(parent));
+      REQUIRE(arg_l3_1->color() == scheme::entity::COLOR::BORDER);
+      REQUIRE(val_3_l4_2->color() == scheme::entity::COLOR::BORDER);
+      parent = p.find_border_entity();
+      REQUIRE(parent == nullptr);
+
+      // Cycle 2
+      p.initialize_pass();
+      parent = p.find_border_entity();
       REQUIRE(parent == args.root());
       REQUIRE(p.consume_argument(parent));
-      REQUIRE(arg_l1_1->color() == scheme::entity::COLOR::VISITED);
       REQUIRE(arg_l1_2->color() == scheme::entity::COLOR::VISITED);
-      REQUIRE(val_2_l2_1->color() == scheme::entity::COLOR::BLOCKED);
       REQUIRE(val_2_l2_2->color() == scheme::entity::COLOR::BORDER);
       parent = p.find_border_entity();
+      REQUIRE(parent == val_1_l2_1);
+      REQUIRE(p.consume_argument(parent));
+      REQUIRE(arg_l3_1->color() == scheme::entity::COLOR::BORDER);
+      REQUIRE(val_3_l4_1->color() == scheme::entity::COLOR::BORDER);
+      parent = p.find_border_entity();
+      REQUIRE(parent == nullptr);
 
+      // Cycle 3
+      p.initialize_pass();
+      parent = p.find_border_entity();
       REQUIRE(parent == args.root());
-      REQUIRE(p.consume_argument(parent)); 
+      REQUIRE(p.consume_argument(parent));
       REQUIRE(positional->color() == scheme::entity::COLOR::VISITED);
       REQUIRE(positional_val1->color() == scheme::entity::COLOR::BORDER);
       REQUIRE(positional_val2->color() == scheme::entity::COLOR::BLOCKED);
+      parent = p.find_border_entity();
+      std::cout << (*parent->known_values())[0] <<"\n";
+      REQUIRE(parent == val_1_l2_1);
+      REQUIRE(!p.consume_argument(parent));
+
+      // Cycle 4
+      p.initialize_pass();
+      parent = p.find_border_entity();
+      REQUIRE(parent == args.root());
+      REQUIRE(!p.consume_argument(parent));
+      parent = p.find_border_entity();
+      REQUIRE(parent == val_1_l2_1);
+      REQUIRE(!p.consume_argument(parent));
+      parent = p.find_border_entity();
+      REQUIRE(parent == nullptr);
+
+      THEN("Check resulting arg values") {
+        REQUIRE(args["Arg_L1_1"].size() == 1);
+        REQUIRE(args["Arg_L1_1"][0] == "Val_1_L2_1");
+        REQUIRE(args["Arg_L3_1"].size() == 2);
+        REQUIRE(args["Arg_L3_1"][0] == "Val_3_L4_2");
+        REQUIRE(args["Arg_L3_1"][1] == "Val_3_L4_1");
+        REQUIRE(args["Arg_L1_2"].size() == 1);
+        REQUIRE(args["Arg_L1_2"][0] == "Val_2_L2_2");
+        REQUIRE(args["positional"].size() == 1);
+        REQUIRE(args["positional"][0] == "pos_val1");
+      }
+    }
+    THEN("High-level") {
+      args.parse(input);
+      REQUIRE(args["Arg_L1_1"].size() == 1);
+      REQUIRE(args["Arg_L1_1"][0] == "Val_1_L2_1");
+      REQUIRE(args["Arg_L3_1"].size() == 2);
+      REQUIRE(args["Arg_L3_1"][0] == "Val_3_L4_2");
+      REQUIRE(args["Arg_L3_1"][1] == "Val_3_L4_1");
+      REQUIRE(args["Arg_L1_2"].size() == 1);
+      REQUIRE(args["Arg_L1_2"][0] == "Val_2_L2_2");
+      REQUIRE(args["positional"].size() == 1);
+      REQUIRE(args["positional"][0] == "pos_val1");
     }
   }            
 }

@@ -281,8 +281,8 @@ namespace optspp {
     }
     
     void parser::clear_color(entity_ptr& e) {
-      if (e->color_ != entity::COLOR::BLOCKED)
-        e->color_ = entity::COLOR::NONE;
+      if (e->color_ == entity::COLOR::VISITED)
+        e->color_ = entity::COLOR::BORDER;
       for (auto& c : e->pending_) clear_color(c);
     }
 
@@ -302,8 +302,10 @@ namespace optspp {
         if (p->color_ == entity::COLOR::BORDER) {
           std::cout << "find_border_arg_def: trying kind " << (int)p->kind_ << "\n";
           for (const auto& e : p->pending_) {
-            if ((e->kind_ == entity::KIND::ARGUMENT) && (e->color_ != entity::COLOR::VISITED))
+            if ((e->kind_ == entity::KIND::ARGUMENT) && (e->color_ != entity::COLOR::VISITED)) {
+              p->color_ = entity::COLOR::VISITED;
               return p;
+            }
           }
         }
         for (const auto& c : p->pending_) q.push(c);
@@ -324,6 +326,7 @@ namespace optspp {
         }
       }
       if (child->siblings_group_ == SIBLINGS_GROUP::OR) {
+        //        parent->color_ = entity::COLOR::BORDER;
       }
     }
 
@@ -341,8 +344,6 @@ namespace optspp {
         }
         if (consume_argument(parent)) {
           rslt = true;
-        } else {
-          parent->color_ = entity::COLOR::VISITED;
         }
       }
       std::cout << " Tree pass returning " << rslt << "\n";
