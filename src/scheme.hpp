@@ -28,8 +28,9 @@ namespace optspp {
 
       void validate() const;
 
-      bool is_long_prefix(const std::string& s) const;
-      bool is_short_prefix(const std::string& s) const;
+      const std::vector<std::string>& operator[](const std::string& name) const;
+      const std::vector<std::string>& operator[](const char name) const;
+      const std::vector<std::string>& operator[](const size_t) const;
 
       const entity_ptr& root() const;
 
@@ -44,10 +45,13 @@ namespace optspp {
       entity_ptr root_;
 
       // Actual value holders
-      std::map<scheme::entity_ptr, std::vector<std::string>> values_;
-      std::vector<scheme::entity_ptr> positional_;
+      std::map<entity_ptr, std::vector<std::string>> values_;
+      std::vector<entity_ptr> positionals_;
 
       static void validate_entity(const entity_ptr& e);
+      bool is_long_prefix(const std::string& s) const;
+      bool is_short_prefix(const std::string& s) const;
+
 
     };
 

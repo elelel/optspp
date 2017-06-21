@@ -11,13 +11,15 @@ namespace optspp {
         token(const size_t& _pos_arg_num,
               const size_t& _pos_in_arg,
               const std::string& _s);
+        token(const token& other);
+        void swap(token& other);
 
         // True if contains data
         explicit operator bool() const noexcept;
                    
-        const size_t pos_arg_num;
-        const size_t pos_in_arg;
-        const std::string s;
+        size_t pos_arg_num;
+        size_t pos_in_arg;
+        std::string s;
     
       private:
         bool some_{false};
@@ -30,8 +32,6 @@ namespace optspp {
       
       // Clear color for a tree branch
       void clear_color(entity_ptr& e);
-      // Test if there are nodes that still can be visited in this pass
-      bool visitables_left(entity_ptr e);
       void initialize_pass();
       entity_ptr find_border_entity() const;
       // Find next node in tree to try parsing the argument
@@ -56,6 +56,8 @@ namespace optspp {
       definition& scheme_def_;
       std::list<token> tokens_;
       bool ignore_option_prefixes_{false};
+      std::vector<std::pair<scheme::entity_ptr, token>> positionals_tmp_;
+
 
       // Split name/values with custom separators
       void preprocess();
@@ -74,8 +76,8 @@ namespace optspp {
       const std::string& main_value(const entity_ptr& arg_def, const std::string& s);
       // Adds named value to results
       void add_value(const entity_ptr& arg_def, const std::string& s);
-      // Pushes positional argument value to results
-      void push_positional_value(const entity_ptr& arg_def, const std::string& s);
+      // Ads positional argument value to results
+      void add_positional_value(const entity_ptr& arg_def, const token& t);
       // Adds implicit value, throws if no implicit values left
       void add_value_implicit(entity_ptr& arg_def, const token& token);
       // Adds default value, throws if no default values left

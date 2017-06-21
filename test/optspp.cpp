@@ -107,6 +107,14 @@ SCENARIO("XOR scheme without 'any' values and positional args") {
       REQUIRE(val_l4_1->color() == scheme::entity::COLOR::BLOCKED);
       REQUIRE(val_l4_2->color() == scheme::entity::COLOR::BORDER);
       REQUIRE(p.find_border_entity() == nullptr);
+      THEN("Check results") {
+        REQUIRE(args["Arg_L1_1"].size() == 1);
+        REQUIRE(args["Arg_L1_1"][0] == "Val_L2_1");
+        REQUIRE(args["Arg_L3_1"].size() == 1);
+        REQUIRE(args["Arg_L3_1"][0] == "Val_L4_2");
+        REQUIRE(args["Arg_L3_2"].size() == 0);
+        REQUIRE(args["Arg_L1_2"].size() == 0);
+      }
     }
   }            
 }
@@ -150,7 +158,7 @@ SCENARIO("XOR/OR scheme without 'any' values and positional args") {
     REQUIRE((*val_1_l2_1->known_values())[0] == "Val_1_L2_1");
     REQUIRE(val_1_l2_2->known_values());
     REQUIRE((*val_1_l2_2->known_values())[0] == "Val_1_L2_2");
-    
+    std::cout << "========================= \n";
     THEN("Command line: --Arg_L1_1 Val_L2_1 --Arg_L3_1 Val_L4_2") {
       scheme::parser p(args, {"--Arg_L1_1", "Val_1_L2_1",  "--Arg_L3_1", "Val_3_L4_2", "--Arg_L3_1", "Val_3_L4_1", "--Arg_L1_2", "Val_2_L2_2" });
       p.initialize_pass();
@@ -176,6 +184,22 @@ SCENARIO("XOR/OR scheme without 'any' values and positional args") {
       REQUIRE(val_3_l4_1->color() == scheme::entity::COLOR::NONE);
       REQUIRE(val_3_l4_2->color() == scheme::entity::COLOR::BORDER);
       REQUIRE(p.find_border_entity() == nullptr);
+      p.initialize_pass();
+      parent = p.find_border_entity();
+      REQUIRE(parent == args.root());
+      REQUIRE(!p.consume_argument(parent));
+      // Continuing requires setting color_ to visited
+      
+      THEN("Check results") {
+        REQUIRE(args["Arg_L1_1"].size() == 1);
+        REQUIRE(args["Arg_L1_1"][0] == "Val_1_L2_1");
+        REQUIRE(args["Arg_L3_1"].size() == 1);  // Not 2 yet
+        REQUIRE(args["Arg_L3_1"][0] == "Val_3_L4_2");
+        //        REQUIRE(args["Arg_L3_1"][1] == "Val_3_L4_1");
+        REQUIRE(args["Arg_L3_2"].size() == 0);
+        REQUIRE(args["Arg_L1_2"].size() == 1);
+        REQUIRE(args["Arg_L1_2"][0] == "Val_2_L2_2");
+      }
     }
   }            
 }

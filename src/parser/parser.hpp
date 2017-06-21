@@ -78,17 +78,16 @@ namespace optspp {
     }
 
     void parser::add_value(const entity_ptr& arg_def, const std::string& s) {
+      std::cout << "add_value: " << (*arg_def->long_names_)[0] << " " << s << "\n";
       auto& v = scheme_def_.values_[arg_def];
       v.push_back(s);
     }
   
-    void parser::push_positional_value(const entity_ptr& arg_def, const std::string& s) {
-      auto& v = scheme_def_.values_[arg_def];
-      v.push_back(s);
-      // TODO: Incorrect! It should be sorted, because push is now not in cmdl order
-      scheme_def_.positional_.push_back(arg_def);
+    void parser::add_positional_value(const entity_ptr& arg_def, const parser::token& t) {
+      add_value(arg_def, t.s);
+      positionals_tmp_.push_back({arg_def, t});
     }
-  
+
     void parser::add_value_implicit(entity_ptr& arg_def, const token& token) {
       if (arg_def->implicit_values_) {
         auto& iv = *arg_def->implicit_values_;
@@ -189,7 +188,7 @@ namespace optspp {
           if (found != val_siblings.end()) {
             std::cout << "Found\n";
             move_border(arg_def, *found);
-            add_value(arg_def, token->s);
+            add_positional_value(arg_def, *token);
             // Remove tokens containing name and value
             tokens_.erase(token);
             return true;
@@ -268,7 +267,6 @@ namespace optspp {
               for (auto t = tokens_.begin(); t != tokens_.end(); ++t) {
                 if ((std::get<1>(unprefix(t->s)) == "") || (ignore_option_prefixes_)) {
                   if (val_def->value_matches(t->s)) {
-                    
                     consume_positional_known_value(arg_def, t);
                     return true;
                   }
@@ -329,17 +327,6 @@ namespace optspp {
       }
     }
 
-    bool parser::visitables_left(entity_ptr e) {
-      bool rslt{false};
-      if ((e->color_ != entity::COLOR::VISITED) &&
-          (e->color_ != entity::COLOR::BLOCKED)) return true;
-      for (auto& c : e->pending_)
-        if (c->color_ != entity::COLOR::BLOCKED) {
-          rslt = rslt | visitables_left(c);
-        };
-      return rslt;
-    }
-
     bool parser::pass_tree() {
       std::cout << "pass_tree: starting\n";
       bool rslt = false;
@@ -365,7 +352,7 @@ namespace optspp {
     // Parse
     void parser::parse() {
       scheme_def_.values_.clear();
-      scheme_def_.positional_.clear();
+      scheme_def_.positionals_.clear();
 
       while (true) {
         std::cout << "parse: cycle start\n";
@@ -380,6 +367,16 @@ namespace optspp {
           std::cout << "parse: Success, no more tokens left\n";
           break;
         }
+      }
+      
+      std::sort(positionals_tmp_.begin(), positionals_tmp_.end(),
+                [] (const std::pair<entity_ptr, token>& a,
+                    const std::pair<entity_ptr, token>& b) {
+                  return (a.second.pos_arg_num < b.second.pos_arg_num);
+                });
+      scheme_def_.positionals_.clear();
+      for (const auto& p : positionals_tmp_) {
+        scheme_def_.positionals_.push_back(p.first);
       }
       
       //TODO: Check if all parents for dead-ends

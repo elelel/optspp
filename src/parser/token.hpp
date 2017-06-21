@@ -20,6 +20,20 @@ namespace optspp {
       s(_s) {
     }
 
+    parser::token::token(const token& other) :
+      some_(other.some_),
+      pos_arg_num(other.pos_arg_num),
+      pos_in_arg(other.pos_in_arg),
+      s(other.s) {
+    }
+
+    void parser::token::swap(token& other) {
+      std::swap(some_, other.some_);
+      std::swap(pos_arg_num, other.pos_arg_num);
+      std::swap(pos_in_arg, other.pos_in_arg);
+      std::swap(s, other.s);
+    }
+
     parser::token::operator bool() const noexcept {
       return some_;
     }

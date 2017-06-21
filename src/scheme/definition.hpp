@@ -47,6 +47,7 @@ namespace optspp {
       // TODO value has only arg childs
       // TODO any valued positionals can't have named subchildren
       // TODO either known_values, or any_value
+      // TODO vertically names should not repeat
     }
     
     void definition::validate() const {
@@ -67,5 +68,20 @@ namespace optspp {
       return root_;
     }
 
+    const std::vector<std::string>& definition::operator[](const std::string& name) const {
+      for (const auto& p : values_) {
+        if (p.first->name_matches(name)) return p.second;
+      }
+      static std::vector<std::string> empty;
+      return empty;
+    }
+
+    const std::vector<std::string>& definition::operator[](const char name) const {
+      for (const auto& p : values_) {
+        if (p.first->name_matches(name)) return p.second;
+      }
+      static std::vector<std::string> empty;
+      return empty;
+    }
   }
 }
