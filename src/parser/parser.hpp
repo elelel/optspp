@@ -319,14 +319,14 @@ namespace optspp {
       if (child->kind_ == entity::KIND::ARGUMENT) std::cout << " of " << child->all_names_to_string();
       std::cout << "\n";
       if (child->siblings_group_ == SIBLINGS_GROUP::XOR) {
-        parent->color_ = entity::COLOR::VISITED;
+        //        parent->color_ = entity::COLOR::VISITED;
         for (auto& s : parent->pending_) {
           if ((s != child) && (s->kind_ == child->kind_) && (s->siblings_group_ == SIBLINGS_GROUP::XOR))
             s->color_ = entity::COLOR::BLOCKED;
         }
       }
       if (child->siblings_group_ == SIBLINGS_GROUP::OR) {
-        //        parent->color_ = entity::COLOR::BORDER;
+        //  parent->color_ = entity::COLOR::VISITED;
       }
     }
 
