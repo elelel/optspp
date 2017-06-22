@@ -191,8 +191,7 @@ namespace optspp {
             });
           if ((!only_known_value) && (found == val_siblings.end())) {
             found = find_if(val_siblings.begin(), val_siblings.end(), [&token] (const entity_ptr& e) {
-                if ((e->kind_ == entity::KIND::VALUE) && e->is_any_value() && *e->is_any_value())
-                  return e;
+                return (e->kind_ == entity::KIND::VALUE) && e->is_any_value() && *e->is_any_value();
               });
           }
           if (found != val_siblings.end()) {
