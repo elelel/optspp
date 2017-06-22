@@ -49,6 +49,10 @@ SCENARIO("Test entity properties") {
   auto v1 = value("yes");
   REQUIRE(v1->known_values());
   REQUIRE(*v1->known_values() == std::vector<std::string>({"yes"}));
+  auto n2 = named(name("second"),
+                  implicit_values("implicit"));
+  REQUIRE(n2->implicit_values());
+  REQUIRE((*n2->implicit_values())[0] == "implicit");
 }
 
 SCENARIO("XOR scheme without 'any' values and positional args") {
@@ -283,61 +287,60 @@ SCENARIO("Throw when unparsed args are left") {
   REQUIRE_NOTHROW(args2.parse(input));
 }
 
-
-/*
-SCNEARIO("Realistic config") {
-    auto option_force =
-      named(name("force"),
-            name('f'),
-            default_values("false"),
-            implicit_values("true"))
-      << value("true", {"on", "yes"})
-      << value("false", {"off", "no"});
+SCENARIO("Realistic config") {
+  using namespace optspp;
+  auto option_force =
+    named(name("force"),
+          name('f'),
+          default_values("false"),
+          implicit_values("true"))
+    << value("true", {"on", "yes"})
+    << value("false", {"off", "no"});
 
     
-    scheme::definition arguments;
-    arguments <<
-      (positional(name("command"))
-       << (value("useradd")
-           | (named(name("login", {"username", "user"}),
-                    name('l', {'u'}),
-                    min_count(1),
-                    max_count(1),
-                    description("User's login")))
-           | (named(name("password", {"pw", "pass"}),
-                    name('p'),
-                    max_count(1),
-                    description("User's password")))
-           | (named(name("admin", {"administrator"}),
-                    name('a'),
-                    description("Make this user administrator"))
-              | (value("true", {"on", "yes"})
-                 << (named(name("super-admin"),
-                           default_values("false"),
-                           implicit_values("true"),
-                           description("Make this administrator a superadministrator"))
-                     << value("true", {"on", "yes"})
-                     << value("false", {"off", "no"}))
-                 << (named(name("rookie-admin"),
-                           default_values("true"),
-                           implicit_values("true"),
-                           description("Make this administrator a rookie administrator"))
-                     << value("true", {"on", "yes"})
-                     << value("false", {"off", "no"})))
-              | (value("false", {"off", "no"})))
-           | (option_force))
-       << (value("userdel")
-           | (named(name("login", {"username", "user"}),
-                    name('l', {'u'}),
-                    min_count(1),
-                    max_count(1),
-                    description("User's login")))
-           | (option_force))
-       << (value(any())));
+  scheme::definition arguments;
+  arguments <<
+    (positional(name("command"))
+     << (value("useradd")
+         | (named(name("login", {"username", "user"}),
+                  name('l', {'u'}),
+                  min_count(1),
+                  max_count(1),
+                  description("User's login")))
+         | (named(name("password", {"pw", "pass"}),
+                  name('p'),
+                  max_count(1),
+                  description("User's password")))
+         | (named(name("admin", {"administrator"}),
+                  name('a'),
+                  description("Make this user administrator"))
+            | (value("true", {"on", "yes"})
+               << (named(name("super-admin"),
+                         default_values("false"),
+                         implicit_values("true"),
+                         description("Make this administrator a superadministrator"))
+                   << value("true", {"on", "yes"})
+                   << value("false", {"off", "no"}))
+               << (named(name("rookie-admin"),
+                         default_values("true"),
+                         implicit_values("true"),
+                         description("Make this administrator a rookie administrator"))
+                   << value("true", {"on", "yes"})
+                   << value("false", {"off", "no"})))
+            | (value("false", {"off", "no"})))
+         | (option_force))
+     << (value("userdel")
+         | (named(name("login", {"username", "user"}),
+                  name('l', {'u'}),
+                  min_count(1),
+                  max_count(1),
+                  description("User's login")))
+         | (option_force))
+     << (value(any())));
 
-    std::vector<std::string> arguments_input{"useradd", "--super-admin", "--admin", "yes", "--login", "mylogin"};
-    arguments.parse(arguments_input);
+  std::vector<std::string> arguments_input{"useradd", "--super-admin", "--admin", "yes", "--login", "mylogin"};
+  arguments.parse(arguments_input);
     
-  }
 }
-*/
+
+

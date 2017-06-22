@@ -15,6 +15,7 @@ namespace optspp {
       min_count_(other.min_count_),
       is_positional_(other.is_positional_),
       known_values_(other.known_values_),
+      implicit_values_(other.implicit_values_),
       default_values_(other.default_values_),
       any_value_(other.any_value_) {
       for (const auto& p : other.pending_) {
@@ -74,7 +75,7 @@ namespace optspp {
     }
 
     template <>
-    void entity::apply_property(default_values p) {
+    void entity::apply_property(optspp::default_values p) {
       if (kind_ == KIND::ARGUMENT) {
         if (p.values) {
           if (!default_values_) default_values_ = std::vector<std::string>{};
@@ -87,7 +88,7 @@ namespace optspp {
     }
 
     template <>
-    void entity::apply_property(implicit_values p) {
+    void entity::apply_property(optspp::implicit_values p) {
       if (kind_ == KIND::ARGUMENT) {
         if (p.values) {
           if (!implicit_values_) implicit_values_ = std::vector<std::string>{};
@@ -184,7 +185,15 @@ namespace optspp {
     const optional<std::vector<std::string>>& entity::known_values() const {
       return known_values_;
     }
-    
+
+    const optional<std::vector<std::string>>& entity::implicit_values() const {
+      return implicit_values_;
+    }
+
+    const optional<std::vector<std::string>>& entity::default_values() const {
+      return default_values_;
+    }
+
     std::string entity::all_names_to_string() const {
       std::string rslt;
       bool need_comma{false};

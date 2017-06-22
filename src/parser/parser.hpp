@@ -90,10 +90,12 @@ namespace optspp {
 
     void parser::add_value_implicit(entity_ptr& arg_def, const token& token) {
       if (arg_def->implicit_values_) {
+        std::cout << "Have implicit\n";
         auto& iv = *arg_def->implicit_values_;
         if (iv.size() > 0) {
           add_value(arg_def, main_value(arg_def, iv[0]));
           iv.erase(iv.begin());
+          return;
         }
       }
       throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value (tried implicit)");
@@ -105,6 +107,7 @@ namespace optspp {
         if (iv.size() > 0) {
           add_value(arg_def, main_value(arg_def, iv[0]));
           iv.erase(iv.begin());
+          return;
         }
       }
       throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value (tried default)");

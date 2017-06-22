@@ -105,6 +105,8 @@ namespace optspp {
       const optional<std::vector<char>>& short_names() const;
       const optional<bool>& is_positional() const;
       const optional<std::vector<std::string>>& known_values() const;
+      const optional<std::vector<std::string>>& implicit_values() const;
+      const optional<std::vector<std::string>>& default_values() const;
       const optional<bool>& is_any_value() const;
       
       friend struct optspp::scheme::parser;
