@@ -45,8 +45,10 @@ namespace optspp {
       // Finds token that matches named arg definition
       std::list<parser::token>::iterator find_token_for_named(const entity_ptr& arg_def);
       // Extracts positional argument's value, only for predefined positional values
-      bool consume_positional_known_value(entity_ptr& arg_def,
-                                          const std::list<token>::iterator& token);
+      bool consume_positional(entity_ptr& arg_def,
+                              const std::list<token>::iterator& token,
+                              const bool only_known_value);
+      bool consume_argument_positional_any(entity_ptr& parent);
       // Find token that looks like a positional arg
       std::list<parser::token>::iterator find_token_for_positional(const entity_ptr& arg_def);
       // Tries to parse current position as a prefixed named argument, then as positional with known value

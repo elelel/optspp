@@ -168,8 +168,9 @@ namespace optspp {
       throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
     }
 
-    bool parser::consume_positional_known_value(entity_ptr& arg_def,
-                                                const std::list<token>::iterator& token) {
+    bool parser::consume_positional(entity_ptr& arg_def,
+                                                const std::list<token>::iterator& token,
+                                                const bool only_known_value) {
       if (arg_def->is_positional_ && *arg_def->is_positional_) {
         if (!ignore_option_prefixes_ &&
             (is_prefixed(token->s, scheme_def_.long_prefixes_) ||
@@ -188,6 +189,12 @@ namespace optspp {
                 return false;
               }
             });
+          if ((!only_known_value) && (found == val_siblings.end())) {
+            found = find_if(val_siblings.begin(), val_siblings.end(), [&token] (const entity_ptr& e) {
+                if ((e->kind_ == entity::KIND::VALUE) && e->is_any_value() && *e->is_any_value())
+                  return e;
+              });
+          }
           if (found != val_siblings.end()) {
             std::cout << "Found\n";
             move_border(arg_def, *found);
@@ -234,22 +241,23 @@ namespace optspp {
     }
 
     bool parser::consume_argument(entity_ptr& parent) {
-      if (ignore_option_prefixes_) return false;
       auto& arg_siblings = parent->pending_;
-      std::cout << "consume_named: Named cycle\n";
-      // Find matching argument
-      for (auto& arg_def : arg_siblings) {
-        if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
-            (arg_def->color_ != entity::COLOR::BLOCKED) &&
-            (arg_def->is_positional_ && !*arg_def->is_positional_)) {
-          std::cout << "consume_named: Trying named arg def " << arg_def->all_names_to_string() << "\n"
-                    << " color " << (int)arg_def->color_ << "\n";
-          auto t = find_token_for_named(arg_def);
-          if (t != tokens_.end()) {
-            move_border(parent, arg_def);
-            consume_named_value(arg_def, t);
-            std::cout << "consume_named: Consumed named arg " << arg_def->all_names_to_string() << " color is now " << (int)arg_def->color_ << "\n";
-            return true;
+      if (!ignore_option_prefixes_) {
+        std::cout << "consume_named: Named cycle\n";
+        // Find matching argument
+        for (auto& arg_def : arg_siblings) {
+          if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
+              (arg_def->color_ != entity::COLOR::BLOCKED) &&
+              (arg_def->is_positional_ && !*arg_def->is_positional_)) {
+            std::cout << "consume_named: Trying named arg def " << arg_def->all_names_to_string() << "\n"
+                      << " color " << (int)arg_def->color_ << "\n";
+            auto t = find_token_for_named(arg_def);
+            if (t != tokens_.end()) {
+              move_border(parent, arg_def);
+              consume_named_value(arg_def, t);
+              std::cout << "consume_named: Consumed named arg " << arg_def->all_names_to_string() << " color is now " << (int)arg_def->color_ << "\n";
+              return true;
+            }
           }
         }
       }
@@ -270,7 +278,7 @@ namespace optspp {
               for (auto t = tokens_.begin(); t != tokens_.end(); ++t) {
                 if ((std::get<1>(unprefix(t->s)) == "") || (ignore_option_prefixes_)) {
                   if (val_def->value_matches(t->s)) {
-                    consume_positional_known_value(arg_def, t);
+                    consume_positional(arg_def, t, true);
                     return true;
                   }
                 }
@@ -280,6 +288,29 @@ namespace optspp {
         }
       }
       // Nothing consumed
+      return false;
+    }
+
+    bool parser::consume_argument_positional_any(entity_ptr& parent) {
+      auto& arg_siblings = parent->pending_;
+      for (auto& arg_def : arg_siblings) {
+        if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
+            (arg_def->color_ != entity::COLOR::BLOCKED) &&
+            (arg_def->is_positional_ && *arg_def->is_positional_)) {
+          std::cout << "consume_named: Trying positional arg def " << arg_def->all_names_to_string() << "\n"
+                    << " color " << (int)arg_def->color_ << "\n";
+          auto& val_siblings = arg_def->pending_;
+          move_border(parent, arg_def);
+          for (auto& val_def : val_siblings) {
+            if ((val_def->kind_ == entity::KIND::VALUE) &&
+                (val_def->color_ != entity::COLOR::BLOCKED) &&
+                (val_def->any_value_ && (*val_def->any_value_))) {
+              //              consume_positional(arg_def, t, false);
+              return true;
+            }
+          }
+        }
+      }
       return false;
     }
     
@@ -364,6 +395,7 @@ namespace optspp {
         if (tokens_.size() > 0) {
           std::cout << "parse: Tokens left: " << tokens_.size() << "\n";
           if (!pass_tree()) {
+            
             throw std::runtime_error("Tokens left, but tree pass did not consume anything");
           }
         } else {
