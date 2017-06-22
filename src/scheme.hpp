@@ -20,6 +20,7 @@ namespace optspp {
     struct definition {
       definition();
       void parse(const std::vector<std::string>& cmdl_args);
+      void parse(const int argc, char* argv[]);
       
       friend struct ::optspp::scheme::parser;
       // Assign argument definition to scheme definition; the children are or-compatible

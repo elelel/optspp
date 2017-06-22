@@ -15,6 +15,14 @@ namespace optspp {
       p.parse();
     }
 
+    void definition::parse(const int argc, char* argv[]) {
+      std::vector<std::string> args;
+      if (argc > 1) {
+        for (int i = 1; i < argc; ++i) args.push_back(std::string(argv[i]));
+      }
+      parse(args);
+    }
+
     void definition::validate_entity(const entity_ptr& e) {
       if (e->kind_ == entity::KIND::ARGUMENT) {
         if (e->is_positional_ && *e->is_positional_) {
