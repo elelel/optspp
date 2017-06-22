@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <limits>
 #include <map>
 #include <memory>
 #include <vector>
@@ -31,6 +32,10 @@ namespace optspp {
       const std::vector<std::string>& operator[](const std::string& name) const;
       const std::vector<std::string>& operator[](const char name) const;
       const std::vector<std::string>& operator[](const size_t) const;
+      const std::string& operator()(const std::string& name, const size_t idx) const;
+      const std::string& operator()(const std::string& name) const;
+      const std::string& operator()(const char name, const size_t idx) const;
+      const std::string& operator()(const char name) const;
 
       const entity_ptr& root() const;
 
