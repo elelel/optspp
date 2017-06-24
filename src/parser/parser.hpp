@@ -277,7 +277,7 @@ namespace optspp {
               for (auto t = tokens_.begin(); t != tokens_.end(); ++t) {
                 if ((std::get<1>(unprefix(t->s)) == "") || (ignore_option_prefixes_)) {
                   if (val_def->value_matches(t->s)) {
-                    consume_positional(arg_def, t, true);
+                    consume_positional(arg_def, t, false);
                     return true;
                   }
                 }
