@@ -113,15 +113,15 @@ namespace optspp {
       throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value (tried default)");
     }
 
-    bool parser::consume_named_value(entity_ptr& arg_def,
+    void parser::consume_named_value(entity_ptr& arg_def,
                                      const std::list<token>::iterator& token) {
-      std::cout << "Consuming value\n";
+      std::cout << "consume_named_value: entry\n";
       // Check if we don't have more tokens.
       if (tokens_.size() == 1) {
         std::cout << "consume value no more tokens left\n";
         add_value_implicit(arg_def, *token);
         tokens_.erase(token);
-        return false;
+        return;
       }
 
       // Continue looking for value in the next token.
@@ -134,7 +134,7 @@ namespace optspp {
         std::cout << "consume value next is prefixed\n";
         add_value_implicit(arg_def, *token);
         tokens_.erase(token);
-        return false;
+        return;
       }
       // Next token must be our the value
       // Find value entity that matches actual value
@@ -161,9 +161,15 @@ namespace optspp {
         add_value(arg_def, next_it->s);
         // Remove tokens containing name and value
         tokens_.erase(tokens_.erase(token));
-        return true;
+        return;
       } else {
-        std::cout << "Warning! Value definition for " << next_it->s << " (argument " << arg_def->all_names_to_string() << ") not found\n";
+        try {
+          add_value_implicit(arg_def, *token);
+          tokens_.erase(token);
+          return;
+        } catch (...) {
+          std::cout << "Warning! Value definition for " << next_it->s << " (argument " << arg_def->all_names_to_string() << ") not found\n";
+        }
       }
       throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
     }

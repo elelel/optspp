@@ -41,7 +41,7 @@ namespace optspp {
 
       // Consume different types of tokens
       // Extracts named argument's value taking into considiration implicit values
-      bool consume_named_value(entity_ptr& arg_def, const std::list<token>::iterator& value_token);
+      void consume_named_value(entity_ptr& arg_def, const std::list<token>::iterator& value_token);
       // Finds token that matches named arg definition
       std::list<parser::token>::iterator find_token_for_named(const entity_ptr& arg_def);
       // Extracts positional argument's value, only for predefined positional values
