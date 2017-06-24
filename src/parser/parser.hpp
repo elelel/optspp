@@ -190,9 +190,11 @@ namespace optspp {
               }
             });
           if ((!only_known_value) && (found == val_siblings.end())) {
+            std::cout << "consume_positional: any value allowed, searching for any\n";
             found = find_if(val_siblings.begin(), val_siblings.end(), [&token] (const entity_ptr& e) {
                 return (e->kind_ == entity::KIND::VALUE) && e->is_any_value() && *e->is_any_value();
               });
+            if (found != val_siblings.end()) std::cout << "consume_positional: any value not found\n";
           }
           if (found != val_siblings.end()) {
             std::cout << "Found\n";
