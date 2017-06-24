@@ -273,8 +273,9 @@ namespace optspp {
           move_border(parent, arg_def);
           for (auto& val_def : val_siblings) {
             if ((val_def->kind_ == entity::KIND::VALUE) &&
-                (val_def->color_ != entity::COLOR::BLOCKED) &&
-                (val_def->any_value_ && (*val_def->any_value_ == false))) {
+                (val_def->color_ != entity::COLOR::BLOCKED)
+                //&& (val_def->any_value_ && (*val_def->any_value_ == false))
+                ) {
               std::cout << "trynig value " << (*val_def->known_values_)[0] << "\n";
               for (auto t = tokens_.begin(); t != tokens_.end(); ++t) {
                 if ((std::get<1>(unprefix(t->s)) == "") || (ignore_option_prefixes_)) {
