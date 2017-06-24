@@ -394,8 +394,10 @@ namespace optspp {
         if (tokens_.size() > 0) {
           std::cout << "parse: Tokens left: " << tokens_.size() << "\n";
           if (!pass_tree()) {
-            
-            throw std::runtime_error("Tokens left, but tree pass did not consume anything");
+            std::string msg;
+            for (const auto& t : tokens_)
+              msg += t.s + " ";
+            throw std::runtime_error("Tokens left, but tree pass did not consume anything: " + msg);
           }
         } else {
           // Success
