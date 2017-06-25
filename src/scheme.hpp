@@ -54,6 +54,9 @@ namespace optspp {
       std::map<entity_ptr, std::vector<std::string>> values_;
       std::vector<entity_ptr> positionals_;
 
+      static void vertical_name_check(const std::vector<std::string>& taken_long_names,
+                                      const std::vector<char>& taken_short_names,
+                                      const entity_ptr& e);
       static void validate_entity(const entity_ptr& e);
       bool is_long_prefix(const std::string& s) const;
       bool is_short_prefix(const std::string& s) const;

@@ -23,6 +23,30 @@ namespace optspp {
       parse(args);
     }
 
+    void definition::vertical_name_check(const std::vector<std::string>& taken_long_names,
+                                         const std::vector<char>& taken_short_names,
+                                         const entity_ptr& e) {
+      auto taken_long = taken_long_names;
+      auto taken_short = taken_short_names;
+      if (e->kind_ == entity::KIND::ARGUMENT) {
+        if (e->long_names_) {
+          for (const auto& n : *e->long_names_) {
+            if (std::find(taken_long.begin(), taken_long.end(), n) != taken_long.end())
+              throw std::runtime_error("Scheme validation error: argument's long name should not be used by it's descendant");
+          }
+          std::copy((*e->long_names_).begin(), (*e->long_names_).end(), std::back_inserter(taken_long));
+        }
+        if (e->short_names_) {
+          for (const auto& n : *e->short_names_) {
+            if (std::find(taken_short.begin(), taken_short.end(), n) != taken_short.end())
+              throw std::runtime_error("Scheme validation error: argument's short name should not be used by it's descendant");
+          }
+          std::copy((*e->short_names_).begin(), (*e->short_names_).end(), std::back_inserter(taken_short));
+        }
+      }
+      for (const auto& c : e->pending_) vertical_name_check(taken_long, taken_short, c);
+    }
+
     void definition::validate_entity(const entity_ptr& e) {
       if (e->kind_ == entity::KIND::ARGUMENT) {
         if (e->is_positional_ && *e->is_positional_) {
@@ -30,6 +54,12 @@ namespace optspp {
             throw std::runtime_error("Scheme validation error: positional argument has short names");
           if (e->implicit_values_)
             throw std::runtime_error("Scheme validation error: positional argument has implicit values");
+          if (e->any_value_ && *e->any_value_) {
+            for (const auto& c : e->pending_) {
+              if ((c->kind_ == entity::KIND::ARGUMENT) && e->is_positional_ && !*e->is_positional_)
+                throw std::runtime_error("Scheme validation error: positional with any value has named child");
+            }
+          }
         } else {
           bool short_undefined = !e->short_names_ || (e->short_names_ && (*e->short_names_).size() == 0);
           bool long_undefined = !e->long_names_ || (e->long_names_ && (*e->long_names_).size() == 0);
@@ -49,18 +79,21 @@ namespace optspp {
           e->pending_.push_back(::optspp::value(any()));
         }
       }
+      if (e->kind_ == entity::KIND::VALUE) {
+        for (const auto& c : e->pending_) {
+          if (c->kind_ != entity::KIND::ARGUMENT)
+            throw std::runtime_error("Scheme validation error: value entity hash non-argument child");
+        }
+      }
       for (const auto& c : e->pending_) {
         validate_entity(c);
       }
-      // TODO value has only arg childs
-      // TODO any valued positionals can't have named subchildren
-      // TODO either known_values, or any_value
-      // TODO vertically names should not repeat
     }
     
     void definition::validate() const {
       for (const auto& c : root_->pending_) {
         validate_entity(c);
+        vertical_name_check(std::vector<std::string>(), std::vector<char>(), c);
       }
     }
 
