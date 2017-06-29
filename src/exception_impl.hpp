@@ -1,5 +1,8 @@
 #pragma once
 
+#include "scheme.hpp"
+#include "parser.hpp"
+
 namespace optspp {
   const char* optspp_error::what() const noexcept {
     return message.c_str();
@@ -16,9 +19,19 @@ namespace optspp {
     message = "Argument " + name + " requires a value";
   }
 
+  unparsed_tokens::unparsed_tokens(const std::list<scheme::parser::token>& ts) :
+    tokens(ts) {
+    message = "Unparsed tokens left: ";
+    bool need_comma = false;
+    for (const auto& t : ts) {
+      if (need_comma) message += " ";
+      need_comma = true;
+      message += t.s;
+    }
+  }
+
   actual_counts_mismatch::actual_counts_mismatch(const std::vector<record>& rs) :
     records(rs) {
-    std::cout << "Constructing mismatch\n";
     message = "Actual argument value counts mismatch. ";
     bool need_comma = false;
     for (const auto& r : records) {
@@ -41,7 +54,6 @@ namespace optspp {
       message += "actual " + std::to_string(r.actual);
       message += ".";
     }
-    std::cout << "Constructing mismatch done\n";
   }
 
   value_not_found::value_not_found(const std::string& n) :

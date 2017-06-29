@@ -76,7 +76,6 @@ namespace optspp {
         if (std::find_if(e->pending_.begin(), e->pending_.end(), [] (const entity_ptr& v) {
               return v->kind_ == entity::KIND::VALUE;
             }) == e->pending_.end()) {
-          std::cout << "Adding ANY value to " << e->all_names_to_string() << "\n";
           e->pending_.push_back(::optspp::value(any()));
         }
       }
@@ -107,11 +106,9 @@ namespace optspp {
               acc.push_back({e, 0});
             }
           } else {
-            std::cout << "checking size for " << found->first.get() << "\n";
             if (found->first->min_count_ &&
                 (found->second.size() < *found->first->min_count_))
               acc.push_back({e, found->second.size()});
-            std::cout << "done\n";
           }
       
         }

@@ -4,6 +4,8 @@
 
 #include "predeclare.hpp"
 
+#include "parser.hpp"
+
 namespace optspp {
   struct optspp_error : std::exception {
     virtual const char* what() const noexcept override;
@@ -18,6 +20,12 @@ namespace optspp {
     value_required(const scheme::entity_ptr& e);
 
     scheme::entity_ptr entity;
+  };
+
+  struct unparsed_tokens : optspp_error {
+    unparsed_tokens(const std::list<scheme::parser::token>& ts);
+
+    std::list<scheme::parser::token> tokens;
   };
   
   struct actual_counts_mismatch : optspp_error {

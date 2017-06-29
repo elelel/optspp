@@ -222,7 +222,6 @@ SCENARIO("XOR/OR scheme with 'any' values and positional args") {
       REQUIRE(positional_val1->color() == scheme::entity::COLOR::BORDER);
       REQUIRE(positional_val2->color() == scheme::entity::COLOR::BLOCKED);
       parent = p.find_border_entity();
-      std::cout << (*parent->known_values())[0] <<"\n";
       REQUIRE(parent == val_1_l2_1);
       REQUIRE(!p.consume_argument(parent));
 

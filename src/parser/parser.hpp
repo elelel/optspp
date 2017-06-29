@@ -78,7 +78,6 @@ namespace optspp {
     }
 
     void parser::add_value(const entity_ptr& arg_def, const std::string& s) {
-      std::cout << "add_value: " << (*arg_def->long_names_)[0] << " " << s << "\n";
       auto& v = scheme_def_.values_[arg_def];
       v.push_back(s);
     }
@@ -90,7 +89,6 @@ namespace optspp {
 
     void parser::add_value_implicit(entity_ptr& arg_def, const token& token) {
       if (arg_def->implicit_values_) {
-        std::cout << "Have implicit\n";
         auto& iv = *arg_def->implicit_values_;
         if (iv.size() > 0) {
           add_value(arg_def, main_value(arg_def, iv[0]));
@@ -115,10 +113,8 @@ namespace optspp {
 
     void parser::consume_named_value(entity_ptr& arg_def,
                                      const std::list<token>::iterator& token) {
-      std::cout << "consume_named_value: entry\n";
       // Check if we don't have more tokens.
       if (tokens_.size() == 1) {
-        std::cout << "consume value no more tokens left\n";
         add_value_implicit(arg_def, *token);
         tokens_.erase(token);
         return;
@@ -131,7 +127,6 @@ namespace optspp {
       if ((is_long_prefixed(next_it->s) ||
            is_short_prefixed(next_it->s)) &&
           !ignore_option_prefixes_) {
-        std::cout << "consume value next is prefixed\n";
         add_value_implicit(arg_def, *token);
         tokens_.erase(token);
         return;
@@ -151,7 +146,6 @@ namespace optspp {
           }
         });
       if (found == val_siblings.end()) {
-        std::cout << "Trying to find any value definition in " << val_siblings.size() << " children of " << arg_def->all_names_to_string() << "\n";
         found = find_if(val_siblings.begin(), val_siblings.end(), [] (const entity_ptr& e) {
             return e->any_value_ && *(e->any_value_);
           });
@@ -168,7 +162,6 @@ namespace optspp {
           tokens_.erase(token);
           return;
         } catch (...) {
-          std::cout << "Warning! Value definition for " << next_it->s << " (argument " << arg_def->all_names_to_string() << ") not found\n";
         }
       }
       throw value_required(arg_def);
@@ -196,21 +189,17 @@ namespace optspp {
               }
             });
           if ((!only_known_value) && (found == val_siblings.end())) {
-            std::cout << "consume_positional: any value allowed, searching for any\n";
             found = find_if(val_siblings.begin(), val_siblings.end(), [&token] (const entity_ptr& e) {
                 return (e->kind_ == entity::KIND::VALUE) && e->is_any_value() && *e->is_any_value();
               });
-            if (found != val_siblings.end()) std::cout << "consume_positional: any value not found\n";
           }
           if (found != val_siblings.end()) {
-            std::cout << "Found\n";
             move_border(arg_def, *found);
             add_positional_value(arg_def, *token);
             // Remove tokens containing name and value
             tokens_.erase(token);
             return true;
           } else {
-            std::cout << "Warning! Value definition for " << token->s << " (positional argument " << arg_def->all_names_to_string() << ") not found\n";
             break;
           }
         }
@@ -221,7 +210,6 @@ namespace optspp {
     std::list<parser::token>::iterator parser::find_token_for_named(const entity_ptr& arg_def) {
       // Find token that matches argument's definition by long name
       for (auto t = tokens_.begin(); t != tokens_.end(); ++t) {
-        std::cout << "find_token_for_named: Comparing to token " << t->s << "\n";
         auto up = unprefix(t->s);
         auto& prefix = std::get<1>(up);
         auto& name = std::get<2>(up);
@@ -250,19 +238,15 @@ namespace optspp {
     bool parser::consume_argument(entity_ptr& parent) {
       auto& arg_siblings = parent->pending_;
       if (!ignore_option_prefixes_) {
-        std::cout << "consume_named: Named cycle\n";
         // Find matching argument
         for (auto& arg_def : arg_siblings) {
           if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
               (arg_def->color_ != entity::COLOR::BLOCKED) &&
               (arg_def->is_positional_ && !*arg_def->is_positional_)) {
-            std::cout << "consume_named: Trying named arg def " << arg_def->all_names_to_string() << "\n"
-                      << " color " << (int)arg_def->color_ << "\n";
             auto t = find_token_for_named(arg_def);
             if (t != tokens_.end()) {
               move_border(parent, arg_def);
               consume_named_value(arg_def, t);
-              std::cout << "consume_named: Consumed named arg " << arg_def->all_names_to_string() << " color is now " << (int)arg_def->color_ << "\n";
               return true;
             }
           }
@@ -273,8 +257,6 @@ namespace optspp {
         if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
             (arg_def->color_ != entity::COLOR::BLOCKED) &&
             (arg_def->is_positional_ && *arg_def->is_positional_)) {
-          std::cout << "consume_named: Trying positional arg def " << arg_def->all_names_to_string() << "\n"
-                    << " color " << (int)arg_def->color_ << "\n";
           auto& val_siblings = arg_def->pending_;
           move_border(parent, arg_def);
           for (auto& val_def : val_siblings) {
@@ -304,8 +286,6 @@ namespace optspp {
         if ((arg_def->kind_ == entity::KIND::ARGUMENT) &&
             (arg_def->color_ != entity::COLOR::BLOCKED) &&
             (arg_def->is_positional_ && *arg_def->is_positional_)) {
-          std::cout << "consume_named: Trying positional arg def " << arg_def->all_names_to_string() << "\n"
-                    << " color " << (int)arg_def->color_ << "\n";
           auto& val_siblings = arg_def->pending_;
           move_border(parent, arg_def);
           for (auto& val_def : val_siblings) {
@@ -341,7 +321,6 @@ namespace optspp {
         auto p = q.front();
         q.pop();
         if (p->color_ == entity::COLOR::BORDER) {
-          std::cout << "find_border_arg_def: trying kind " << (int)p->kind_ << "\n";
           for (const auto& e : p->pending_) {
             if ((e->kind_ == entity::KIND::ARGUMENT) && (e->color_ != entity::COLOR::VISITED)) {
               p->color_ = entity::COLOR::VISITED;
@@ -356,9 +335,6 @@ namespace optspp {
 
     void parser::move_border(entity_ptr& parent, entity_ptr& child) {
       child->color_ = entity::COLOR::BORDER;
-      std::cout << "Marking siblings";
-      if (child->kind_ == entity::KIND::ARGUMENT) std::cout << " of " << child->all_names_to_string();
-      std::cout << "\n";
       if (child->siblings_group_ == SIBLINGS_GROUP::XOR) {
         //        parent->color_ = entity::COLOR::VISITED;
         for (auto& s : parent->pending_) {
@@ -372,12 +348,10 @@ namespace optspp {
     }
 
     bool parser::pass_tree() {
-      std::cout << "pass_tree: starting\n";
       bool rslt = false;
       initialize_pass();
 
       while (true) {
-        std::cout << "pass_tree: cycle start\n";
         auto parent = find_border_entity();
         if (parent == nullptr) {
           // No more parents found
@@ -387,7 +361,6 @@ namespace optspp {
           rslt = true;
         }
       }
-      std::cout << " Tree pass returning " << rslt << "\n";
       return rslt;
     }
     
@@ -397,19 +370,13 @@ namespace optspp {
       scheme_def_.positionals_.clear();
 
       while (true) {
-        std::cout << "parse: cycle start\n";
         // If we still have unparsed data
         if (tokens_.size() > 0) {
-          std::cout << "parse: Tokens left: " << tokens_.size() << "\n";
           if (!pass_tree()) {
-            std::string msg;
-            for (const auto& t : tokens_)
-              msg += t.s + " ";
-            throw std::runtime_error("Tokens left, but tree pass did not consume anything: " + msg);
+            throw unparsed_tokens(tokens_);
           }
         } else {
           // Success
-          std::cout << "parse: Success, no more tokens left\n";
           break;
         }
       }
