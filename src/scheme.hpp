@@ -8,6 +8,7 @@
 
 #include "predeclare.hpp"
 #include "misc.hpp"
+#include "exception.hpp"
 
 namespace optspp {
   namespace scheme {
@@ -29,6 +30,7 @@ namespace optspp {
       friend definition& optspp::operator|(definition& lhs, const std::shared_ptr<scheme::entity>& rhs);
 
       void validate() const;
+      void validate_results() const;
 
       const std::vector<std::string>& operator[](const std::string& name) const;
       const std::vector<std::string>& operator[](const char name) const;
@@ -58,9 +60,10 @@ namespace optspp {
                                       const std::vector<char>& taken_short_names,
                                       const entity_ptr& e);
       static void validate_entity(const entity_ptr& e);
+      void min_value_check(std::vector<actual_counts_mismatch::record>& acc, const entity_ptr& e) const;
+      
       bool is_long_prefix(const std::string& s) const;
       bool is_short_prefix(const std::string& s) const;
-
 
     };
 
@@ -117,6 +120,9 @@ namespace optspp {
       const optional<std::vector<std::string>>& implicit_values() const;
       const optional<std::vector<std::string>>& default_values() const;
       const optional<bool>& is_any_value() const;
+      
+      const optional<size_t>& max_count() const;
+      const optional<size_t>& min_count() const;
       
       friend struct optspp::scheme::parser;
       friend struct scheme::definition;

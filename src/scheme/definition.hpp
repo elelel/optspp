@@ -13,6 +13,7 @@ namespace optspp {
       validate();
       parser p(*this, cmdl_args);
       p.parse();
+      validate_results();
     }
 
     void definition::parse(const int argc, char* argv[]) {
@@ -94,6 +95,44 @@ namespace optspp {
       for (const auto& c : root_->pending_) {
         validate_entity(c);
         vertical_name_check(std::vector<std::string>(), std::vector<char>(), c);
+      }
+    }
+
+    void definition::min_value_check(std::vector<actual_counts_mismatch::record>& acc, const entity_ptr& e) const {
+      if (e->color_ != entity::COLOR::BLOCKED) {
+        if (e->min_count_) {
+          auto found = values_.find(e);
+          if (found == values_.end()) {
+            if (*e->min_count_ > 0) {
+              acc.push_back({e, 0});
+            }
+          } else {
+            std::cout << "checking size for " << found->first.get() << "\n";
+            if (found->first->min_count_ &&
+                (found->second.size() < *found->first->min_count_))
+              acc.push_back({e, found->second.size()});
+            std::cout << "done\n";
+          }
+      
+        }
+        for (const auto& c : e->pending_) min_value_check(acc, c);
+      }
+    }
+
+    void definition::validate_results() const {
+      std::vector<actual_counts_mismatch::record> acc;
+      for (const auto& c : root_->pending_) {
+        min_value_check(acc, c);
+      }
+      for (const auto& p : values_) {
+        const auto& e = p.first;
+        const auto& vs = p.second;
+        if (e->max_count_ && (vs.size() > *e->max_count_)) {
+          acc.push_back({e, vs.size()});
+        }
+      }
+      if (acc.size() > 0) {
+        throw actual_counts_mismatch(acc);
       }
     }
 

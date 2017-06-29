@@ -21,8 +21,6 @@ namespace optspp {
   struct implicit_value;
   struct any;
 
-
-
   // Factory functions to create scheme definition nodes
   // Create positional argument definition
   template <typename... Properties>
@@ -46,5 +44,9 @@ namespace optspp {
   scheme::definition& operator<<(scheme::definition& lhs, const std::shared_ptr<scheme::entity>& rhs);  
   // Assign argument definition to scheme definition; the children are or-compatible
   scheme::definition& operator|(scheme::definition& lhs, const std::shared_ptr<scheme::entity>& rhs);
+
+  // Exceptions
+  struct optspp_error;
+  struct actual_counts_mismatch;
   
 }

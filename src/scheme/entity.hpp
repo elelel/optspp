@@ -108,14 +108,14 @@ namespace optspp {
     }
 
     template <>
-    void entity::apply_property(min_count p) {
+    void entity::apply_property(::optspp::min_count p) {
       if (p.count) {
         min_count_ = p.count;
       }
     }
 
     template <>
-    void entity::apply_property(max_count p) {
+    void entity::apply_property(::optspp::max_count p) {
       if (p.count) {
         min_count_ = p.count;
       }
@@ -193,22 +193,32 @@ namespace optspp {
     const optional<std::vector<std::string>>& entity::default_values() const {
       return default_values_;
     }
+    
+    const optional<size_t>& entity::max_count() const {
+      return max_count_;
+    }
+    
+    const optional<size_t>& entity::min_count() const {
+      return min_count_;
+    }
 
     std::string entity::all_names_to_string() const {
       std::string rslt;
-      bool need_comma{false};
-      if (long_names_) {
-        for (const auto& n : *long_names_) {
-          if (need_comma) rslt += "/";
-          rslt += n;
-          need_comma = true;
+      if (kind_ == KIND::ARGUMENT) {
+        bool need_comma{false};
+        if (long_names_) {
+          for (const auto& n : *long_names_) {
+            if (need_comma) rslt += "/";
+            rslt += n;
+            need_comma = true;
+          }
         }
-      }
-      if (short_names_) {
-        for (const auto& n : *short_names_) {
-          if (need_comma) rslt += "/";
-          rslt += n;
-          need_comma = true;
+        if (short_names_) {
+          for (const auto& n : *short_names_) {
+            if (need_comma) rslt += "/";
+            rslt += n;
+            need_comma = true;
+          }
         }
       }
       return rslt;
