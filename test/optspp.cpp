@@ -340,7 +340,7 @@ SCENARIO("Realistic config") {
 
     THEN("useradd --super-admin --admin yes --login mylogin") {
       std::vector<std::string> arguments_input{"useradd", "--super-admin", "--admin", "yes", "--login", "mylogin"};
-      REQUIRE_THROWS_AS(arguments.parse(arguments_input), actual_counts_mismatch);
+      arguments.parse(arguments_input);
     }
     THEN("useradd --super-admin --admin yes --login mylogin -p secret") {
       std::vector<std::string> arguments_input{"useradd", "--super-admin", "--admin", "yes", "--login", "mylogin", "-p", "secret"};
@@ -365,16 +365,18 @@ SCENARIO("rm example") {
       | (named(name("force"),  // Set long name attribute to "force"
                name('f'),      // Set short name attribute to 'f'
                default_values("false"),   // Which value to assume if not given on the cmd line
-               implicit_values("true"))   // Which value to assume if given on cmd line without value
-         << value("true", {"on", "yes"})
+               implicit_values("true"),   // Which value to assume if given on cmd line without value
+               max_count(1))    // Maximum number of times the argument may be specified
+         << value("true", {"on", "yes"})  // Possible value with synonyms
          << value("false", {"off", "no"}))
       | (named(name("recursive"),
-               name('r', {'R'}),
+               name('r', {'R'}),  // Short name with one synonym
                default_values("false"),
                implicit_values("true"))
          << value("true", {"on", "yes"})
          << value("false", {"off", "no"}))
-      | (positional(name("filename"))
+      | (positional(name("filename"),
+                    min_count(1))
          << (value(any())));
 
     THEN("-rf file1 file2") {
@@ -425,8 +427,18 @@ SCENARIO("rm example") {
       REQUIRE(arguments["filename"][1] == "file2");
     }
 
-    THEN("--force yes --force no file1") {
-      std::vector<std::string> input{"-R", "--force", "on", "--force", "off", "file1"};
+    THEN("-f true -f true file1") {
+      std::vector<std::string> input{"-f", "true", "-f", "true", "file1"};
+      REQUIRE_THROWS_AS(arguments.parse(input), actual_counts_mismatch);
+    }
+
+    THEN("-rf") {
+      std::vector<std::string> input{"-rf"};
+      REQUIRE_THROWS_AS(arguments.parse(input), actual_counts_mismatch);
+    }
+    
+    THEN("--force yes --force no file1 file2") {
+      std::vector<std::string> input{"-R", "--force", "yes", "--force", "no", "file1", "file2"};
       REQUIRE_THROWS_AS(arguments.parse(input), value_conflict);
     }
   }

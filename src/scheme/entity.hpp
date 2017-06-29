@@ -117,7 +117,7 @@ namespace optspp {
     template <>
     void entity::apply_property(::optspp::max_count p) {
       if (p.count) {
-        min_count_ = p.count;
+        max_count_ = p.count;
       }
     }
 

@@ -96,7 +96,7 @@ namespace optspp {
           return;
         }
       }
-      throw value_required(arg_def);
+      throw no_implicit_value(arg_def);
     }
 
     void parser::add_value_default(entity_ptr& arg_def, const parser::token& token) {
@@ -108,7 +108,7 @@ namespace optspp {
           return;
         }
       }
-      throw value_required(arg_def);
+      //TODO     throw (arg_def);
     }
 
     void parser::consume_named_value(entity_ptr& arg_def,
@@ -168,7 +168,7 @@ namespace optspp {
         } catch (...) {
         }
       }
-      throw value_required(arg_def);
+      throw consume_value_failed(arg_def);
     }
 
     bool parser::consume_positional(entity_ptr& arg_def,

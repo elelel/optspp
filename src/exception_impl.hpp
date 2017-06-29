@@ -12,11 +12,18 @@ namespace optspp {
     message = msg;
   }
 
-  value_required::value_required(const scheme::entity_ptr& e) :
+  consume_value_failed::consume_value_failed(const scheme::entity_ptr& e) :
     entity(e) {
     std::string name = entity->all_names_to_string();
     if (name == "") name = "<Unnamed>";
-    message = "Argument " + name + " requires a value";
+    message = "Consume value failed for argument " + name;
+  }
+  
+  no_implicit_value::no_implicit_value(const scheme::entity_ptr& e) :
+    entity(e) {
+    std::string name = entity->all_names_to_string();
+    if (name == "") name = "<Unnamed>";
+    message = "Argument " + name + " specified without a value, but no implicit value is defined";
   }
 
   argument_conflict::argument_conflict(const scheme::entity_ptr& e) :

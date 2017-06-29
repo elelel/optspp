@@ -16,8 +16,14 @@ namespace optspp {
     scheme_error(const std::string& msg);
   };
 
-  struct value_required : optspp_error {
-    value_required(const scheme::entity_ptr& e);
+  struct consume_value_failed : optspp_error {
+    consume_value_failed(const scheme::entity_ptr& e);
+
+    scheme::entity_ptr entity;
+  };
+  
+  struct no_implicit_value : optspp_error {
+    no_implicit_value(const scheme::entity_ptr& e);
 
     scheme::entity_ptr entity;
   };
