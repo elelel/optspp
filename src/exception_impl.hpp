@@ -19,6 +19,21 @@ namespace optspp {
     message = "Argument " + name + " requires a value";
   }
 
+  argument_conflict::argument_conflict(const scheme::entity_ptr& e) :
+    entity(e) {
+    std::string name = entity->all_names_to_string();
+    if (name == "") name = "<Unnamed>";
+    message = "Argument " + name + " conflicts with other arguments";
+  }
+  
+  value_conflict::value_conflict(const scheme::entity_ptr& e, const std::string& v) :
+    entity(e),
+    value(v) {
+    std::string name = entity->all_names_to_string();
+    if (name == "") name = "<Unnamed>";
+    message = "Argument " + name + " specified with value '" + value + "' conflicts with other argument values";
+  }
+
   unparsed_tokens::unparsed_tokens(const std::list<scheme::parser::token>& ts) :
     tokens(ts) {
     message = "Unparsed tokens left: ";

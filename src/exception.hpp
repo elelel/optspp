@@ -22,9 +22,21 @@ namespace optspp {
     scheme::entity_ptr entity;
   };
 
+  struct argument_conflict : optspp_error {
+    argument_conflict(const scheme::entity_ptr& e);
+    
+    scheme::entity_ptr entity;
+  };
+    
+  struct value_conflict : optspp_error {
+    value_conflict(const scheme::entity_ptr& e, const std::string& v);
+    
+    std::string value;
+    scheme::entity_ptr entity;
+  };
+
   struct unparsed_tokens : optspp_error {
     unparsed_tokens(const std::list<scheme::parser::token>& ts);
-
     std::list<scheme::parser::token> tokens;
   };
   

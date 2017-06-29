@@ -353,8 +353,81 @@ SCENARIO("Realistic config") {
       REQUIRE(arguments["force"][0] == "true");
     }
   }
-
-    
 }
 
+SCENARIO("rm example") {
+  using namespace optspp;
+  scheme::definition arguments;
 
+  WHEN("Somplified scheme is given") {
+    arguments
+      // Declare a named argument node
+      | (named(name("force"),  // Set long name attribute to "force"
+               name('f'),      // Set short name attribute to 'f'
+               default_values("false"),   // Which value to assume if not given on the cmd line
+               implicit_values("true"))   // Which value to assume if given on cmd line without value
+         << value("true", {"on", "yes"})
+         << value("false", {"off", "no"}))
+      | (named(name("recursive"),
+               name('r', {'R'}),
+               default_values("false"),
+               implicit_values("true"))
+         << value("true", {"on", "yes"})
+         << value("false", {"off", "no"}))
+      | (positional(name("filename"))
+         << (value(any())));
+
+    THEN("-rf file1 file2") {
+      std::vector<std::string> input{"-rf", "file1", "file2"};
+      REQUIRE_NOTHROW(arguments.parse(input));
+      REQUIRE(arguments["force"].size() == 1);
+      REQUIRE(arguments["force"][0] == "true");
+      REQUIRE(arguments["recursive"].size() == 1);
+      REQUIRE(arguments["recursive"][0] == "true");
+      REQUIRE(arguments["filename"].size() == 2);
+      REQUIRE(arguments["filename"][0] == "file1");
+      REQUIRE(arguments["filename"][1] == "file2");
+    }
+
+    THEN("-rf on file1 file2") {
+      std::vector<std::string> input{"-rf", "on", "file1", "file2"};
+      REQUIRE_NOTHROW(arguments.parse(input));
+      REQUIRE(arguments["force"].size() == 1);
+      REQUIRE(arguments["force"][0] == "true");
+      REQUIRE(arguments["recursive"].size() == 1);
+      REQUIRE(arguments["recursive"][0] == "true");
+      REQUIRE(arguments["filename"].size() == 2);
+      REQUIRE(arguments["filename"][0] == "file1");
+      REQUIRE(arguments["filename"][1] == "file2");
+    }
+
+    THEN("-r -f file1 file2") {
+      std::vector<std::string> input{"-r", "-f", "file1", "file2"};
+      REQUIRE_NOTHROW(arguments.parse(input));
+      REQUIRE(arguments["force"].size() == 1);
+      REQUIRE(arguments["force"][0] == "true");
+      REQUIRE(arguments["recursive"].size() == 1);
+      REQUIRE(arguments["recursive"][0] == "true");
+      REQUIRE(arguments["filename"].size() == 2);
+      REQUIRE(arguments["filename"][0] == "file1");
+      REQUIRE(arguments["filename"][1] == "file2");
+    }
+    
+    THEN("-R --force file1 file2") {
+      std::vector<std::string> input{"-R", "--force", "file1", "file2"};
+      REQUIRE_NOTHROW(arguments.parse(input));
+      REQUIRE(arguments["force"].size() == 1);
+      REQUIRE(arguments["force"][0] == "true");
+      REQUIRE(arguments["recursive"].size() == 1);
+      REQUIRE(arguments["recursive"][0] == "true");
+      REQUIRE(arguments["filename"].size() == 2);
+      REQUIRE(arguments["filename"][0] == "file1");
+      REQUIRE(arguments["filename"][1] == "file2");
+    }
+
+    THEN("--force yes --force no file1") {
+      std::vector<std::string> input{"-R", "--force", "on", "--force", "off", "file1"};
+      REQUIRE_THROWS_AS(arguments.parse(input), value_conflict);
+    }
+  }
+}

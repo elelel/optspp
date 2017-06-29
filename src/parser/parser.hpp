@@ -149,13 +149,17 @@ namespace optspp {
         found = find_if(val_siblings.begin(), val_siblings.end(), [] (const entity_ptr& e) {
             return e->any_value_ && *(e->any_value_);
           });
-      } 
+      }
       if (found != val_siblings.end()) {
-        move_border(arg_def, *found);
-        add_value(arg_def, next_it->s);
-        // Remove tokens containing name and value
-        tokens_.erase(tokens_.erase(token));
-        return;
+        if ((*found)->color_ != entity::COLOR::BLOCKED) {
+          move_border(arg_def, *found);
+          add_value(arg_def, next_it->s);
+          // Remove tokens containing name and value
+          tokens_.erase(tokens_.erase(token));
+          return;
+        } else {
+          throw value_conflict(arg_def, next_it->s);
+        }
       } else {
         try {
           add_value_implicit(arg_def, *token);
@@ -194,11 +198,15 @@ namespace optspp {
               });
           }
           if (found != val_siblings.end()) {
-            move_border(arg_def, *found);
-            add_positional_value(arg_def, *token);
-            // Remove tokens containing name and value
-            tokens_.erase(token);
-            return true;
+            if ((*found)->color_ != entity::COLOR::BLOCKED) {
+              move_border(arg_def, *found);
+              add_positional_value(arg_def, *token);
+              // Remove tokens containing name and value
+              tokens_.erase(token);
+              return true;
+            } else {
+              throw value_conflict(arg_def, token->s);
+            }
           } else {
             break;
           }
@@ -334,12 +342,26 @@ namespace optspp {
     }
 
     void parser::move_border(entity_ptr& parent, entity_ptr& child) {
+      if (child->kind_ == entity::KIND::VALUE) {
+        if (child->known_values_) {
+          for (const auto& s : *child->known_values_) {
+          }
+        }
+      }
       child->color_ = entity::COLOR::BORDER;
       if (child->siblings_group_ == SIBLINGS_GROUP::XOR) {
         //        parent->color_ = entity::COLOR::VISITED;
         for (auto& s : parent->pending_) {
-          if ((s != child) && (s->kind_ == child->kind_) && (s->siblings_group_ == SIBLINGS_GROUP::XOR))
+          if ((s != child) && (s->kind_ == child->kind_) && (s->siblings_group_ == SIBLINGS_GROUP::XOR)) {
+            if (s->kind_ == entity::KIND::VALUE) {
+              if (s->known_values_) {
+                for (const auto& ss : *s->known_values_) {
+                }
+              }
+            }
+            
             s->color_ = entity::COLOR::BLOCKED;
+          }
         }
       }
       if (child->siblings_group_ == SIBLINGS_GROUP::OR) {
