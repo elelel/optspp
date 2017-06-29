@@ -9,6 +9,13 @@ namespace optspp {
     message = msg;
   }
 
+  value_required::value_required(const scheme::entity_ptr& e) :
+    entity(e) {
+    std::string name = entity->all_names_to_string();
+    if (name == "") name = "<Unnamed>";
+    message = "Argument " + name + " requires a value";
+  }
+
   actual_counts_mismatch::actual_counts_mismatch(const std::vector<record>& rs) :
     records(rs) {
     std::cout << "Constructing mismatch\n";
@@ -17,9 +24,7 @@ namespace optspp {
     for (const auto& r : records) {
       if (need_comma) message += " ";
       need_comma = true;
-      std::cout << "All names to string, entity " << r.entity << "\n";
       std::string name = r.entity->all_names_to_string();
-      std::cout << "All names to string done\n";
       if (name == "") name = "<Unnamed>";
       message += "Argument " + name + " ";
       bool need_inner_comma = false;

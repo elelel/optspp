@@ -98,7 +98,7 @@ namespace optspp {
           return;
         }
       }
-      throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value (tried implicit)");
+      throw value_required(arg_def);
     }
 
     void parser::add_value_default(entity_ptr& arg_def, const parser::token& token) {
@@ -110,7 +110,7 @@ namespace optspp {
           return;
         }
       }
-      throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value (tried default)");
+      throw value_required(arg_def);
     }
 
     void parser::consume_named_value(entity_ptr& arg_def,
@@ -171,7 +171,7 @@ namespace optspp {
           std::cout << "Warning! Value definition for " << next_it->s << " (argument " << arg_def->all_names_to_string() << ") not found\n";
         }
       }
-      throw std::runtime_error("Argument " + arg_def->all_names_to_string() + " requires a value");
+      throw value_required(arg_def);
     }
 
     bool parser::consume_positional(entity_ptr& arg_def,

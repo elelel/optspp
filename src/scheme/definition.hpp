@@ -187,7 +187,7 @@ namespace optspp {
           }
         }
       }
-      throw std::runtime_error("Argument '" + name + "' not found");
+      throw value_not_found("Argument '" + name + "' not found");
     }
 
     const std::string& definition::operator()(const char name, const size_t idx) const {
@@ -200,7 +200,7 @@ namespace optspp {
           }
         }
       }
-      throw std::runtime_error(std::string("Argument '") + name + "' not found");
+      throw value_not_found(std::string("Argument '") + name + "' not found");
     }
 
     const std::string& definition::operator()(const char name) const {

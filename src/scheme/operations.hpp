@@ -77,7 +77,7 @@ namespace optspp {
         lhs->pending_.push_back(e);
       }
     } else {
-      throw std::runtime_error("Scheme entity types are incompatible for combination");
+      throw scheme_error("Scheme entity types are incompatible for combination");
     }
     return lhs;
   }
@@ -92,7 +92,7 @@ namespace optspp {
         lhs->pending_.push_back(e);
       }
     } else {
-      throw std::runtime_error("Scheme entity types are incompatible for combination: " +
+      throw scheme_error("Scheme entity types are incompatible for combination: " +
                                std::to_string((int)lhs->kind_) + " and " +
                                std::to_string((int)rhs->kind_));
     }
@@ -109,7 +109,7 @@ namespace optspp {
         lhs.root_->pending_.push_back(e);
       }
     } else {
-      throw std::runtime_error("Scheme entity type are incompatible for setting as scheme root element: " +
+      throw scheme_error("Scheme entity type are incompatible for setting as scheme root element: " +
                                std::to_string((int)rhs->kind_));
     }
     return lhs;
@@ -124,7 +124,7 @@ namespace optspp {
         lhs.root_->pending_.push_back(e);
       }
     } else {
-      throw std::runtime_error("Scheme entity type are incompatible for setting as scheme root element: " +
+      throw scheme_error("Scheme entity type are incompatible for setting as scheme root element: " +
                                std::to_string((int)rhs->kind_));
     }
     return lhs;

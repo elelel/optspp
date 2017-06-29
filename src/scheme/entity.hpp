@@ -70,7 +70,7 @@ namespace optspp {
             if (std::find(lhs.begin(), lhs.end(), *it) == lhs.end()) lhs.push_back(*it);
         }        
       } else {
-        throw std::runtime_error("Can't assign name to a non-argument entity");
+        throw scheme_error("Can't assign name to a non-argument entity");
       }
     }
 

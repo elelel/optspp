@@ -13,6 +13,12 @@ namespace optspp {
   struct scheme_error : optspp_error {
     scheme_error(const std::string& msg);
   };
+
+  struct value_required : optspp_error {
+    value_required(const scheme::entity_ptr& e);
+
+    scheme::entity_ptr entity;
+  };
   
   struct actual_counts_mismatch : optspp_error {
     struct record {
