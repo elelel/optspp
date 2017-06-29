@@ -70,7 +70,7 @@ namespace optspp {
           const auto& known_values = *c->known_values_;
           auto found = std::find(known_values.begin(), known_values.end(), s);
           if (found != known_values.end()) {
-            return *found;
+            return *known_values.begin();
           }
         }
       }
@@ -79,7 +79,7 @@ namespace optspp {
 
     void parser::add_value(const entity_ptr& arg_def, const std::string& s) {
       auto& v = scheme_def_.values_[arg_def];
-      v.push_back(s);
+      v.push_back(main_value(arg_def, s));
     }
   
     void parser::add_positional_value(const entity_ptr& arg_def, const parser::token& t) {
