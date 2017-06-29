@@ -23,4 +23,12 @@ namespace optspp {
     
     std::vector<record> records;
   };
+
+  struct value_not_found : optspp_error {
+    value_not_found(const std::string& n);
+    value_not_found(const std::string& n, const size_t idx);
+
+    size_t index{0};
+    std::string name;
+  };
 }

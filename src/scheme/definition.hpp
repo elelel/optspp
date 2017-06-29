@@ -170,11 +170,11 @@ namespace optspp {
           if (p.second.size() < idx) {
             return p.second[idx];
           } else {
-            throw std::runtime_error("Index " + std::to_string(idx) + " for argument '" + name + "' is out bounds");
+            throw value_not_found(name, idx);
           }
         }
       }
-      throw std::runtime_error("Argument '" + name + "' not found");
+      throw value_not_found("Argument '" + name + "' not found");
     }
 
     const std::string& definition::operator()(const std::string& name) const {
@@ -183,7 +183,7 @@ namespace optspp {
           if (p.second.size() > 0) {
             return p.second[p.second.size() - 1];
           } else {
-            throw std::runtime_error("Argument '" + name + "' has no values");
+            throw value_not_found(name);
           }
         }
       }
@@ -196,7 +196,7 @@ namespace optspp {
           if (p.second.size() < idx) {
             return p.second[idx];
           } else {
-            throw std::runtime_error("Index " + std::to_string(idx) + " for argument '" + name + "' is out bounds");
+            throw value_not_found(std::string() + name, idx);
           }
         }
       }
@@ -209,11 +209,11 @@ namespace optspp {
           if (p.second.size() > 0) {
             return p.second[p.second.size() - 1];
           } else {
-            throw std::runtime_error(std::string("Argument '") + name + "' has no values");
+            throw value_not_found(std::string() + name, 0);
           }
         }
       }
-      throw std::runtime_error(std::string("Argument '") + name + "' not found");
+      throw value_not_found(std::string() + name);
     }
 
     

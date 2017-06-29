@@ -38,4 +38,15 @@ namespace optspp {
     }
     std::cout << "Constructing mismatch done\n";
   }
+
+  value_not_found::value_not_found(const std::string& n) :
+    name(n) {
+    message = "Argument '" + name + "' has no values";
+  }
+
+  value_not_found::value_not_found(const std::string& n, const size_t idx) :
+    name(n),
+    index(idx) {
+    message = "Index " + std::to_string(idx) + " for argument '" + name + "' is out bounds";
+  }
 }
