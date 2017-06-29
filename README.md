@@ -62,4 +62,6 @@ myutil --force yes --force no file1 file2
 Argument force/f specified with value 'no' conflicts with other argument values
 ```
 
+Arguments may depend on the presence of other argument values if you specify them as a child of the dependncy. See tests for more examples.
+
 Some features are not available yet, consult the issues for more info.
