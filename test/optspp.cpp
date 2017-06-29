@@ -341,6 +341,10 @@ SCENARIO("Realistic config") {
 
     THEN("useradd --super-admin --admin yes --login mylogin") {
       std::vector<std::string> arguments_input{"useradd", "--super-admin", "--admin", "yes", "--login", "mylogin"};
+      REQUIRE_THROWS_AS(arguments.parse(arguments_input), actual_counts_mismatch);
+    }
+    THEN("useradd --super-admin --admin yes --login mylogin -p secret") {
+      std::vector<std::string> arguments_input{"useradd", "--super-admin", "--admin", "yes", "--login", "mylogin", "-p", "secret"};
       arguments.parse(arguments_input);
     }
     THEN("userdel --force --login mylogin") {
