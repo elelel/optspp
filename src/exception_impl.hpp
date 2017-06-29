@@ -5,6 +5,10 @@ namespace optspp {
     return message.c_str();
   }
 
+  scheme_error::scheme_error(const std::string& msg) {
+    message = msg;
+  }
+
   actual_counts_mismatch::actual_counts_mismatch(const std::vector<record>& rs) :
     records(rs) {
     std::cout << "Constructing mismatch\n";

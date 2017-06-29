@@ -33,14 +33,14 @@ namespace optspp {
         if (e->long_names_) {
           for (const auto& n : *e->long_names_) {
             if (std::find(taken_long.begin(), taken_long.end(), n) != taken_long.end())
-              throw std::runtime_error("Scheme validation error: argument's long name should not be used by it's descendant");
+              throw scheme_error("Argument's long name should not be used by it's descendant");
           }
           std::copy((*e->long_names_).begin(), (*e->long_names_).end(), std::back_inserter(taken_long));
         }
         if (e->short_names_) {
           for (const auto& n : *e->short_names_) {
             if (std::find(taken_short.begin(), taken_short.end(), n) != taken_short.end())
-              throw std::runtime_error("Scheme validation error: argument's short name should not be used by it's descendant");
+              throw scheme_error("Argument's short name should not be used by it's descendant");
           }
           std::copy((*e->short_names_).begin(), (*e->short_names_).end(), std::back_inserter(taken_short));
         }
@@ -52,24 +52,24 @@ namespace optspp {
       if (e->kind_ == entity::KIND::ARGUMENT) {
         if (e->is_positional_ && *e->is_positional_) {
           if (e->short_names_)
-            throw std::runtime_error("Scheme validation error: positional argument has short names");
+            throw scheme_error("Positional argument should not have short names");
           if (e->implicit_values_)
-            throw std::runtime_error("Scheme validation error: positional argument has implicit values");
+            throw scheme_error("Positional argument should not implicit values");
           if (e->any_value_ && *e->any_value_) {
             for (const auto& c : e->pending_) {
               if ((c->kind_ == entity::KIND::ARGUMENT) && e->is_positional_ && !*e->is_positional_)
-                throw std::runtime_error("Scheme validation error: positional with any value has named child");
+                throw scheme_error("Positional with any value should not have named child");
             }
           }
         } else {
           bool short_undefined = !e->short_names_ || (e->short_names_ && (*e->short_names_).size() == 0);
           bool long_undefined = !e->long_names_ || (e->long_names_ && (*e->long_names_).size() == 0);
           if (short_undefined && long_undefined )
-            throw std::runtime_error("Named argument's both long and short names are empty");
+            throw scheme_error("Named argument's both long and short names are empty");
         }
         for (const auto& c : e->pending_) {
           if (c->kind_ != entity::KIND::VALUE) {
-            throw std::runtime_error("Scheme validation error: argument entity has non-value child");
+            throw scheme_error("Argument entity shoud not have non-value child");
           }
         }
         // Implicitly allow any value
@@ -83,7 +83,7 @@ namespace optspp {
       if (e->kind_ == entity::KIND::VALUE) {
         for (const auto& c : e->pending_) {
           if (c->kind_ != entity::KIND::ARGUMENT)
-            throw std::runtime_error("Scheme validation error: value entity hash non-argument child");
+            throw scheme_error("Value entity should not have non-argument child");
         }
       }
       for (const auto& c : e->pending_) {
